@@ -205,7 +205,7 @@ export default function SignInPage() {
                         }}
                     />
 
-                    <StyledLink to="forgot-password"><TextSmRegular>Forgot password?</TextSmRegular></StyledLink>
+                    <StyledLink to="/resetpw"><TextSmRegular>Forgot password?</TextSmRegular></StyledLink>
                     <StyledButton>Submit</StyledButton></div>
                 </form>
 

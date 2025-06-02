@@ -6,6 +6,8 @@ import {Profile} from "./pages/Profile"
 import SignInPage from "./pages/SignIn"
 import SignUpPage from "./pages/SignUp"
 import WelcomePage from "./pages/SignIn&UpOption"
+import ResetPwPage from "./pages/ResetPw"
+import ConfirmPwPage from "./pages/ConfirmPw"
 import ModalView from "./modal/internal/ModalView"
 import ModalManager from "./modal/internal/ModalManager"
 
@@ -18,6 +20,8 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/resetpw" element={<ResetPwPage />} />
+        <Route path="/confirmpw" element={<ConfirmPwPage />} />
         <Route path="/" element={<WelcomePage />} />
       </Routes>
       <ModalView ref={ModalManager.ref} />
