@@ -18,6 +18,12 @@ const TextMdSemiBold = styled.p`
     align-items: center;
 `;
 
+const TextSmRegular = styled.p`
+    font-size: ${FONTSIZE.sm};
+    font-weight: ${FONTWEIGHT.normal};
+    
+`;
+
 const StyledButton = styled.button`
     background-color: ${COLORS.greyblue};
     border: none;
@@ -32,6 +38,13 @@ const StyledButton = styled.button`
     font-family: montserrat;
     border-radius: 1rem;
     display: block;
+`;
+
+const RowContainer = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.8rem;
 `;
 
 export default function ConfirmPwPage() {
@@ -141,6 +154,9 @@ export default function ConfirmPwPage() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <img src={Logo} alt="Logo" style={{ width: '50px' }} />
                 <TextMdSemiBold>Reset Password</TextMdSemiBold>
+                <RowContainer>
+                    <TextSmRegular>Hi, you can reset your new password below.</TextSmRegular>
+                </RowContainer>
             </div>
             <form onSubmit={handleSubmit}>
                 <div style={{ paddingLeft: '3rem', paddingRight: '3rem' }}>
