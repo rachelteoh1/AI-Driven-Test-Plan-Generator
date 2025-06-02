@@ -13,7 +13,7 @@ import {
   SidebarMenuItem,
 } from "./ui/sidebar"
 import { Button } from "./ui/button"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import ExportModal from "../modal/ExportModal"; // adjust path if needed
 import { useState } from "react";
 
@@ -37,17 +37,20 @@ const navigationItems = [
 
 export function AppSidebar() {
   const navigate = useNavigate()
+  const location = useLocation();
+  const isChatSessionPage = location.pathname.startsWith("/home"); // update if your route is different
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const testResults = [
-  { test: 'Voltage Test', result: 'Pass', time: '2.1s' },
-  { test: 'Resistance Test', result: 'Fail', time: '3.5s' },
-];
+    { test: 'Voltage Test', result: 'Pass', time: '2.1s' },
+    { test: 'Resistance Test', result: 'Fail', time: '3.5s' },
+  ]; // dummy data, should fetch from chat session later on
 
   const bottomItems = [
     {
       title: "Download result",
       icon: Download,
       action: () => setExportModalOpen(true),
+      disabled: !isChatSessionPage,
     },
     {
       title: "Search Chat",
@@ -112,11 +115,12 @@ export function AppSidebar() {
             <SidebarMenuItem key={`${item.title}-${index}`} className="list-none">
               <SidebarMenuButton asChild>
                 <button
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 w-full text-left no-underline"
-                  style={{ textDecoration: "none", listStyle: "none" }}
-                  onClick={item.action}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm w-full text-left no-underline ${item.disabled ? "text-gray-400 cursor-not-allowed" : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  onClick={!item.disabled ? item.action : undefined}
+                  disabled={item.disabled}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className={`h-4 w-4 ${item.disabled ? "text-gray-400" : ""}`} />
                   <span>{item.title}</span>
                 </button>
               </SidebarMenuButton>
