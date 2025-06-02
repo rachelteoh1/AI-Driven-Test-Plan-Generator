@@ -60,7 +60,7 @@ export function AppSidebar() {
     {
       title: "Log out",
       icon: LogOut,
-      action: () => {},
+      action: () => navigate("/signup"),
     },
   ]
 
