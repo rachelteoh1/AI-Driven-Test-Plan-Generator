@@ -14,43 +14,50 @@ import {
 } from "./ui/sidebar"
 import { Button } from "./ui/button"
 import { useNavigate } from "react-router-dom"
+import ExportModal from "../modal/ExportModal"; // adjust path if needed
+import { useState } from "react";
 
 const navigationItems = [
   {
     title: "New chat",
     icon: MessageSquare,
-    action: () => {},
+    action: () => { },
   },
   {
     title: "History",
     icon: History,
-    action: () => {},
+    action: () => { },
   },
   {
     title: "History",
     icon: History,
-    action: () => {},
+    action: () => { },
   },
 ]
 
 export function AppSidebar() {
-  const navigate  = useNavigate()
+  const navigate = useNavigate()
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const testResults = [
+  { test: 'Voltage Test', result: 'Pass', time: '2.1s' },
+  { test: 'Resistance Test', result: 'Fail', time: '3.5s' },
+];
 
   const bottomItems = [
     {
       title: "Download result",
       icon: Download,
-      action: () => {},
+      action: () => setExportModalOpen(true),
     },
     {
       title: "Search Chat",
       icon: Search,
-      action: () => {},
+      action: () => { },
     },
     {
       title: "Clear conversations",
       icon: Trash2,
-      action: () => {},
+      action: () => { },
     },
     {
       title: "My account",
@@ -117,6 +124,11 @@ export function AppSidebar() {
           ))}
         </SidebarMenu>
       </SidebarFooter>
+      <ExportModal
+        open={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        testData={testResults}
+      />
     </Sidebar>
   )
 }
