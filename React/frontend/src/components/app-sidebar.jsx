@@ -1,6 +1,5 @@
-"use client"
+// "use client"
 
-import { useContext } from "react"
 import { Plus, MessageSquare, History, Download, Search, Trash2, User, LogOut } from "lucide-react"
 import {
   Sidebar,
@@ -14,7 +13,7 @@ import {
   SidebarMenuItem,
 } from "./ui/sidebar"
 import { Button } from "./ui/button"
-import { NavigationContext } from "../App"
+import { useNavigate } from "react-router-dom"
 
 const navigationItems = [
   {
@@ -35,7 +34,7 @@ const navigationItems = [
 ]
 
 export function AppSidebar() {
-  const { navigate } = useContext(NavigationContext)
+  const navigate  = useNavigate()
 
   const bottomItems = [
     {
@@ -56,7 +55,7 @@ export function AppSidebar() {
     {
       title: "My account",
       icon: User,
-      action: () => navigate("profile"),
+      action: () => navigate("/profile"),
     },
     {
       title: "Log out",
@@ -66,11 +65,11 @@ export function AppSidebar() {
   ]
 
   return (
-    <Sidebar className="border-r border-gray-200">
+    <Sidebar className="w-64 border-r border-gray-200 fixed top-0 left-0 h-full bg-white z-10" >
       <SidebarHeader className="p-4">
         <Button
           className="w-full justify-start gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200 no-underline"
-          onClick={() => navigate("home")}
+          onClick={() => navigate("/home")}
         >
           <Plus className="h-4 w-4" />
           New chat
