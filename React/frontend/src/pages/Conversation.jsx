@@ -151,7 +151,7 @@ const MessageForm = styled.form`
 `
 
 // Main Export Component
-export default function ChatInterface({ chat, onSendMessage, isLoading }) {
+export default function ChatInterface({ chat = { messages: [] }, onSendMessage, isLoading }) {
   const [inputValue, setInputValue] = useState("")
   const messagesEndRef = useRef(null)
 

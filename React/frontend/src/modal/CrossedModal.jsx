@@ -1,7 +1,8 @@
-import Lottie from 'react-lottie';
+import Lottie from 'lottie-react';
 import styled from 'styled-components';
 import {COLORS,FONTSIZE, FONTWEIGHT} from '../lib/styles';
 import lottieCrossed from '../animation/lottieCrossed.json';
+import { Button } from '@mui/material';
 
 
 const CenteredDiv = styled.div`
@@ -24,18 +25,26 @@ const Description = styled.p`
     font-weight: ${FONTWEIGHT.normal};
     color: ${COLORS.darkGrey};
 `;
+const StyledButton = styled(Button)`
+  width: 5rem;
+  height: 3rem;
+  background-color: ${COLORS.blue} !important;
+`;
 
-export default function CrossedModal({ title, description }) {
+
+export default function CrossedModal({ title, description, hideModal }) {
     return (
         <CenteredDiv>
             <Lottie
-                options={{ animationData: lottieCrossed, autoplay: true, loop: false }}
-                width={200}
-                height={200}
+               animationData={lottieCrossed}
+                      loop
+                      autoplay
+                      style={{ width: 200, height: 200 }}
                 isClickToPauseDisabled
             />
             {title && <Title>{title}</Title>}
             {description && <Description>{description}</Description>}
+            <StyledButton onClick = {hideModal} variant="contained">Ok</StyledButton>
         </CenteredDiv>
     );
 }
