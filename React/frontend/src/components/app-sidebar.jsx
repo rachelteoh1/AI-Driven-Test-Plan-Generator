@@ -1,7 +1,5 @@
 // "use client"
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import RenameModal from "../modal/RenameModal";
 import DeleteModal from "../modal/DeleteModal";
 import ClearModal from "../modal/ClearConversationModal";
