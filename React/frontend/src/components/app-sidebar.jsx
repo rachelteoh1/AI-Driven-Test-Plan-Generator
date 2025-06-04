@@ -1,7 +1,5 @@
 // "use client"
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import RenameModal from "../modal/RenameModal";
 import DeleteModal from "../modal/DeleteModal";
 import ClearModal from "../modal/ClearConversationModal";
@@ -28,8 +26,11 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "./ui/sidebar";
-import { Button } from "./ui/button";
+} from "./ui/sidebar"
+import { Button } from "./ui/button"
+import { useNavigate, useLocation } from "react-router-dom"
+import ExportModal from "../modal/ExportModal"; // adjust path if needed
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,26 +49,36 @@ export function AppSidebar({
   onSetChat,
 }) {
   const navigate = useNavigate();
-  const { showModal ,hideModal} = useModal();
+  const location = useLocation();
+  const isChatSessionPage = location.pathname.startsWith("/home"); // update if your route is different
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const testResults = [
+    { test: 'Voltage Test', result: 'Pass', time: '2.1s' },
+    { test: 'Resistance Test', result: 'Fail', time: '3.5s' },
+  ]; // dummy data, should fetch from chat session later on
+  const { showModal, hideModal } = useModal();
   const bottomItems = [
     {
       title: "Download result",
       icon: Download,
-      action: () => {},
+      action: () => setExportModalOpen(true),
+      disabled: !isChatSessionPage,
     },
     {
       title: "Search Chat",
       icon: Search,
-      action: () => {showModal({
+      action: () => {
+        showModal({
           modal: (
             <SearchChatModal
               chats={chats}
-              onSelectChat= {(selectedId) => onSelectChat(selectedId)}
+              onSelectChat={(selectedId) => onSelectChat(selectedId)}
               hideModal={hideModal}
-              
+
             />
           ),
-        });},
+        });
+      },
     },
     {
       title: "Clear conversations",
@@ -77,14 +88,14 @@ export function AppSidebar({
           modal: (
             <ClearModal
               title="Clear Conversation?"
-              onSetChat= {onSetChat}
-              activeChat = {activeChat}
+              onSetChat={onSetChat}
+              activeChat={activeChat}
               hideModal={hideModal}
-              
+
             />
           ),
         });
-       
+
       },
     },
     {
@@ -95,7 +106,7 @@ export function AppSidebar({
     {
       title: "Log out",
       icon: LogOut,
-      action: () => navigate("/"),
+      action: () => navigate("/signup"),
     },
   ];
 
@@ -140,10 +151,12 @@ export function AppSidebar({
             >
               <SidebarMenuButton asChild>
                 <button
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 w-full text-left no-underline"
-                  onClick={item.action}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm w-full text-left no-underline ${item.disabled ? "text-gray-400 cursor-not-allowed" : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  onClick={!item.disabled ? item.action : undefined}
+                  disabled={item.disabled}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className={`h-4 w-4 ${item.disabled ? "text-gray-400" : ""}`} />
                   <span>{item.title}</span>
                 </button>
               </SidebarMenuButton>
@@ -151,6 +164,11 @@ export function AppSidebar({
           ))}
         </SidebarMenu>
       </SidebarFooter>
+      <ExportModal
+        open={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        testData={testResults}
+      />
     </Sidebar>
   );
 }
@@ -165,9 +183,8 @@ function ChatItem({ chat, isActive, onSelect, onRename, onDelete }) {
 
   return (
     <div
-      className={`flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-gray-100 group ${
-        isActive ? "bg-gray-200" : ""
-      }`}
+      className={`flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-gray-100 group ${isActive ? "bg-gray-200" : ""
+        }`}
       onClick={onSelect}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -178,7 +195,7 @@ function ChatItem({ chat, isActive, onSelect, onRename, onDelete }) {
           <input
             type="text"
             value={newName}
-         
+
           />
         ) : (
           <span className="truncate text-sm">{chat.name}</span>
@@ -224,7 +241,7 @@ function ChatItem({ chat, isActive, onSelect, onRename, onDelete }) {
                   modal: (
                     <DeleteModal
                       chat={chat}
-                      onDelete = {onDelete}
+                      onDelete={onDelete}
                       hideModal={hideModal}
                     />
                   ),
