@@ -16,7 +16,7 @@ const ModalView = forwardRef((_, ref) => {
     const children = useRef(<></>);
 
     const [open, setOpen] = useState(false);
-    const [maxWidth, setMaxWidth] = useState('md');
+    const [maxWidth, setMaxWidth] = useState('sm');
 
     const handleClose = useCallback((__, reason) => {
         if (!allowBackdropClick.current && reason && reason === 'backdropClick') {
@@ -28,7 +28,7 @@ const ModalView = forwardRef((_, ref) => {
 
     const showModal = useCallback(({ modal, disableBackdropDismiss, cmaxWidth }) => {
         setOpen(true);
-        setMaxWidth(cmaxWidth || 'md');
+        setMaxWidth(cmaxWidth || 'sm');
         if (disableBackdropDismiss) {
             allowBackdropClick.current = false;
         }
