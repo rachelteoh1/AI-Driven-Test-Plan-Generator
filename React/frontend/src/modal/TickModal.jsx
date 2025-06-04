@@ -10,7 +10,7 @@ const CenteredDiv = styled.div`
     justify-content: center;
     align-items: center;
     gap: 2rem;
-    min-height: 50vh;
+    min-height: 60vh;
 `;
 
 const Title = styled.h1`
@@ -41,5 +41,5 @@ export default function TickedModal({ title, description ,hideModal}) {
             {description && <Description>{description}</Description>}
             <Button onClick = {hideModal} variant="contained" sx={{ backgroundColor: COLORS.blue } }>Ok</Button>
         </CenteredDiv>
-    );
+    );
 }

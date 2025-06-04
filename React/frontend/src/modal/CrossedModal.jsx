@@ -46,5 +46,5 @@ export default function CrossedModal({ title, description, hideModal }) {
             {description && <Description>{description}</Description>}
             <StyledButton onClick = {hideModal} variant="contained">Ok</StyledButton>
         </CenteredDiv>
-    );
+    );
 }
