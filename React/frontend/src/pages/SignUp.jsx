@@ -12,9 +12,6 @@ import useModal from '../modal/useModal';
 import Logo from "../assets/keysight.png"
 import AuthLayout from "../components/reusable/AuthLayout"
 
-
-
-
 const TextMdSemiBold = styled.p`
     font-size: ${FONTSIZE['3xl']};
     font-weight: ${FONTWEIGHT.bold};
