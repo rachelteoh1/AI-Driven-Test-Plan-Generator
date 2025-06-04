@@ -1,24 +1,272 @@
-import { SidebarProvider } from "../components/ui/sidebar"
-import { AppSidebar } from "../components/app-sidebar"
-import { Header } from "../components/header"
+import { SidebarProvider } from "../components/ui/sidebar";
+import { AppSidebar } from "../components/app-sidebar";
+import { Header } from "../components/header";
+import ChatInterface from "./Conversation";
+import { useState } from "react";
+import styled from "styled-components";
+import { FONTSIZE, FONTWEIGHT, SPACING, COLORS } from "../lib/styles";
+
+// Styled components
+const PageContainer = styled.div`
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+`;
+
+const MainContent = styled.main`
+  margin-left: 12rem;
+  background-color: ${COLORS.background.light};
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+`;
+const ContentContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: ${SPACING.L};
+  overflow-y: auto;
+  background-color: ${COLORS.background.light};
+  height: calc(100vh - ${SPACING.xl} - 64px); /* still needed */
+  margin-top: ${SPACING.xl};
+  margin-bottom: 64px;
+  margin-left: 0rem;
+`;
+
+const CenterContainer = styled.div`
+  margin-top: 10rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex: 1; /* take all available space */
+  width: 100%;
+  text-align: center;
+`;
+const ChatWrapper = styled.div`
+  bottom: 0;
+  width: 50rem;
+  max-width: calc(100vw - 2rem);
+  background-color: ${COLORS.white};
+  z-index: 10;
+  overflow-y: auto;
+  /* Hide scrollbar for Chrome, Safari */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const TextContainer = styled.div`
+  text-align: center;
+`;
+
+const Title = styled.h1`
+  font-size: ${FONTSIZE.XL};
+  font-weight: ${FONTWEIGHT.bold};
+  color: ${COLORS.black};
+  margin-bottom: ${SPACING.md};
+`;
+const HeaderWrapper = styled.div`
+  position: fixed;
+  top: 0;
+  left: 16rem; /* width of the sidebar */
+  right: 0;
+  height: ${SPACING.xl};
+  background-color: ${COLORS.white};
+  z-index: 20;
+  border-bottom: 1px solid #e5e7eb;
+`;
+const ExamplesGrid = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${SPACING.sm};
+  margin-top: ${SPACING.md};
+`;
+
+const ExampleButton = styled.button`
+  width: 100%;
+  text-align: left;
+  padding: ${SPACING.md};
+  border: 1px;
+  border-radius: 0.5rem;
+  background-color: ${COLORS.background.light};
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${COLORS.background.medium};
+  }
+`;
 
 export function Home() {
+  const initialChat = {
+  id: Date.now(),
+  name: "New Chat",
+  messages: [],
+};
+
+  const [chats, setChats] = useState([initialChat]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [activeChatId, setActiveChatId] = useState(initialChat.id);
+  const activeChat = chats.find((chat) => chat.id === activeChatId);
+  const hasConversation = activeChat?.messages?.length > 0;
+
+  const handleNewChat = () => {
+    const newChat = {
+      id: Date.now(),
+      name: `Chat ${chats.length + 1}`,
+      messages: [],
+    };
+    setChats((prev) => [ newChat, ...prev]);
+    setActiveChatId(newChat.id);
+  };
+
+  const handleSelectChat = (id) => {
+    setActiveChatId(id);
+  };
+
+ 
+
+const handleRenameChat = async (id, newName) => {
+  console.log("Attempting rename:", id, newName);
+  try {
+    setChats(prev => prev.map(chat => 
+      chat.id === id ? {...chat, name: newName} : chat
+    ));
+    return true; // Explicit success
+  } catch (error) {
+    console.error("Rename failed:", error);
+    return false; // Explicit failure
+  }
+};
+
+ const handleDeleteChat = async (id) => {
+  try {
+    // const response = await fetch(`/api/chats/${id}`, {
+    //   method: 'DELETE',
+    // });
+
+    // if (!response.ok) throw new Error();
+
+    // Update local state AFTER confirming DB deletion
+    setChats((prev) => {
+      const updatedChats = prev.filter((chat) => chat.id !== id);
+
+      if (activeChatId === id) {
+        const deletedIndex = prev.findIndex((chat) => chat.id === id);
+        const nextChat = updatedChats[deletedIndex] || updatedChats[deletedIndex - 1] || null;
+        setActiveChatId(nextChat ? nextChat.id : null);
+      }
+
+      return updatedChats;
+    });
+
+    return true;
+  } catch (err) {
+    console.error("Deletion failed", err);
+    return false; 
+  }
+};
+
+  const handleSendMessage = async (message) => {
+    const userMessage = { id: Date.now(), role: "user", content: message };
+    const botMessage = {
+      id: Date.now() + 1,
+      role: "assistant",
+      content: `You said: "${message}"`,
+    };
+
+    // Step 1: Immediately add the user message
+    setChats((prevChats) =>
+      prevChats.map((chat) =>
+        chat.id === activeChatId
+          ? {
+              ...chat,
+              messages: [...chat.messages, userMessage],
+            }
+          : chat
+      )
+    );
+
+    setIsLoading(true);
+
+    // Step 2: Add bot response after delay
+    setTimeout(() => {
+      setChats((prevChats) =>
+        prevChats.map((chat) =>
+          chat.id === activeChatId
+            ? {
+                ...chat,
+                messages: [...chat.messages, botMessage],
+              }
+            : chat
+        )
+      );
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  // const[examples, onSelectExample]= useState([
+  //   "Generate test case to measure the voltage on channel 1.",
+  //   "Test case to perform a diode forward voltage check.",
+  //   "Explain ROUT:SCAN (@101:110).",
+  // ])
+
+  const examples = [
+    // direct array declaration
+    "Generate test case to measure the voltage on channel 1.",
+    "Test case to perform a diode forward voltage check.",
+    "Explain ROUT:SCAN (@101:110).",
+  ];
+
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen w-full">
-        <AppSidebar />
-        <main className="flex-1 bg-gray-50">
-          <Header />
-          <div className="flex-1 p-10 overflow-auto bg-gray-50">
-            <div className="flex justify-center items-center min-h-full w-full">
-              <div className="text-center">
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">Welcome to KeysightGPT</h1>
-                <p className="text-lg text-gray-600">Hello Li Chee</p>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
+      <PageContainer>
+        <AppSidebar
+          chats={chats}
+          activeChat={activeChat}
+          onNewChat={handleNewChat}
+          onSelectChat={handleSelectChat}
+          onRenameChat={handleRenameChat}
+          onDeleteChat={handleDeleteChat}
+          onSetChat={setChats}
+        />
+        <MainContent>
+          <HeaderWrapper>
+            <Header />
+          </HeaderWrapper>
+          <ContentContainer>
+            {!hasConversation && (
+              <CenterContainer>
+                <TextContainer>
+                  <Title>Welcome to KeysightGPT</Title>
+                </TextContainer>
+                <div>Examples</div>
+                <ExamplesGrid>
+                  {examples.map((example, index) => (
+                    <ExampleButton
+                      key={index}
+                      onClick={() => handleSendMessage(example)}
+                    >
+                      "{example}"
+                    </ExampleButton>
+                  ))}
+                </ExamplesGrid>
+              </CenterContainer>
+            )}
+          </ContentContainer>
+          <ChatWrapper>
+            <ChatInterface
+              chat={activeChat}
+              onSendMessage={handleSendMessage}
+              isLoading={isLoading}
+            />
+          </ChatWrapper>
+        </MainContent>
+      </PageContainer>
     </SidebarProvider>
-  )
+  );
 }
