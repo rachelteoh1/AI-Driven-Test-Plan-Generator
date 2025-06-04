@@ -9,20 +9,27 @@ const CenteredDiv = styled.div`
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 2rem;
-    min-height: 60vh;
+    gap: 1rem;
+    min-height: 65vh;
 `;
 
 const Title = styled.h1`
     font-size: ${FONTSIZE['2xl']};
     font-weight: ${FONTWEIGHT.medium};
     color: ${COLORS.black};
+    margin-bottom: 0rem;
 `;
 
 const Description = styled.p`
-    font-size: ${FONTSIZE.xl};
+    font-size: ${FONTSIZE.lg};
     font-weight: ${FONTWEIGHT.normal};
     color: ${COLORS.darkGrey};
+`;
+
+const StyledButton = styled(Button)`
+  width: 5rem;
+  height: 3rem;
+  background-color: ${COLORS.blue} !important;
 `;
 
 export default function TickedModal({ title, description ,hideModal}) {
@@ -41,5 +48,5 @@ export default function TickedModal({ title, description ,hideModal}) {
             {description && <Description>{description}</Description>}
             <Button onClick = {hideModal} variant="contained" sx={{ backgroundColor: COLORS.blue } }>Ok</Button>
         </CenteredDiv>
-    );
+    );
 }
