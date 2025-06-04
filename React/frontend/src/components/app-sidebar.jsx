@@ -101,12 +101,12 @@ export function AppSidebar({
     {
       title: "My account",
       icon: User,
-      action: () => navigate("/profile"),
+      action: (chats={chats}) => navigate("/profile"),
     },
     {
       title: "Log out",
       icon: LogOut,
-      action: () => navigate("/signup"),
+      action: () => navigate("/"),
     },
   ];
 

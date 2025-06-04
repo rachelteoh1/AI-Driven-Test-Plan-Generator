@@ -19,7 +19,7 @@ export function MainDashboard() {
       <Header />
 
       {/* Tabs */}
-      <div className="px-6 bg-white border-b border-gray-200">
+      <div className="px-6 border-b border-gray-200">
         <div className="w-full max-w-md grid grid-cols-2">
           <button
             onClick={() => handleTabChange("edit-profile")}

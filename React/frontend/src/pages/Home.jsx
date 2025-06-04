@@ -15,12 +15,13 @@ const PageContainer = styled.div`
 `;
 
 const MainContent = styled.main`
-  margin-left: 12rem;
+  margin-left: 18rem;
   background-color: ${COLORS.background.light};
   height: 100vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  justify-content: center;
 `;
 const ContentContainer = styled.div`
   display: flex;
@@ -45,6 +46,7 @@ const CenterContainer = styled.div`
   width: 100%;
   text-align: center;
 `;
+
 const ChatWrapper = styled.div`
   bottom: 0;
   width: 50rem;
@@ -100,17 +102,17 @@ const ExampleButton = styled.button`
   }
 `;
 
-export function Home() {
-  const initialChat = {
-  id: Date.now(),
-  name: "New Chat",
-  messages: [],
-};
+export function Home({ chats, setChats, activeChatId, setActiveChatId }) {
+//   const initialChat = {
+//   id: Date.now(),
+//   name: "New Chat",
+//   messages: [],
+// };
 
-  const [chats, setChats] = useState([initialChat]);
-  const [isLoading, setIsLoading] = useState(false);
+//   const [chats, setChats] = useState([initialChat]);
+   const [isLoading, setIsLoading] = useState(false);
 
-  const [activeChatId, setActiveChatId] = useState(initialChat.id);
+//   const [activeChatId, setActiveChatId] = useState(initialChat.id);
   const activeChat = chats.find((chat) => chat.id === activeChatId);
   const hasConversation = activeChat?.messages?.length > 0;
 
