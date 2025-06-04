@@ -6,7 +6,7 @@ import { Profile } from "./profile"
 import { DashboardContent } from "./dashboard-content"
 
 export function MainDashboard() {
-  const [activeTab, setActiveTab] = useState("summary-dashboard")
+  const [activeTab, setActiveTab] = useState("edit-profile")
 
   // Function to handle tab changes
   const handleTabChange = (value) => {

@@ -35,7 +35,6 @@ const StyledButton = styled.button`
     margin: 0rem auto; /* Center horizontally */
     font-weight: ${FONTWEIGHT.medium};
     font-size: ${FONTSIZE.lg};
-    font-family: montserrat;
     border-radius: 1rem;
     display: block; /* Important for margin auto to work */
 `;
