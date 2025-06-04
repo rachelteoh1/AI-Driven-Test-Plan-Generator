@@ -99,8 +99,7 @@ const MessageTextArea = styled.textarea`
   width: 100%;
   min-height: 2.5rem;
   max-height: 12rem;
-  padding: ${SPACING.md};
-  padding-right: 3rem; // <- Leave space for icon
+  padding: 12px 40px 12px 16px;
   background-color: ${props => props.$isLoading ? COLORS.background.light : COLORS.background.medium};
   border: 1px solid ${COLORS.lightblue};
   border-radius: 1rem;
@@ -113,21 +112,23 @@ const MessageTextArea = styled.textarea`
   font-size: ${FONTSIZE.base};
   overflow-y: auto;
   box-sizing: border-box;
+  
 `
 const SubmitButton = styled(Button)`
   position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
+  left: 690px;
+  bottom: 40px; 
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background-color: transparent;
   color: ${COLORS.grey};
   opacity: ${props => (props.$isLoading || !props.$hasValue) ? 0.5 : 1};
-  border: none;
-  height: 2rem;
-  width: 2rem;
-  min-width: unset;
-  padding: 0;
-  z-index: 2;
+  
 `
 
 const CopyButton = styled(Button)`
@@ -146,6 +147,9 @@ const CopyButton = styled(Button)`
   }
 `
 const MessageForm = styled.form`
+  width: 100%;
+`
+const TextAreaWrapper = styled.div`
   position: relative;
   width: 100%;
 `
@@ -271,6 +275,7 @@ function MessageInput({ value, onChange, onSubmit, isLoading }) {
 
   return (
     <MessageForm onSubmit={onSubmit}>
+      <TextAreaWrapper>
       <MessageTextArea
         ref={textareaRef}
         value={value}
@@ -284,12 +289,11 @@ function MessageInput({ value, onChange, onSubmit, isLoading }) {
       <SubmitButton
         type="submit"
         size="icon"
-        $isLoading={isLoading}
-        $hasValue={!!value.trim()}
         disabled={isLoading || !value.trim()}
       >
         {isLoading ? <LoadingIcon /> : <Send size={16} />}
       </SubmitButton>
+      </TextAreaWrapper>
     </MessageForm>
   )
 

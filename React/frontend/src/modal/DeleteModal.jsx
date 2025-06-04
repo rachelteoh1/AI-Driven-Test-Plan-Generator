@@ -38,12 +38,12 @@ const Description = styled.p`
     color: ${COLORS.darkGrey};
 `;
 
-export default function DeleteModal({ chatName, onDelete ,hideModal}) {
+export default function DeleteModal({ chat, onDelete ,hideModal}) {
   const [status, setStatus] = useState(false);
 
   const handleDelete = async () => {
     try {
-      const result = await onDelete(); 
+      const result = await onDelete(chat.id); 
       if (result) {
         setStatus("success");
       } else {
@@ -55,7 +55,7 @@ export default function DeleteModal({ chatName, onDelete ,hideModal}) {
   };
 
   if (status === "success") {
-    return <TickedModal title="Chat deleted successfully!" />;
+    return <TickedModal title="Chat deleted successfully!"  hideModal={hideModal}/>;
   }
 
   if (status === "fail") {
@@ -67,7 +67,7 @@ export default function DeleteModal({ chatName, onDelete ,hideModal}) {
   return (
     <CenteredDiv>
       <Title>Delete Chat?</Title>
-      {chatName && <Description>This will delete <strong>{chatName}</strong>.</Description>}
+      {chat.name && <Description>This will delete <strong>{chat.name}</strong>.</Description>}
 
       <RowDiv>
         <Button onClick={hideModal} variant="contained" sx={{ backgroundColor: COLORS.greyblue }}>

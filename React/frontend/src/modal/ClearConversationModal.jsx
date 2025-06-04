@@ -14,7 +14,10 @@ const CenteredDiv = styled.div`
   justify-content: center;
   align-items: center;
   gap: 2rem;
-  min-height: 50vh;
+  min-height: 30vh;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
 `;
 
 const Title = styled.h1`
@@ -27,7 +30,7 @@ const RowDiv = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-around;
-  gap: 1rem;
+  gap: 5rem;
 `;
 
 
@@ -55,7 +58,7 @@ export default function ClearModal({ title, onSetChat, activeChat,hideModal }) {
   };
 
   if (status === "success") {
-    return <TickedModal title="Conversation cleared successfully!" />;
+    return <TickedModal title="Conversation cleared successfully!" hideModal={hideModal}/>;
   }
 
   if (status === "fail") {
@@ -63,6 +66,7 @@ export default function ClearModal({ title, onSetChat, activeChat,hideModal }) {
       <CrossedModal
         title="Unable to clear the chat"
         description="Please try again later"
+        hideModal={hideModal}
       />
     );
   }

@@ -1,10 +1,9 @@
 import styled from "styled-components";
 import { Button } from "@mui/material";
-import { useState } from "react";
-import { MessageSquare ,X} from "lucide-react";
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
+import { MessageSquare, X } from "lucide-react";
 
-
+// Centered main container
 const CenteredDiv = styled.div`
   display: flex;
   flex-direction: column;
@@ -15,14 +14,13 @@ const CenteredDiv = styled.div`
   margin: 0 auto;
 `;
 
-
+// Styled input field
 const Input = styled.input`
-  width: 100%;
-  text-align: center;
+  width: 30rem;
   border: none;
   background-color: #f9fafb;
   border-radius: 16px;
-  padding: 12px 0;
+  padding: 12px 0 8px 16px;
   color: #6b7280;
   font-size: 1rem;
   &::placeholder {
@@ -31,68 +29,71 @@ const Input = styled.input`
   outline: none;
 `;
 
+// Row for input and close button
 const RowDiv = styled.div`
   display: flex;
-  flex-direction: row;
-  justify-content: space-around;
- 
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+  margin-top:2rem;
+`;
+
+// Scrollable chat container
+const ScrollableChatList = styled.div`
+  width: 100%;
+  max-height: 15rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding-left: 5px;
 `;
 
 export default function SearchChatModal({ chats, onSelectChat, hideModal }) {
   const [searchQuery, setSearchQuery] = useState("");
 
-
-  // Filter chats based on search query
   const filteredChats = useMemo(() => {
     if (!searchQuery) return chats;
-    return chats.filter(chat => 
+    return chats.filter(chat =>
       chat.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [chats, searchQuery]);
 
   const handleChatSelect = async (chatId) => {
-
     try {
       await onSelectChat(chatId);
-      hideModal(); // Close the modal after selection
+      hideModal();
     } catch (error) {
       console.error("Error selecting chat:", error);
-    } finally {
-
     }
   };
 
   return (
     <CenteredDiv>
-     
       <RowDiv>
-       
-
-       
         <Input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search chats..."
           autoFocus
-          
         />
-         <Button
+        <Button
           onClick={hideModal}
-          variant="ghost"
-          size="icon"
-          className="absolute right-0 top-0 rounded-full"
+          variant="text"
+          size="small"
+          style={{ position: "absolute", right: 0 }}
         >
           <X className="h-5 w-5" />
-        </Button></RowDiv>
-      
+        </Button>
+      </RowDiv>
 
-      <div className="w-full max-h-60 overflow-y-auto">
+      <ScrollableChatList>
         {filteredChats.length > 0 ? (
           filteredChats.map((chat) => (
-            <div 
-              key={chat.id} 
+            <div
+              key={chat.id}
               onClick={() => handleChatSelect(chat.id)}
-              className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
+              className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer w-11/12"
             >
               <MessageSquare className="h-5 w-5 text-gray-600" />
               <span className="text-gray-900 truncate">{chat.name}</span>
@@ -103,7 +104,7 @@ export default function SearchChatModal({ chats, onSelectChat, hideModal }) {
             {searchQuery ? "No matching chats found" : "No chats available"}
           </div>
         )}
-      </div>
+      </ScrollableChatList>
     </CenteredDiv>
   );
 }

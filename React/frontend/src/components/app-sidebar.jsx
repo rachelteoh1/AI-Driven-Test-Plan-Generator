@@ -122,7 +122,7 @@ export function AppSidebar({
                     isActive={activeChat?.id === chat.id}
                     onSelect={() => onSelectChat(chat.id)}
                     onRename={(newName) => onRenameChat(chat.id, newName)}
-                    onDelete={() => onDeleteChat(chat.id)}
+                    onDelete={(id) => onDeleteChat(id)}
                   />
                 </SidebarMenuItem>
               ))}
@@ -220,11 +220,11 @@ function ChatItem({ chat, isActive, onSelect, onRename, onDelete }) {
               className="hover:bg-gray-200"
               onClick={(e) => {
                 e.stopPropagation();
-                onDelete();
                 showModal({
                   modal: (
                     <DeleteModal
-                      onDelete = {onDelete()}
+                      chat={chat}
+                      onDelete = {onDelete}
                       hideModal={hideModal}
                     />
                   ),
