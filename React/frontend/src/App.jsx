@@ -13,24 +13,11 @@ import ModalView from "./modal/internal/ModalView";
 import ModalManager from "./modal/internal/ModalManager";
 
 function App() {
-  const initialChat = {
-    id: Date.now(),
-    name: "New Chat",
-    messages: [],
-  };
+  const [chats, setChats] = useState([]);
+  const [activeChatId, setActiveChatId] = useState(null);
 
-  const [chats, setChats] = useState([initialChat]);
-  const [activeChatId, setActiveChatId] = useState(initialChat.id);
-
-  // ✅ New chat function
-  const onNewChat = () => {
-    const newChat = {
-      id: Date.now(),
-      name: "New Chat",
-      messages: [],
-    };
-    setChats([newChat, ...chats]);
-    setActiveChatId(newChat.id);
+  const onSelectChat = (chatId) => {
+    setActiveChatId(chatId);
   };
 
   return (
@@ -44,7 +31,6 @@ function App() {
               setChats={setChats}
               activeChatId={activeChatId}
               setActiveChatId={setActiveChatId}
-              onNewChat={onNewChat}
             />
           }
         />
@@ -53,10 +39,9 @@ function App() {
           element={
             <Profile
               chats={chats}
-              setChats={setChats}
-              activeChatId={activeChatId}
-              setActiveChatId={setActiveChatId}
-              onNewChat={onNewChat}
+              onSelectChat={(chatId) => {
+                onSelectChat(chatId);
+              }}
             />
           }
         />
