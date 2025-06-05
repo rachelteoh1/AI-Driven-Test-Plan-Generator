@@ -2,9 +2,10 @@ import { SidebarProvider } from "../components/ui/sidebar";
 import { AppSidebar } from "../components/app-sidebar";
 import { Header } from "../components/header";
 import ChatInterface from "./Conversation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { FONTSIZE, FONTWEIGHT, SPACING, COLORS } from "../lib/styles";
+import { useSearchParams } from "react-router-dom";
 
 // Styled components
 const PageContainer = styled.div`
@@ -102,17 +103,28 @@ const ExampleButton = styled.button`
   }
 `;
 
-export function Home({ chats, setChats, activeChatId, setActiveChatId }) {
+export const Home = ({ chats, setChats, activeChatId, setActiveChatId }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("newchat") === "true") {
+      handleNewChat();
+      // remove query param after using it
+      searchParams.delete("newchat");
+      setSearchParams(searchParams);
+    }
+  }, [searchParams]);
+
 //   const initialChat = {
 //   id: Date.now(),
 //   name: "New Chat",
 //   messages: [],
 // };
 
-//   const [chats, setChats] = useState([initialChat]);
-   const [isLoading, setIsLoading] = useState(false);
+  // const [chats, setChats] = useState([initialChat]);
+  const [isLoading, setIsLoading] = useState(false);
 
-//   const [activeChatId, setActiveChatId] = useState(initialChat.id);
+  // const [activeChatId, setActiveChatId] = useState(initialChat.id);
   const activeChat = chats.find((chat) => chat.id === activeChatId);
   const hasConversation = activeChat?.messages?.length > 0;
 
