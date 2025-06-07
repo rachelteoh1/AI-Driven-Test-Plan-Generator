@@ -16,7 +16,7 @@ const PageContainer = styled.div`
 `;
 
 const MainContent = styled.main`
-  margin-left: 18rem;
+  margin-left: 8rem;
   background-color: ${COLORS.background.light};
   height: 100vh;
   overflow: hidden;
@@ -115,11 +115,11 @@ export const Home = ({ chats, setChats, activeChatId, setActiveChatId }) => {
     }
   }, [searchParams]);
 
-//   const initialChat = {
-//   id: Date.now(),
-//   name: "New Chat",
-//   messages: [],
-// };
+  //   const initialChat = {
+  //   id: Date.now(),
+  //   name: "New Chat",
+  //   messages: [],
+  // };
 
   // const [chats, setChats] = useState([initialChat]);
   const [isLoading, setIsLoading] = useState(false);
@@ -134,7 +134,7 @@ export const Home = ({ chats, setChats, activeChatId, setActiveChatId }) => {
       name: `Chat ${chats.length + 1}`,
       messages: [],
     };
-    setChats((prev) => [ newChat, ...prev]);
+    setChats((prev) => [newChat, ...prev]);
     setActiveChatId(newChat.id);
   };
 
@@ -142,86 +142,108 @@ export const Home = ({ chats, setChats, activeChatId, setActiveChatId }) => {
     setActiveChatId(id);
   };
 
- 
 
-const handleRenameChat = async (id, newName) => {
-  console.log("Attempting rename:", id, newName);
-  try {
-    setChats(prev => prev.map(chat => 
-      chat.id === id ? {...chat, name: newName} : chat
-    ));
-    return true; // Explicit success
-  } catch (error) {
-    console.error("Rename failed:", error);
-    return false; // Explicit failure
+
+  const handleRenameChat = async (id, newName) => {
+    console.log("Attempting rename:", id, newName);
+    try {
+      setChats(prev => prev.map(chat =>
+        chat.id === id ? { ...chat, name: newName } : chat
+      ));
+      return true; // Explicit success
+    } catch (error) {
+      console.error("Rename failed:", error);
+      return false; // Explicit failure
+    }
+  };
+
+  const handleDeleteChat = async (id) => {
+    try {
+      // const response = await fetch(`/api/chats/${id}`, {
+      //   method: 'DELETE',
+      // });
+
+      // if (!response.ok) throw new Error();
+
+      // Update local state AFTER confirming DB deletion
+      setChats((prev) => {
+        const updatedChats = prev.filter((chat) => chat.id !== id);
+
+        if (activeChatId === id) {
+          const deletedIndex = prev.findIndex((chat) => chat.id === id);
+          const nextChat = updatedChats[deletedIndex] || updatedChats[deletedIndex - 1] || null;
+          setActiveChatId(nextChat ? nextChat.id : null);
+        }
+
+        return updatedChats;
+      });
+
+      return true;
+    } catch (err) {
+      console.error("Deletion failed", err);
+      return false;
+    }
+  };
+
+const handleSendMessage = async (message, pdfFile) => {
+  const safeMessage = message && message.trim() ? message.trim() : "";
+  let userContent = "";
+  let botContent = "";
+
+  if (safeMessage && pdfFile) {
+    userContent = `${safeMessage}\n(Attached file: ${pdfFile.name})`;
+    botContent = `You said:"${safeMessage}"\n(Attached file: ${pdfFile.name})`;
+  } else if (safeMessage) {
+    userContent = safeMessage;
+    botContent = `You said: "${safeMessage}"`;
+  } else if (pdfFile) {
+    userContent = `(Attached file: ${pdfFile.name})`;
+    botContent = `(Attached file: ${pdfFile.name})`;
   }
-};
 
- const handleDeleteChat = async (id) => {
-  try {
-    // const response = await fetch(`/api/chats/${id}`, {
-    //   method: 'DELETE',
-    // });
 
-    // if (!response.ok) throw new Error();
+  const userMessage = {
+    id: Date.now(),
+    role: "user",
+    content: userContent,
+  };
 
-    // Update local state AFTER confirming DB deletion
-    setChats((prev) => {
-      const updatedChats = prev.filter((chat) => chat.id !== id);
+  const botMessage = {
+    id: Date.now() + 1,
+    role: "assistant",
+    content: botContent,
+  };
 
-      if (activeChatId === id) {
-        const deletedIndex = prev.findIndex((chat) => chat.id === id);
-        const nextChat = updatedChats[deletedIndex] || updatedChats[deletedIndex - 1] || null;
-        setActiveChatId(nextChat ? nextChat.id : null);
-      }
+  // Add user message
+  setChats((prevChats) =>
+    prevChats.map((chat) =>
+      chat.id === activeChatId
+        ? {
+            ...chat,
+            messages: [...chat.messages, userMessage],
+          }
+        : chat
+    )
+  );
 
-      return updatedChats;
-    });
+  setIsLoading(true);
 
-    return true;
-  } catch (err) {
-    console.error("Deletion failed", err);
-    return false; 
-  }
-};
-
-  const handleSendMessage = async (message) => {
-    const userMessage = { id: Date.now(), role: "user", content: message };
-    const botMessage = {
-      id: Date.now() + 1,
-      role: "assistant",
-      content: `You said: "${message}"`,
-    };
-
-    // Step 1: Immediately add the user message
+  // Add bot message after delay
+  setTimeout(() => {
     setChats((prevChats) =>
       prevChats.map((chat) =>
         chat.id === activeChatId
           ? {
               ...chat,
-              messages: [...chat.messages, userMessage],
+              messages: [...chat.messages, botMessage],
             }
           : chat
       )
     );
+    setIsLoading(false);
+  }, 1000);
+};
 
-    setIsLoading(true);
-
-    // Step 2: Add bot response after delay
-    setTimeout(() => {
-      setChats((prevChats) =>
-        prevChats.map((chat) =>
-          chat.id === activeChatId
-            ? {
-                ...chat,
-                messages: [...chat.messages, botMessage],
-              }
-            : chat
-        )
-      );
-      setIsLoading(false);
-    }, 1000);
-  };
 
   // const[examples, onSelectExample]= useState([
   //   "Generate test case to measure the voltage on channel 1.",

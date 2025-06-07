@@ -29,7 +29,6 @@ import {
 } from "./ui/sidebar"
 import { Button } from "./ui/button"
 import { useNavigate, useLocation } from "react-router-dom"
-import ExportModal from "../modal/ExportModal"; // adjust path if needed
 import { useState } from "react";
 import {
   DropdownMenu,
@@ -50,20 +49,8 @@ export function AppSidebar({
 }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const isChatSessionPage = location.pathname.startsWith("/home"); // update if your route is different
-  const [exportModalOpen, setExportModalOpen] = useState(false);
-  const testResults = [
-    { test: 'Voltage Test', result: 'Pass', time: '2.1s' },
-    { test: 'Resistance Test', result: 'Fail', time: '3.5s' },
-  ]; // dummy data, should fetch from chat session later on
   const { showModal, hideModal } = useModal();
   const bottomItems = [
-    {
-      title: "Download result",
-      icon: Download,
-      action: () => setExportModalOpen(true),
-      disabled: !isChatSessionPage,
-    },
     {
       title: "Search Chat",
       icon: Search,
@@ -164,11 +151,6 @@ export function AppSidebar({
           ))}
         </SidebarMenu>
       </SidebarFooter>
-      <ExportModal
-        open={exportModalOpen}
-        onClose={() => setExportModalOpen(false)}
-        testData={testResults}
-      />
     </Sidebar>
   );
 }

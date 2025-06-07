@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 
 import { Home } from "./pages/Home";
@@ -15,6 +15,23 @@ import ModalManager from "./modal/internal/ModalManager";
 function App() {
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
+
+  // Create a new chat function (you can reuse this elsewhere too)
+  const createNewChat = () => {
+    const newChat = {
+      id: Date.now(),
+      name: `Chat ${chats.length + 1}`,
+      messages: [],
+    };
+    setChats([newChat]);
+    setActiveChatId(newChat.id);
+  };
+
+  useEffect(() => {
+    if (chats.length === 0) {
+      createNewChat();
+    }
+  }, [chats]);
 
   const onSelectChat = (chatId) => {
     setActiveChatId(chatId);
