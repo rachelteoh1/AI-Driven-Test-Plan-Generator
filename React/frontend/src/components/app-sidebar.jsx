@@ -67,6 +67,7 @@ export function AppSidebar({
     {
       title: "Search Chat",
       icon: Search,
+      disabled: !isChatSessionPage,
       action: () => {
         showModal({
           modal: (
@@ -83,6 +84,7 @@ export function AppSidebar({
     {
       title: "Clear conversations",
       icon: Trash2,
+      disabled: !isChatSessionPage,
       action: () => {
         showModal({
           modal: (

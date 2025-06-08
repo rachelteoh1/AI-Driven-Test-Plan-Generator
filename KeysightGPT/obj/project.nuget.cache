@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "cB/nv52xL9T6bDkbE4rqaX2U0E5bIxs0cTnaeiUHbeReDL2ct5w4YeOPP+/vYWwYpw3ZZcmX6WcZeUbEF6CWwA==",
+  "success": true,
+  "projectFilePath": "/Users/lichee/FYP/AI-Driven-Test-Plan-Generator/KeysightGPT/KeysightGPT.csproj",
+  "expectedPackageFiles": [
+    "/Users/lichee/.nuget/packages/microsoft.netcore.platforms/1.1.0/microsoft.netcore.platforms.1.1.0.nupkg.sha512",
+    "/Users/lichee/.nuget/packages/netstandard.library/2.0.3/netstandard.library.2.0.3.nupkg.sha512",
+    "/Users/lichee/.nuget/packages/opentap/9.28.2/opentap.9.28.2.nupkg.sha512"
+  ],
+  "logs": []
+}
