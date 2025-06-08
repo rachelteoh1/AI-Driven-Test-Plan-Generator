@@ -106,6 +106,7 @@ export default function SignInPage() {
                     <TickedModal
                         title="Sign Up Successfully!"
                         description="Please Sign In now using your credentials that you've just signed in"
+                        hideModal={hideModal}
                     />
                 ),
             });

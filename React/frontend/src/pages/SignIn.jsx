@@ -106,6 +106,7 @@ export default function SignInPage() {
                     <TickedModal
                         title="Sign In Successfully!"
                         description="Redirecting you to KeysightGPT Chatbot..."
+                        hideModal={hideModal}
                     />
                 ),
             }); 
