@@ -38,6 +38,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import useModal from "../modal/useModal";
+import { useLogout } from "../hook/useAuth";
 
 export function AppSidebar({
   chats,
@@ -57,6 +58,7 @@ export function AppSidebar({
     { test: 'Resistance Test', result: 'Fail', time: '3.5s' },
   ]; // dummy data, should fetch from chat session later on
   const { showModal, hideModal } = useModal();
+  const logout = useLogout();
   const bottomItems = [
     {
       title: "Download result",
@@ -108,7 +110,8 @@ export function AppSidebar({
     {
       title: "Log out",
       icon: LogOut,
-      action: () => navigate("/"),
+      action: () => {logout(); 
+        navigate("/");}
     },
   ];
 
