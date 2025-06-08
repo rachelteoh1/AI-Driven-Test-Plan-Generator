@@ -1,4 +1,3 @@
-import api from './api/api';
 import React, { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { Home } from "./pages/Home";
