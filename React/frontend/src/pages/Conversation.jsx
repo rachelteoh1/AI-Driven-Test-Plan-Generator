@@ -155,7 +155,7 @@ const TextAreaWrapper = styled.div`
 `
 
 // Main Export Component
-export default function ChatInterface({ chat = { messages: [] }, onSendMessage, isLoading }) {
+export default function ChatInterface({ chat , onSendMessage, isLoading }) {
   const [inputValue, setInputValue] = useState("")
   const messagesEndRef = useRef(null)
 
@@ -179,7 +179,7 @@ export default function ChatInterface({ chat = { messages: [] }, onSendMessage, 
     <Container>
       <MessagesContainer>
         {chat.messages.map((message) => (
-          <Message key={message.id} message={message} />
+          <Message key={message.message_id} message={message} />
         ))}
         {isLoading && <LoadingIndicator />}
         <div ref={messagesEndRef} />

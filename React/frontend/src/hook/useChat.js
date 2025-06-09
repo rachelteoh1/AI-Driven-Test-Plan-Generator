@@ -2,13 +2,18 @@ import { useQuery,useMutation,useQueryClient } from '@tanstack/react-query';
 import * as service from '../services/chatServices';
 
 //chat session
-export const useChats = () => {
-  return useQuery(['chats'], service.getChats);
+export const useChats = (userId) => {
+  return useQuery({
+    queryKey: ['chats', userId],
+    queryFn: ({ queryKey }) => service.getChats(queryKey[1]),
+    enabled: !!userId,
+  });
 };
 
 export const useNewChat = () => {
   const queryClient = useQueryClient();
-  return useMutation(service.newChat, {
+  return useMutation({
+    mutationFn: service.newChat,
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['chats', variables.session_id]);
     },
@@ -17,7 +22,8 @@ export const useNewChat = () => {
 
 export const useRenameChat = () => {
   const queryClient = useQueryClient();
-  return useMutation(service.renameChat, {
+  return useMutation({
+    mutationFn: service.renameChat,
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['chats', variables.session_id]);
     },
@@ -26,7 +32,8 @@ export const useRenameChat = () => {
 
 export const useDeleteChat = () => {
   const queryClient = useQueryClient();
-  return useMutation(service.deleteChat, {
+  return useMutation({
+    mutationFn: service.deleteChat,
     onSuccess: (_, variables) => {
       // Invalidate logs for the session
       //After it succeeds, it tells React Query to refetch chat logs for that session (invalidateQueries) 
@@ -37,14 +44,16 @@ export const useDeleteChat = () => {
 
 //chat log
 export const useChatLogs = (sessionId) => {
-  return useQuery(['chatLogs', sessionId], () => service.getChatLogs(sessionId), { // makes sure each session has its own cached logs.
-    enabled: !!sessionId, // avoid fetching when sessionId is null
+  return useQuery({
+    queryKey: ['chatLogs', sessionId],
+    queryFn: () => service.getChatLogs(sessionId), //  pass a function
+    enabled: !!sessionId, //  only fetch if sessionId is not null
   });
 };
-
 export const useAddChatLog = () => {
   const queryClient = useQueryClient();
-  return useMutation(service.addChatLog, {
+  return useMutation( {
+    mutationFn: service.addChatLog,
     onSuccess: (_, variables) => {
       // Invalidate logs for the session
       //After it succeeds, it tells React Query to refetch chat logs for that session (invalidateQueries) so the UI gets updated automatically with the new message.
@@ -55,7 +64,9 @@ export const useAddChatLog = () => {
 
 export const useDeleteChatLog = () => {
   const queryClient = useQueryClient();
-  return useMutation(service.deleteChatLog, {
+  
+  return useMutation({
+    mutationFn: service.deleteChatLog, 
     onSuccess: (_, variables) => {
       // Invalidate logs for the session
       //After it succeeds, it tells React Query to refetch chat logs for that session (invalidateQueries) 

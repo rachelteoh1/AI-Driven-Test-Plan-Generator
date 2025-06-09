@@ -5,15 +5,15 @@ from pydantic import BaseModel
 
 class LogCreate(BaseModel):  #save message
     session_id: UUID
-    user_input: str
-    llm_response: str
+    role: str
+    content: str
     
 
 class LogResponse(BaseModel):  # display message
     message_id:UUID
     session_id:UUID
-    user_input: str
-    llm_response: str
+    role: str
+    content: str
 
 
 

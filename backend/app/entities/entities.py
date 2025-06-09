@@ -24,14 +24,14 @@ class ChatSession(Base):
     created_at= Column(DateTime, default=datetime.utcnow)
     updated_at= Column(DateTime, default=datetime.utcnow)
     
-    
+   
 class ChatLog(Base):
     __tablename__ = "chat_logs"  #name table
    
     message_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     session_id = Column(UUID(as_uuid=True), ForeignKey("chat_sessions.session_id"), nullable=False)  # FK to ChatSession
-    user_input = Column(Text)
-    llm_response = Column(Text)
+    role=Column(Text)
+    content = Column(Text)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
 # class Examples(Base):

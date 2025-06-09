@@ -55,7 +55,7 @@ export default function SearchChatModal({ chats, onSelectChat, hideModal }) {
   const filteredChats = useMemo(() => {
     if (!searchQuery) return chats;
     return chats.filter(chat =>
-      chat.name.toLowerCase().includes(searchQuery.toLowerCase())
+      chat.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [chats, searchQuery]);
 
@@ -91,12 +91,12 @@ export default function SearchChatModal({ chats, onSelectChat, hideModal }) {
         {filteredChats.length > 0 ? (
           filteredChats.map((chat) => (
             <div
-              key={chat.id}
-              onClick={() => handleChatSelect(chat.id)}
+              key={chat.session_id}
+              onClick={() => handleChatSelect(chat.session_id)}
               className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer w-11/12"
             >
               <MessageSquare className="h-5 w-5 text-gray-600" />
-              <span className="text-gray-900 truncate">{chat.name}</span>
+              <span className="text-gray-900 truncate">{chat.title}</span>
             </div>
           ))
         ) : (
