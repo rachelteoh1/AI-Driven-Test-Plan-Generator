@@ -25,7 +25,7 @@ const PageContainer = styled.div`
 `;
 
 const MainContent = styled.main`
-  margin-left: 18rem;
+  margin-left: 14rem;
   background-color: ${COLORS.background.light};
   height: 100vh;
   overflow: hidden;
@@ -111,10 +111,10 @@ const ExampleButton = styled.button`
     background-color: ${COLORS.background.medium};
   }
 `;
-export const Home = () => {
-  const { user } = useContext(UserStatusContext); // <-- assuming your `user` object comes from context
+export const Home = ({chats, activeChatId, setActiveChatId}) => {
+  const { user } = useContext(UserStatusContext); 
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeChatId, setActiveChatId] = useState(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -123,13 +123,7 @@ export const Home = () => {
     }
   }, [user, navigate]);
  
-  const safeUserId =
-    typeof user?.id === "string" ? user.id : user?.id?.id || "";
 
- // Hooks
-  const { data: chats = [] } = useChats(safeUserId);
- 
-  console.log("userid:", user.id);
   const { data: activeChatLogs = [] } = useChatLogs(activeChatId);
   const newChatMutation = useNewChat();
   const renameChatMutation = useRenameChat();
