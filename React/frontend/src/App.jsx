@@ -1,4 +1,4 @@
-import React, { useState,useEffect ,useContext} from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { Home } from "./pages/Home";
 import Interface from "./pages/Conversation";
@@ -10,14 +10,27 @@ import ResetPwPage from "./pages/ResetPw";
 import ConfirmPwPage from "./pages/ConfirmPw";
 import ModalView from "./modal/internal/ModalView";
 import ModalManager from "./modal/internal/ModalManager";
-
-
-
+import UserStatusContext from "./lib/UserStatusContext";
+import { useChats } from "./hook/useChat";
 
 function App() {
-  const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
 
+  const { user } = useContext(UserStatusContext); // <-- assuming your `user` object comes from context
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/signin");
+    }
+  }, [user, navigate]);
+
+  const safeUserId =
+    typeof user?.id === "string" ? user.id : user?.id?.id || "";
+
+  // Hooks
+  const { data: chats = [] } = useChats(safeUserId);
 
   const onSelectChat = (chatId) => {
     setActiveChatId(chatId);
@@ -31,7 +44,6 @@ function App() {
           element={
             <Home
               chats={chats}
-              setChats={setChats}
               activeChatId={activeChatId}
               setActiveChatId={setActiveChatId}
             />
