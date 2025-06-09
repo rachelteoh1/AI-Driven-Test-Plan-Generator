@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import useModal from "../modal/useModal";
+import { useLogout } from "../hook/useAuth";
 
 export function AppSidebar({
   chats,
@@ -50,10 +51,12 @@ export function AppSidebar({
   const navigate = useNavigate();
   const location = useLocation();
   const { showModal, hideModal } = useModal();
+  const logout = useLogout();
   const bottomItems = [
     {
       title: "Search Chat",
       icon: Search,
+      disabled: !isChatSessionPage,
       action: () => {
         showModal({
           modal: (
@@ -70,6 +73,7 @@ export function AppSidebar({
     {
       title: "Clear conversations",
       icon: Trash2,
+      disabled: !isChatSessionPage,
       action: () => {
         showModal({
           modal: (
@@ -93,7 +97,8 @@ export function AppSidebar({
     {
       title: "Log out",
       icon: LogOut,
-      action: () => navigate("/"),
+      action: () => {logout(); 
+        navigate("/");}
     },
   ];
 

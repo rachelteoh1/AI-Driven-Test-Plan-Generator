@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
-
 import { Home } from "./pages/Home";
 import Interface from "./pages/Conversation";
 import { Profile } from "./pages/Profile";
@@ -11,6 +10,7 @@ import ResetPwPage from "./pages/ResetPw";
 import ConfirmPwPage from "./pages/ConfirmPw";
 import ModalView from "./modal/internal/ModalView";
 import ModalManager from "./modal/internal/ModalManager";
+
 
 function App() {
   const [chats, setChats] = useState([]);
