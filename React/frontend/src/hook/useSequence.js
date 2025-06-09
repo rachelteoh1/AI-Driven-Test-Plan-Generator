@@ -3,12 +3,13 @@ import * as service from '../services/sequenceServices';
 
 
 export const useSequence = () => {
-  return useQuery(['sequence'], service.getSequence);
+  return useQuery({queryKey:['sequence'],queryFn: service.getSequence});
 };
 
 export const useAddSequence = () => {
   const queryClient = useQueryClient();
-  return useMutation(service.addSequence, {
+  return useMutation({
+    mutationFn: service.addSequence, 
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['sequence', variables.sequenceId]);
     },

@@ -132,13 +132,13 @@ export function AppSidebar({
           <SidebarGroupContent>
             <SidebarMenu className="list-none">
               {(chats ?? []).map((chat) => (
-                <SidebarMenuItem key={chat.id} className="list-none">
+                <SidebarMenuItem key={chat.session_id} className="list-none">
                   <ChatItem
                     chat={chat}
-                    isActive={activeChat?.id === chat.id}
-                    onSelect={() => onSelectChat(chat.id)}
-                    onRename={(newName) => onRenameChat(chat.id, newName)}
-                    onDelete={(id) => onDeleteChat(id)}
+                    isActive={activeChat?.session_id === chat.session_id}
+                    onSelect={() => onSelectChat(chat.session_id)}
+                    onRename={(newName) => onRenameChat(chat.session_id, newName)}
+                    onDelete={(session_id) => onDeleteChat(session_id)}
                   />
                 </SidebarMenuItem>
               ))}
@@ -203,7 +203,7 @@ function ChatItem({ chat, isActive, onSelect, onRename, onDelete }) {
 
           />
         ) : (
-          <span className="truncate text-sm">{chat.name}</span>
+          <span className="truncate text-sm">{chat.title}</span>
         )}
       </div>
 

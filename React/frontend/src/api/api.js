@@ -12,4 +12,17 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear token or any auth state you have
+      localStorage.removeItem("access_token");
+      // Redirect to sign-in page immediately
+      window.location.href = '/signin';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api

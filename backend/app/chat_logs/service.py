@@ -18,8 +18,8 @@ def create_chatlog(db: Session, request):
         new_chat_log = ChatLog(
             message_id=uuid4(),
             session_id=request.session_id,
-            user_input=request.user_input,
-            llm_response=request.llm_response,
+            role=request.role,
+            content=request.content,
             timestamp=datetime.utcnow()
         )
         db.add(new_chat_log)
@@ -44,7 +44,7 @@ def clear_chat_log(db: Session, session_id):
 
 def get_chat_log_by_user(db: Session, session_id):
     try:
-        logs = db.query(ChatLog).filter_by(session_id=session_id).order_by(ChatLog.timestamp.desc()).all()
+        logs = db.query(ChatLog).filter_by(session_id=session_id).order_by(ChatLog.timestamp).all()
         logger.info(f"Retrieved {len(logs)} chat logs for session: {session_id}")
         return logs
     except Exception as e:

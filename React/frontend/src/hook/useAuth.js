@@ -5,7 +5,7 @@ import * as userService from "../services/userServices";
 // Register
 export const useSignUp = () => {
   return useMutation({
-    mutationFn: authService.registerUser
+    mutationFn: authService.registerUser,
   });
 };
 
@@ -16,14 +16,16 @@ export const useSignIn = () => {
   return useMutation({
     mutationFn: authService.loginUserforToken,
     onSuccess: () => {
-      queryClient.invalidateQueries(['currentUser']); // refetch user after login
+      queryClient.invalidateQueries(["currentUser"] ); // refetch user after login
     },
   });
 };
 
 // Get current user
 export const useUser = () => {
-  return useQuery(['currentUser'], userService.getCurrentUser, {
+  return useQuery({
+    queryKey: ["currentUser"],
+    queryFn: userService.getCurrentUser,
     retry: false,
     refetchOnWindowFocus: false,
   });
