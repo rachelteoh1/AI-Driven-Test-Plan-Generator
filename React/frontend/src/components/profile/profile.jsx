@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react";
+import { useUserProfile, useUpdateProfile } from "../../hook/useProfile";
 import styled from "styled-components"
 import { Input } from "../ui/input"
 import { Label } from "../ui/label"
@@ -98,28 +99,56 @@ const SaveButtonWrapper = styled.div`
 `
 
 export function Profile() {
-  const [darkMode, setDarkMode] = useState(false)
-  const [autoSave, setAutoSave] = useState(false)
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [dateJoined, setDateJoined] = useState("")
-  const [role, setRole] = useState("")
+  const { data: profile, isLoading } = useUserProfile();
+  const updateProfile = useUpdateProfile();
+  const { showModal, hideModal } = useModal();
 
-  const { showModal, hideModal } = useModal()
+  const [darkMode, setDarkMode] = useState(false);
+  const [autoSave, setAutoSave] = useState(true);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [dateJoined, setDateJoined] = useState("");
+  const [role, setRole] = useState("");
+
+  // Load profile into form
+  useEffect(() => {
+    if (profile) {
+      setName(profile.username || "");
+      setEmail(profile.email || "");
+      setDateJoined(profile.date_joined?.split("T")[0] || ""); // e.g., "2025-06-01T12:00:00Z" → "2025-06-01"
+      setRole(profile.role || "");
+      setDarkMode(profile.pref_darkmode || false);
+      setAutoSave(profile.pref_autosave || false);
+    }
+  }, [profile]);
 
   const handleSave = () => {
-    showModal({
-      modal: (
-        <TickedModal
-          title="Changes Saved!"
-          description="Your profile settings have been updated successfully."
-        />
-      ),
-    })
-    setTimeout(() => {
-      hideModal()
-    }, 2500)
-  }
+    const updated = {
+      username: name,
+      email,
+      role,
+      pref_darkmode: darkMode,
+      pref_autosave: autoSave,
+    };
+
+    updateProfile.mutate(updated, {
+      onSuccess: () => {
+        showModal({
+          modal: (
+            <TickedModal
+              title="Changes Saved!"
+              description="Your profile settings have been updated successfully."
+            />
+          ),
+        });
+        setTimeout(() => {
+          hideModal();
+        }, 2500);
+      },
+    });
+  };
+
+  if (isLoading) return <div>Loading profile...</div>;
 
   return (
     <Wrapper>
@@ -136,7 +165,7 @@ export function Profile() {
               <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
-                placeholder={name || "Your Name"}
+                placeholder={profile?.username || "Your Name"}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -146,7 +175,7 @@ export function Profile() {
               <Input
                 id="email"
                 type="email"
-                placeholder={email || "Your Email Address"}
+                placeholder={profile?.email || "Your Email Address"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -158,7 +187,7 @@ export function Profile() {
               <Label htmlFor="dateJoined">Date Joined</Label>
               <Input
                 id="dateJoined"
-                placeholder={dateJoined || "14/5/2025"}
+                placeholder={profile?.date_joined?.split("T")[0] || "14/5/2025"}
                 value={dateJoined}
                 disabled
               />
@@ -167,7 +196,7 @@ export function Profile() {
               <Label htmlFor="role">Role</Label>
               <Input
                 id="role"
-                placeholder={role || "Your Role"}
+                placeholder={profile?.role || "Your Role"}
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
               />

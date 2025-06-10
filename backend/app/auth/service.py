@@ -69,7 +69,7 @@ def register_user(db: Session, register_user_request: models.RegisterUserRequest
         new_user = User(
             id=uuid4(),
             email=register_user_request.email,
-            password_hash=get_password_hash(register_user_request.password)
+            password_hash=get_password_hash(register_user_request.password),
             
             username=None,
             date_joined=datetime.utcnow(),
