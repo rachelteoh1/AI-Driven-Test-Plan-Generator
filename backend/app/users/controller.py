@@ -12,10 +12,14 @@ router = APIRouter(
 def get_current_user(current_user: CurrentUser, db: DbSession):
     return service.get_user_by_id(db, current_user.get_uuid())
 
-@router.put("/change-password", status_code=status.HTTP_200_OK)
-def change_password(
-    password_change: models.PasswordChange,
-    db: DbSession,
-    current_user: CurrentUser
-):
-    service.change_password(db, current_user.get_uuid(), password_change)
+@router.post("/reset-password")
+def request_password_reset(request: models.PasswordResetRequest, db: DbSession):
+    return service.handle_reset_request(db, request)
+
+
+
+@router.post("/reset-password/confirm")
+def confirm_password_reset(data: models.PasswordResetConfirm, db: DbSession):
+    service.reset_password_confirm(db, data)
+    return {"message": "Password reset successful."}
+

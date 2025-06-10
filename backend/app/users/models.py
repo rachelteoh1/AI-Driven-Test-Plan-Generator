@@ -4,8 +4,11 @@ from uuid import UUID
 class UserResponse(BaseModel):
     id: UUID
     email: EmailStr
+    
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
 
-class PasswordChange(BaseModel):
-    current_password: str
+class PasswordResetConfirm(BaseModel):
+    token: str
     new_password: str
-    new_password_confirm: str
+    confirm_password: str

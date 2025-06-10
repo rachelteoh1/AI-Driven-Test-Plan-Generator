@@ -11,6 +11,7 @@ import TickedModal from '../modal/TickModal';
 import useModal from '../modal/useModal';
 import Logo from "../assets/keysight.png"
 import AuthLayout from "../components/reusable/AuthLayout"
+import { useConfirmResetPassword } from '../hook/useUser';
 
 const TextMdSemiBold = styled.p`
     font-size: ${FONTSIZE['3xl']};
@@ -56,6 +57,7 @@ export default function ConfirmPwPage() {
     const navigate = useNavigate();
     const location = useLocation();
     const { showModal, hideModal } = useModal();
+    const { mutate: confirmResetPassword } = useConfirmResetPassword();
 
     const handleTogglePasswordVisibility = () => {
         setShowPassword((prevShowPassword) => !prevShowPassword);
@@ -79,22 +81,9 @@ export default function ConfirmPwPage() {
 
         if (!token) {
             setExpired(true);
-            return;
-        }
-
-        try {
-            const decoded = atob(token); // Decode base64
-            const [email, timestamp] = decoded.split(':');
-            const expiryLimit = 60 * 60 * 1000; // 1 hour
-            const now = Date.now();
-
-            if (now - Number(timestamp) > expiryLimit) {
-                setExpired(true);
-            }
-        } catch (err) {
-            setExpired(true); // Handle malformed token
         }
     }, [location.search]);
+
 
     // If expired, show modal and redirect
     useEffect(() => {
@@ -118,35 +107,47 @@ export default function ConfirmPwPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitted(true);
-
         const formErrors = FormValidation(values);
+
         if (expired) {
             setErrors({ confirmPassword: "This reset link has expired." });
             return;
         }
 
         if (Object.keys(formErrors).length === 0) {
-            // Update new password to database
-            showModal({
-                modal: (
-                    <TickedModal
-                        title="Reset Password Success!"
-                        description="Sign in with your new password."
-                    />
-                ),
-            });
+            const token = new URLSearchParams(location.search).get("token");
 
-            setTimeout(() => {
-                hideModal();
-            }, 2500);
-
-            setTimeout(() => {
-                navigate('/signin');
-            }, 2500);
+            confirmResetPassword(
+                {
+                    token,
+                    new_password: values.password,
+                    confirm_password: values.confirmPassword,
+                },
+                {
+                    onSuccess: () => {
+                        showModal({
+                            modal: (
+                                <TickedModal
+                                    title="Reset Password Success!"
+                                    description="Sign in with your new password."
+                                />
+                            ),
+                        });
+                        setTimeout(() => {
+                            hideModal();
+                            navigate('/signin');
+                        }, 2500);
+                    },
+                    onError: () => {
+                        setErrors({ confirmPassword: "Failed to reset password. Try again." });
+                    },
+                }
+            );
         } else {
             setErrors(formErrors);
         }
     };
+
 
     return (
         <AuthLayout>
