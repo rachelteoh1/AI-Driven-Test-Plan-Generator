@@ -1,21 +1,16 @@
 from fastapi import APIRouter, status
-from uuid import UUID
-
 from ..database import DbSession
-from . import models
-from . import service
 from ..auth.service import CurrentUser
+from . import service, models
 
 router = APIRouter(
     prefix="/users",
     tags=["Users"]
 )
 
-
 @router.get("/currentUser", response_model=models.UserResponse)
 def get_current_user(current_user: CurrentUser, db: DbSession):
     return service.get_user_by_id(db, current_user.get_uuid())
-
 
 @router.put("/change-password", status_code=status.HTTP_200_OK)
 def change_password(
@@ -24,15 +19,3 @@ def change_password(
     current_user: CurrentUser
 ):
     service.change_password(db, current_user.get_uuid(), password_change)
-
-@router.get("/profile", response_model=models.UserProfileResponse)
-def get_user_profile(current_user: CurrentUser, db: DbSession):
-    return service.get_user_by_id(db, current_user.get_uuid())  # or make separate profile function
-
-@router.put("/profile", response_model=models.UserProfileResponse)
-def update_user_profile(
-    update: models.UserProfileUpdate,
-    db: DbSession,
-    current_user: CurrentUser
-):
-    return service.update_user_profile(db, current_user.get_uuid(), update)
