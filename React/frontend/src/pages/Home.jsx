@@ -112,16 +112,10 @@ const ExampleButton = styled.button`
   }
 `;
 export const Home = ({chats, activeChatId, setActiveChatId}) => {
-  const { user } = useContext(UserStatusContext); 
+  const { user ,isLoading} = useContext(UserStatusContext); 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!user) {
-      navigate("/signin");
-    }
-  }, [user, navigate]);
  
 
   const { data: activeChatLogs = [] } = useChatLogs(activeChatId);
@@ -130,10 +124,10 @@ export const Home = ({chats, activeChatId, setActiveChatId}) => {
   const deleteChatMutation = useDeleteChat();
   const addChatLogMutation = useAddChatLog();
 
-  const isLoading = newChatMutation.isLoading || addChatLogMutation.isLoading;
+  // const isLoading = newChatMutation.isLoading || addChatLogMutation.isLoading;
 
   useEffect(() => {
-    if (searchParams.get("newchat") === "true") {
+    if (!isLoading && user && searchParams.get("newchat") === "true") {
       handleNewChat();
       searchParams.delete("newchat");
       setSearchParams(searchParams);
@@ -184,27 +178,30 @@ export const Home = ({chats, activeChatId, setActiveChatId}) => {
       return false;
     }
   };
-
+const [isReplyLoading, setIsReplyLoading] = useState(false);
   const handleSendMessage = async (message) => {
-    try {
-      await addChatLogMutation.mutateAsync({
-        session_id: activeChatId,
-        role: "user",
-        content: message,
-      });
+  setIsReplyLoading(true);
+  try {
+    await addChatLogMutation.mutateAsync({
+      session_id: activeChatId,
+      role: "user",
+      content: message,
+    });
 
-      // Optional: simulate assistant response
-      setTimeout(() => {
-        addChatLogMutation.mutateAsync({
-          session_id: activeChatId,
-          role: "llm_response",
-          content: `You said: "${message}"`,
-        });
-      }, 1000);
-    } catch (err) {
-      console.error("Message send failed:", err);
-    }
-  };
+    setTimeout(() => {
+      console.log("Sending LLM response...");
+      addChatLogMutation.mutateAsync({
+        session_id: activeChatId,
+        role: "llm_response",
+        content: `You said: "${message}"`,
+      });
+      setIsReplyLoading(false); 
+    }, 1000);
+  } catch (err) {
+    console.error("Message send failed:", err);
+    setIsReplyLoading(false); // ensure reset on error too
+  }
+};
 
   const activeChat = chats.find((chat) => chat.session_id === activeChatId);
   const hasConversation = activeChatLogs.length > 0;
@@ -257,7 +254,7 @@ export const Home = ({chats, activeChatId, setActiveChatId}) => {
                 messages: activeChatLogs,
               }}
               onSendMessage={handleSendMessage}
-              isLoading={isLoading}
+              isLoading={isReplyLoading}
             />
           </ChatWrapper>
         </MainContent>

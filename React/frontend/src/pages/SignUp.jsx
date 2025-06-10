@@ -124,12 +124,13 @@ export default function SignInPage() {
                 }, 2500);
             },
             onError: (error) => {
-                alert("Sign Up failed: " + error.message);
+              const msg = error.response?.data?.detail || "Sign Up failed";
+               // alert("Sign Up failed: " + error.message);
                 showModal({
                     modal: (
                         <CrossedModal
                             title="Sign Up Failed!"
-                            description="Please try again!"
+                            description={msg}
                             hideModal={hideModal}
                         />
                     ),

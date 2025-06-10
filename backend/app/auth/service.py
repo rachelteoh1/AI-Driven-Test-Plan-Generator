@@ -13,6 +13,8 @@ from . import models
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from ..exceptions import AuthenticationError
 import logging
+from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 
 load_dotenv()
@@ -33,11 +35,14 @@ def get_password_hash(password: str) -> str:
     return bcrypt_context.hash(password)
 
 
-def authenticate_user(email: str, password: str, db: Session) -> User | bool:
+def authenticate_user(email, password, db):
     user = db.query(User).filter(User.email == email).first()
-    if not user or not verify_password(password, user.password_hash):
-        logging.warning(f"Failed authentication attempt for email: {email}")
-        return False
+    if not user:
+        # email not found
+        raise HTTPException(status_code=404, detail="User not found. Please create an account before sign in.")
+    if not verify_password(password, user.password_hash):
+        # wrong password
+        raise HTTPException(status_code=401, detail="Incorrect password.")
     return user
 
 
@@ -58,20 +63,33 @@ def verify_token(token: str) -> models.TokenData:
     except PyJWTError as e:
         logging.warning(f"Token verification failed: {str(e)}")
         raise AuthenticationError()
-
-
-def register_user(db: Session, register_user_request: models.RegisterUserRequest) -> None:
+    
+def register_user(db: Session, register_user_request: models.RegisterUserRequest):
     try:
-        create_user_model = User(
+        new_user = User(
             id=uuid4(),
             email=register_user_request.email,
             password_hash=get_password_hash(register_user_request.password)
-        )    
-        db.add(create_user_model)
+        )
+        db.add(new_user)
         db.commit()
+        #return new_user
+
+    except IntegrityError:
+        db.rollback()
+        logging.warning(f"Attempted to register duplicate email: {register_user_request.email}")
+        raise HTTPException(
+            status_code=409,
+            detail="Email is already registered."
+        )
+
     except Exception as e:
+        db.rollback()
         logging.error(f"Failed to register user: {register_user_request.email}. Error: {str(e)}")
-        raise
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred during registration."
+        )
     
     
 def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]) -> models.TokenData:

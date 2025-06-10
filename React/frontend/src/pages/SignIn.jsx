@@ -125,18 +125,18 @@ export default function SignInPage() {
         setTimeout(() => {
           navigate("/home");
           hideModal();
-        }, 1500);
+        }, 1000);
 
       
       },
 
       onError: (error) => {
-        alert("Login failed: " + error.message);
+        const msg = error.response?.data?.detail || "Sign In failed";
         showModal({
           modal: (
             <CrossedModal
               title="Sign In Failed!"
-              description="Please try it again!"
+              description={msg}
               hideModal={hideModal}
             />
           ),

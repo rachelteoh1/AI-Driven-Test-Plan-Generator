@@ -52,15 +52,30 @@ export const useChatLogs = (sessionId) => {
 };
 export const useAddChatLog = () => {
   const queryClient = useQueryClient();
-  return useMutation( {
+
+  return useMutation({
     mutationFn: service.addChatLog,
-    onSuccess: (_, variables) => {
-      // Invalidate logs for the session
-      //After it succeeds, it tells React Query to refetch chat logs for that session (invalidateQueries) so the UI gets updated automatically with the new message.
+    onMutate: async (newMessage) => {
+      await queryClient.cancelQueries(['chatLogs', newMessage.session_id]);
+
+      const previousMessages = queryClient.getQueryData(['chatLogs', newMessage.session_id]);
+
+      queryClient.setQueryData(['chatLogs', newMessage.session_id], (old) => [
+        ...(old || []),
+        { ...newMessage, message_id: Date.now() }, // fake id for optimistic update
+      ]);
+
+      return { previousMessages };
+    },
+    onError: (_err, newMessage, context) => {
+      queryClient.setQueryData(['chatLogs', newMessage.session_id], context.previousMessages);
+    },
+    onSettled: (_data, _err, variables) => {
       queryClient.invalidateQueries(['chatLogs', variables.session_id]);
     },
   });
 };
+
 
 export const useDeleteChatLog = () => {
   const queryClient = useQueryClient();
