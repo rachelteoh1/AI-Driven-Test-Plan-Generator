@@ -1,5 +1,5 @@
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { useContext, useEffect, useState } from 'react';
+import { useContext,  useState } from 'react';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
@@ -61,12 +61,12 @@ const RowContainer = styled.div`
 `;
 
 export default function SignInPage() {
-    const [submitted, setSubmitted] = useState(true);
+    const [submitted] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
     const [isFormValid,setIsFormValid] = useState(false);
 
     const navigate = useNavigate();
-    const { setUserStatus, isLogin } = useContext(UserStatusContext);
+
 
     const signInMutation = useSignIn();
     const { showModal,hideModal } = useModal();
@@ -107,15 +107,11 @@ export default function SignInPage() {
   }
   setIsFormValid(true);
 
+
   signInMutation.mutate(
     { username: values.emailTel , password: values.password},
     {
       onSuccess: () => {
-        setUserStatus((prevStatus) => ({
-          ...prevStatus,
-          isLogin: true,
-        }));
-
         showModal({
           modal: (
             <TickedModal
@@ -127,9 +123,11 @@ export default function SignInPage() {
         });
 
         setTimeout(() => {
-          hideModal();
           navigate("/home");
+          hideModal();
         }, 1500);
+
+      
       },
 
       onError: (error) => {

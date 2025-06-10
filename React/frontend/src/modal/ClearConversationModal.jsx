@@ -5,7 +5,8 @@ import { COLORS, FONTSIZE, FONTWEIGHT } from "../lib/styles";
 
 import { Button } from "@mui/material";
 import TickedModal from "./TickModal";
-import CrossedModal from "./CrossedModal"; 
+import CrossedModal from "./CrossedModal";
+import { useDeleteChatLog } from "../hook/useChat";
 
 // Styled components
 const CenteredDiv = styled.div`
@@ -33,32 +34,38 @@ const RowDiv = styled.div`
   gap: 5rem;
 `;
 
-
-
-export default function ClearModal({ title, onSetChat, activeChat,hideModal }) {
+export default function ClearModal({
+  title,
+  // onSetChat,
+  activeChat,
+  hideModal,
+}) {
   const [status, setStatus] = useState(null);
+  const clearChatLogMutation = useDeleteChatLog();
+
 
   const handleClear = () => {
-    try {
-      if (!activeChat) {
-        setStatus("fail");
-        return;
-      }
-
-      onSetChat((prevChats) =>
-        prevChats.map((chat) =>
-          chat.id === activeChat.id ? { ...chat, messages: [] } : chat
-        )
-      );
-
+    if (!activeChat) {
+      setStatus("fail");
+      return;
+    }
+   try {
+     clearChatLogMutation.mutateAsync(activeChat.session_id);
       setStatus("success");
-    } catch (error) {
+     
+    } catch (err) {
+      console.error("Delete failed", err);
       setStatus("fail");
     }
-  };
+  }
 
   if (status === "success") {
-    return <TickedModal title="Conversation cleared successfully!" hideModal={hideModal}/>;
+    return (
+      <TickedModal
+        title="Conversation cleared successfully!"
+        hideModal={hideModal}
+      />
+    );
   }
 
   if (status === "fail") {
@@ -75,10 +82,18 @@ export default function ClearModal({ title, onSetChat, activeChat,hideModal }) {
     <CenteredDiv>
       {title && <Title>{title}</Title>}
       <RowDiv>
-        <Button onClick={hideModal} variant="contained" sx={{ backgroundColor: COLORS.greyblue }}>
+        <Button
+          onClick={hideModal}
+          variant="contained"
+          sx={{ backgroundColor: COLORS.greyblue }}
+        >
           Cancel
         </Button>
-        <Button onClick={handleClear} variant="contained" sx={{ backgroundColor: COLORS.red }}>
+        <Button
+          onClick={handleClear}
+          variant="contained"
+          sx={{ backgroundColor: COLORS.red }}
+        >
           Clear
         </Button>
       </RowDiv>
