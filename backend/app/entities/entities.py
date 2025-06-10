@@ -48,11 +48,9 @@ class OptimizedTestSequence(Base):
     __tablename__ = "optimized_test_sequence"
 
     sequence_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    message_id = Column(UUID(as_uuid=True), ForeignKey("chat_logs.message_id"), nullable=False) # FK to chatlog
+    message_id = Column(UUID(as_uuid=True), ForeignKey("chat_logs.message_id"), nullable=False)
     created_date = Column(DateTime, default=datetime.utcnow)
-
-    # is_optimized = Column(Boolean, default=False)
-    # optimization_explanation = Column(Text, nullable=True)
+    instrument = Column(String)
 
 
 class ScpiCommand(Base):
@@ -62,6 +60,15 @@ class ScpiCommand(Base):
     sequence_id = Column(UUID(as_uuid=True), ForeignKey("optimized_test_sequence.sequence_id"), nullable=False)
     command_text= Column(Text)
     order_index = Column(Integer)
+    
+class OptimizationExplanation(Base):
+    __tablename__ = "optimization_explanation"
+
+    explanation_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sequence_id = Column(UUID(as_uuid=True), ForeignKey("optimized_test_sequence.sequence_id"), nullable=False)
+    explanation_text = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 
 class Dashboard(Base):
     __tablename__ = "dashboard"

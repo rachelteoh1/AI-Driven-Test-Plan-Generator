@@ -1,5 +1,5 @@
-from typing import List
-from ..entities.entities import OptimizedTestSequence, ScpiCommand
+from typing import List, Tuple
+from ..entities.entities import OptimizedTestSequence, ScpiCommand, OptimizationExplanation
 from datetime import datetime
 from uuid import UUID, uuid4
 from fastapi import Depends
@@ -56,42 +56,57 @@ def get_sequence_with_commands(db: Session, sequence_id: UUID):
         logger.error(f"Failed to retrieve sequence {sequence_id}: {str(e)}")
         raise InternalServerError(str(e))
     
-# def optimize_commands_with_llm(commands: List[ScpiCommand]):
-#     """
-#     Simulate LLM optimization.
-#     Replace with real LLM call (OpenAI, Ollama, etc.)
-#     """
-#     # Sample logic: Remove duplicate command_text
-#     seen = set()
-#     optimized = []
-#     explanation = []
+def optimize_sequence(db: Session, sequence_id: UUID, instrument: str) -> Tuple[OptimizedTestSequence, List[ScpiCommand], OptimizationExplanation]:
+    try:
+        # Step 1: Fetch original
+        data = get_sequence_with_commands(db, sequence_id)
+        original_commands = data["commands"]
 
-#     for i, cmd in enumerate(commands):
-#         if cmd.command_text not in seen:
-#             seen.add(cmd.command_text)
-#             optimized.append(cmd)
-#         else:
-#             explanation.append(f"Removed duplicate command at index {cmd.order_index}: {cmd.command_text}")
+        # Step 2: Apply optimization logic (you can replace this with LLM logic)
+        optimized_commands = []
+        seen = set()
+        for cmd in original_commands:
+            if cmd.command_text not in seen:
+                seen.add(cmd.command_text)
+                optimized_commands.append(cmd)
 
-#     return optimized, "\n".join(explanation) or "No redundant commands found."
+        # Step 3: Resequence
+        for idx, cmd in enumerate(optimized_commands):
+            cmd.order_index = idx
 
+        # Step 4: Create new sequence entry
+        new_sequence = OptimizedTestSequence(
+            sequence_id=uuid4(),
+            message_id=data["sequence"].message_id,
+            created_date=datetime.utcnow(),
+            instrument=instrument
+        )
+        db.add(new_sequence)
+        db.flush()
 
-# def update_sequence_with_optimized_results(db: Session, sequence_id: UUID, optimized_commands: List[ScpiCommand], explanation: str):
-#     # Delete old commands
-#     db.query(ScpiCommand).filter_by(sequence_id=sequence_id).delete()
+        # Step 5: Store optimized commands
+        for cmd in optimized_commands:
+            new_cmd = ScpiCommand(
+                command_id=uuid4(),
+                sequence_id=new_sequence.sequence_id,
+                command_text=cmd.command_text,
+                order_index=cmd.order_index,
+            )
+            db.add(new_cmd)
 
-#     # Insert optimized commands
-#     for i, cmd in enumerate(optimized_commands):
-#         db.add(ScpiCommand(
-#             command_id=uuid4(),
-#             sequence_id=sequence_id,
-#             command_text=cmd.command_text,
-#             order_index=i
-#         ))
+        # Step 6: Generate and store explanation
+        explanation_text = f"{len(original_commands) - len(optimized_commands)} redundant commands removed."
+        explanation = OptimizationExplanation(
+            explanation_id=uuid4(),
+            sequence_id=new_sequence.sequence_id,
+            explanation_text=explanation_text,
+        )
+        db.add(explanation)
 
-#     # Update sequence metadata
-#     sequence = db.query(OptimizedTestSequence).filter_by(sequence_id=sequence_id).first()
-#     sequence.is_optimized = True
-#     sequence.optimization_explanation = explanation
+        db.commit()
+        return new_sequence, optimized_commands, explanation
 
-#     db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to optimize sequence {sequence_id}: {str(e)}")
+        raise InternalServerError(str(e))
