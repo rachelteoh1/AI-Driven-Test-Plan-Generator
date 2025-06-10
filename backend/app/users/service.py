@@ -38,3 +38,24 @@ def change_password(db: Session, user_id: UUID, password_change: models.Password
     except Exception as e:
         logging.error(f"Error during password change for user ID: {user_id}. Error: {str(e)}")
         raise
+
+def update_user_profile(db: Session, user_id: UUID, update: models.UserProfileUpdate) -> models.UserProfileResponse:
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        logging.warning(f"User not found with ID: {user_id}")
+        raise UserNotFoundError(user_id)
+
+    # Optional: Check for email conflicts
+    if update.email and update.email != user.email:
+        email_exists = db.query(User).filter(User.email == update.email).first()
+        if email_exists:
+            raise HTTPException(status_code=400, detail="Email already in use.")
+
+    # Update fields
+    for field, value in update.dict(exclude_unset=True).items():
+        setattr(user, field, value)
+
+    db.commit()
+    db.refresh(user)
+    logging.info(f"Updated profile for user ID: {user_id}")
+    return user

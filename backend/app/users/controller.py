@@ -24,3 +24,15 @@ def change_password(
     current_user: CurrentUser
 ):
     service.change_password(db, current_user.get_uuid(), password_change)
+
+@router.get("/profile", response_model=models.UserProfileResponse)
+def get_user_profile(current_user: CurrentUser, db: DbSession):
+    return service.get_user_by_id(db, current_user.get_uuid())  # or make separate profile function
+
+@router.put("/profile", response_model=models.UserProfileResponse)
+def update_user_profile(
+    update: models.UserProfileUpdate,
+    db: DbSession,
+    current_user: CurrentUser
+):
+    return service.update_user_profile(db, current_user.get_uuid(), update)

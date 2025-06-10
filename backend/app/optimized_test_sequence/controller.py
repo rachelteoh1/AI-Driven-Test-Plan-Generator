@@ -65,3 +65,33 @@ async def read_sequence(
     return response
 
 
+# @router.post("/optimize", response_model=models.OptimizeSequenceResponse)
+# async def optimize_sequence(
+#     request: models.OptimizeSequenceRequest,
+#     db: DbSession,
+# ):
+#     data = service.get_sequence_with_commands(db, request.sequence_id)
+#     if not data:
+#         raise HTTPException(status_code=404, detail="Sequence not found")
+
+#     commands = data["commands"]
+
+#     # ✨ Pass to LLM for optimization (simulate for now)
+#     optimized_commands, explanation = service.optimize_commands_with_llm(commands)
+
+#     # ✍️ Update DB
+#     service.update_sequence_with_optimized_results(
+#         db, request.sequence_id, optimized_commands, explanation
+#     )
+
+#     return models.OptimizeSequenceResponse(
+#         sequence_id=request.sequence_id,
+#         optimized_commands=[
+#             models.ScpiCommandResponse(
+#                 command_id=cmd.command_id,
+#                 command_text=cmd.command_text,
+#                 order_index=cmd.order_index
+#             ) for cmd in optimized_commands
+#         ],
+#         explanation=explanation
+#     )

@@ -65,7 +65,14 @@ def register_user(db: Session, register_user_request: models.RegisterUserRequest
         create_user_model = User(
             id=uuid4(),
             email=register_user_request.email,
-            password_hash=get_password_hash(register_user_request.password)
+            password_hash=get_password_hash(register_user_request.password),
+            
+            username=None,
+            date_joined=datetime.utcnow(),
+            role="user",
+            pref_darkmode=False,
+            pref_autosave=True,
+
         )    
         db.add(create_user_model)
         db.commit()

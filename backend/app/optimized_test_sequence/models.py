@@ -13,8 +13,6 @@ class SequenceCreateRequest(BaseModel):
     message_id: UUID   
     commands: List[ScpiCommandCreateRequest]
 
-
-
 class ScpiCommandResponse(BaseModel):
     command_id: UUID
     command_text: str
@@ -25,3 +23,11 @@ class SequenceResponse(BaseModel):
     message_id: UUID
     created_date: datetime
     commands: List[ScpiCommandResponse]
+    
+# class OptimizeSequenceRequest(BaseModel):
+#     sequence_id: UUID
+
+# class OptimizeSequenceResponse(BaseModel):
+#     sequence_id: UUID
+#     optimized_commands: List[ScpiCommandResponse]
+#     explanation: str
