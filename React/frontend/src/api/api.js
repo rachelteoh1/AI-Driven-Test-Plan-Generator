@@ -15,7 +15,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const requestUrl = error.config?.url;
+    if (error.response?.status === 401 && !requestUrl.includes("/auth/token")) {
       // Clear token or any auth state you have
       localStorage.removeItem("access_token");
       // Redirect to sign-in page immediately
