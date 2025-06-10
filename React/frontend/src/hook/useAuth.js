@@ -17,10 +17,11 @@ export const useSignIn = () => {
     mutationFn: authService.loginUserforToken,
     onSuccess: () => {
       queryClient.invalidateQueries(["currentUser"] ); // refetch user after login
+      
     },
   });
 };
-
+const token = localStorage.getItem('access_token');
 // Get current user
 export const useUser = () => {
   return useQuery({
@@ -28,6 +29,7 @@ export const useUser = () => {
     queryFn: userService.getCurrentUser,
     retry: false,
     refetchOnWindowFocus: false,
+    enabled: !!token
   });
 };
 

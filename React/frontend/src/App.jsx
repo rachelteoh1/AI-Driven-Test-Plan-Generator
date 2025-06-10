@@ -18,13 +18,7 @@ function App() {
 
   const { user } = useContext(UserStatusContext); // <-- assuming your `user` object comes from context
 
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!user) {
-      navigate("/signin");
-    }
-  }, [user, navigate]);
+  
 
   const safeUserId =
     typeof user?.id === "string" ? user.id : user?.id?.id || "";
