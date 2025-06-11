@@ -133,9 +133,11 @@ export function DashboardContent() {
     month,
   } = data;
 
-  const metricsData = data.weekly_stats.map((item, index) => ({
-  week: `Week ${data.weekly_stats.length - index}`,
-  value: item.minutes_saved,
+  const metricsData = [...data.weekly_stats]
+  .reverse()
+  .map((item, index) => ({
+    week: `Week ${index + 1}`,
+    value: item.minutes_saved,
 }));
 
 
