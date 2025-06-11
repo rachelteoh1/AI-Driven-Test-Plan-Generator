@@ -1,54 +1,73 @@
 "use client"
 
 import { useState } from "react"
+import styled from "styled-components"
 import { Header } from "../header"
 import { Profile } from "./profile"
 import { DashboardContent } from "./dashboard-content"
 
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+`
+
+const TabWrapper = styled.div`
+  padding: 0 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+`
+
+const Tabs = styled.div`
+  width: 100%;
+  max-width: 28rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+`
+
+const TabButton = styled.button`
+  padding: 1rem 0;
+  text-align: center;
+  font-weight: 500;
+  border-bottom: 2px solid
+    ${(props) => (props.active ? "#3B82F6" : "transparent")};
+  color: ${(props) => (props.active ? "#2563EB" : "#6B7280")};
+  background: transparent;
+  cursor: pointer;
+`
+
+const Content = styled.div`
+  flex: 1;
+  padding: 2.5rem;
+  overflow: auto;
+  background-color: #f9fafb;
+`
+
 export function MainDashboard() {
   const [activeTab, setActiveTab] = useState("edit-profile")
 
-  // Function to handle tab changes
-  const handleTabChange = (value) => {
-    setActiveTab(value)
-  }
-
   return (
-    <div className="flex flex-col h-screen">
-      {/* Header Component */}
+    <Container>
       <Header />
-
-      {/* Tabs */}
-      <div className="px-6 border-b border-gray-200">
-        <div className="w-full max-w-md grid grid-cols-2">
-          <button
-            onClick={() => handleTabChange("edit-profile")}
-            className={`py-4 text-center font-medium ${
-              activeTab === "edit-profile"
-                ? "text-blue-600 border-b-2 border-blue-500"
-                : "text-gray-500 border-b-2 border-transparent"
-            }`}
+      <TabWrapper>
+        <Tabs>
+          <TabButton
+            onClick={() => setActiveTab("edit-profile")}
+            active={activeTab === "edit-profile"}
           >
             Edit Profile
-          </button>
-          <button
-            onClick={() => handleTabChange("summary-dashboard")}
-            className={`py-4 text-center font-medium ${
-              activeTab === "summary-dashboard"
-                ? "text-blue-600 border-b-2 border-blue-500"
-                : "text-gray-500 border-b-2 border-transparent"
-            }`}
+          </TabButton>
+          <TabButton
+            onClick={() => setActiveTab("summary-dashboard")}
+            active={activeTab === "summary-dashboard"}
           >
             Summary Dashboard
-          </button>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 p-10 overflow-auto bg-gray-50">
+          </TabButton>
+        </Tabs>
+      </TabWrapper>
+      <Content>
         {activeTab === "edit-profile" && <Profile />}
         {activeTab === "summary-dashboard" && <DashboardContent />}
-      </div>
-    </div>
+      </Content>
+    </Container>
   )
 }

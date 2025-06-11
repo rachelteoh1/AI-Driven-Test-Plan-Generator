@@ -1,5 +1,5 @@
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { useContext, useEffect, useState } from 'react';
+import { useContext,  useState } from 'react';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
@@ -9,9 +9,11 @@ import {FONTSIZE,FONTWEIGHT, COLORS } from "../lib/styles"
 import FormValidation from "../lib/FormValidation"
 import UserStatusContext from '../lib/UserStatusContext';
 import TickedModal from '../modal/TickModal';
+import CrossedModal from '../modal/CrossedModal';
 import useModal from '../modal/useModal';
 import Logo from "../assets/keysight.png"
 import AuthLayout from "../components/reusable/AuthLayout"
+import { useSignIn } from '../hook/useAuth';
 
 
 
@@ -59,13 +61,14 @@ const RowContainer = styled.div`
 `;
 
 export default function SignInPage() {
-    const [submitted, setSubmitted] = useState(false);
+    const [submitted] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
+    const [isFormValid,setIsFormValid] = useState(false);
 
     const navigate = useNavigate();
-    const { setUserStatus, isLogin } = useContext(UserStatusContext);
 
-    // const { login } = useLogin();
+
+    const signInMutation = useSignIn();
     const { showModal,hideModal } = useModal();
 
     const handleTogglePasswordVisibility = () => {
@@ -73,7 +76,7 @@ export default function SignInPage() {
     };
 
     const [values, setValues] = useState({
-        email: '',
+        emailTel: '',
         password: '',
     });
 
@@ -86,69 +89,66 @@ export default function SignInPage() {
             const fieldErrors = FormValidation({ ...values, [name]: value });
             setErrors((prevErrors) => ({ ...prevErrors, [name]: fieldErrors[name] }));
         }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSubmitted(true);
         const formErrors = FormValidation(values);
-
-        if (Object.keys(formErrors).length === 0) {
-            
-        // Simulate successful login
-        setUserStatus((prevStatus) => ({
-            ...prevStatus,
-            isLogin: true,
-             // or true, depending on your mock need
-        }))
-        showModal({
-                modal: (
-                    <TickedModal
-                        title="Sign In Successfully!"
-                        description="Redirecting you to KeysightGPT Chatbot..."
-                    />
-                ),
-            }); 
-            setTimeout(() => {
-                hideModal();
-            }, 2500);
-
-        // Redirect to home
-        navigate('/home');
-            // try {
-            //     const data = await login({ email: values.email, password: values.password });
-            //     setUserStatus((prevStatus) => ({
-            //         ...prevStatus,
-            //         isLogin: true,
-            //         registeredSeller: data.seller,
-            //     }));
-
-            //     // force a page reload while navigating
-            //     window.location.href = '/';
-            // } catch (error) {
-            //     if (error.response.status === 401) {
-            //         showModal({ modal: <CrossedModal title="Invalid email and password combination" /> });
-            //         return;
-            //     }
-            //     showModal({
-            //         modal: (
-            //             <CrossedModal
-            //                 title="Something went wrong"
-            //                 description="We are aware of the problem, please try again later"
-            //             />
-            //         ),
-            //     });
-            
-        } else {
-            setErrors(formErrors);
-        }
+        setIsFormValid(Object.keys(formErrors).length===0)
     };
 
-    useEffect(() => {
-        if (isLogin) {
-            navigate('/home');
-        }
-    }, [isLogin, navigate]);
+    
+    const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  const formErrors = FormValidation(values);
+  
+
+  // Don't attempt login if there are validation errors
+  if (Object.keys(formErrors).length > 0) {
+    setIsFormValid(false);
+    return;
+  }
+  setIsFormValid(true);
+
+
+  signInMutation.mutate(
+    { username: values.emailTel , password: values.password},
+    {
+      onSuccess: () => {
+        showModal({
+          modal: (
+            <TickedModal
+              title="Sign In Successfully!"
+              description="Redirecting you to KeysightGPT Chatbot..."
+              hideModal={hideModal}
+            />
+          ),
+        });
+
+        setTimeout(() => {
+          navigate("/home");
+          hideModal();
+        }, 1000);
+
+      
+      },
+
+      onError: (error) => {
+        const msg = error.response?.data?.detail || "Sign In failed";
+        showModal({
+          modal: (
+            <CrossedModal
+              title="Sign In Failed!"
+              description={msg}
+              hideModal={hideModal}
+            />
+          ),
+        });
+      },
+    }
+  );
+  
+};
+
+
+
 
     return (
      
@@ -205,7 +205,7 @@ export default function SignInPage() {
                     />
 
                     <StyledLink to="/resetpw"><TextSmRegular>Forgot password?</TextSmRegular></StyledLink>
-                    <StyledButton>Submit</StyledButton></div>
+                    <StyledButton type='submit' disabled={!isFormValid}>Submit</StyledButton></div>
                 </form>
 
                 <RowContainer>

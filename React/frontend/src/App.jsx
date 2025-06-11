@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import { Routes, Route } from "react-router-dom";
-
+import React, { useState, useEffect, useContext } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { Home } from "./pages/Home";
 import Interface from "./pages/Conversation";
 import { Profile } from "./pages/Profile";
@@ -11,10 +10,21 @@ import ResetPwPage from "./pages/ResetPw";
 import ConfirmPwPage from "./pages/ConfirmPw";
 import ModalView from "./modal/internal/ModalView";
 import ModalManager from "./modal/internal/ModalManager";
+import UserStatusContext from "./lib/UserStatusContext";
+import { useChats } from "./hook/useChat";
 
 function App() {
-  const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
+
+  const { user } = useContext(UserStatusContext); // <-- assuming your `user` object comes from context
+
+  
+
+  const safeUserId =
+    typeof user?.id === "string" ? user.id : user?.id?.id || "";
+
+  // Hooks
+  const { data: chats = [] } = useChats(safeUserId);
 
   const onSelectChat = (chatId) => {
     setActiveChatId(chatId);
@@ -28,7 +38,6 @@ function App() {
           element={
             <Home
               chats={chats}
-              setChats={setChats}
               activeChatId={activeChatId}
               setActiveChatId={setActiveChatId}
             />
@@ -45,12 +54,12 @@ function App() {
             />
           }
         />
+        <Route path="/" element={<WelcomePage />} />
         <Route path="/interface" element={<Interface />} />
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/resetpw" element={<ResetPwPage />} />
         <Route path="/confirmpw" element={<ConfirmPwPage />} />
-        <Route path="/" element={<WelcomePage />} />
       </Routes>
       <ModalView ref={ModalManager.ref} />
     </>

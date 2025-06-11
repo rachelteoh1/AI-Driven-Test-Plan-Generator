@@ -29,7 +29,6 @@ import {
 } from "./ui/sidebar"
 import { Button } from "./ui/button"
 import { useNavigate, useLocation } from "react-router-dom"
-import ExportModal from "../modal/ExportModal"; // adjust path if needed
 import { useState } from "react";
 import {
   DropdownMenu,
@@ -38,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import useModal from "../modal/useModal";
+import { useLogout } from "../hook/useAuth";
 
 export function AppSidebar({
   chats,
@@ -50,23 +50,13 @@ export function AppSidebar({
 }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const isChatSessionPage = location.pathname.startsWith("/home"); // update if your route is different
-  const [exportModalOpen, setExportModalOpen] = useState(false);
-  const testResults = [
-    { test: 'Voltage Test', result: 'Pass', time: '2.1s' },
-    { test: 'Resistance Test', result: 'Fail', time: '3.5s' },
-  ]; // dummy data, should fetch from chat session later on
   const { showModal, hideModal } = useModal();
+  const logout = useLogout();
   const bottomItems = [
-    {
-      title: "Download result",
-      icon: Download,
-      action: () => setExportModalOpen(true),
-      disabled: !isChatSessionPage,
-    },
     {
       title: "Search Chat",
       icon: Search,
+      // disabled: !isChatSessionPage,
       action: () => {
         showModal({
           modal: (
@@ -83,6 +73,7 @@ export function AppSidebar({
     {
       title: "Clear conversations",
       icon: Trash2,
+      // disabled: !isChatSessionPage,
       action: () => {
         showModal({
           modal: (
@@ -106,7 +97,8 @@ export function AppSidebar({
     {
       title: "Log out",
       icon: LogOut,
-      action: () => navigate("/"),
+      action: () => {logout(); 
+        navigate("/");}
     },
   ];
 
@@ -127,13 +119,13 @@ export function AppSidebar({
           <SidebarGroupContent>
             <SidebarMenu className="list-none">
               {(chats ?? []).map((chat) => (
-                <SidebarMenuItem key={chat.id} className="list-none">
+                <SidebarMenuItem key={chat.session_id} className="list-none">
                   <ChatItem
                     chat={chat}
-                    isActive={activeChat?.id === chat.id}
-                    onSelect={() => onSelectChat(chat.id)}
-                    onRename={(newName) => onRenameChat(chat.id, newName)}
-                    onDelete={(id) => onDeleteChat(id)}
+                    isActive={activeChat?.session_id === chat.session_id}
+                    onSelect={() => onSelectChat(chat.session_id)}
+                    onRename={(newName) => onRenameChat(chat.session_id, newName)}
+                    onDelete={(session_id) => onDeleteChat(session_id)}
                   />
                 </SidebarMenuItem>
               ))}
@@ -164,11 +156,6 @@ export function AppSidebar({
           ))}
         </SidebarMenu>
       </SidebarFooter>
-      <ExportModal
-        open={exportModalOpen}
-        onClose={() => setExportModalOpen(false)}
-        testData={testResults}
-      />
     </Sidebar>
   );
 }
@@ -198,7 +185,7 @@ function ChatItem({ chat, isActive, onSelect, onRename, onDelete }) {
 
           />
         ) : (
-          <span className="truncate text-sm">{chat.name}</span>
+          <span className="truncate text-sm">{chat.title}</span>
         )}
       </div>
 

@@ -43,7 +43,7 @@ export default function DeleteModal({ chat, onDelete ,hideModal}) {
 
   const handleDelete = async () => {
     try {
-      const result = await onDelete(chat.id); 
+      const result = await onDelete(chat.session_id); 
       if (result) {
         setStatus("success");
       } else {

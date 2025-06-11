@@ -1,175 +1,254 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react";
+import { useUserProfile, useUpdateProfile } from "../../hook/useProfile";
+import styled from "styled-components"
 import { Input } from "../ui/input"
 import { Label } from "../ui/label"
 import { Button } from "../ui/button"
 import { User } from "lucide-react"
-import useModal from '../../modal/useModal';
-import TickedModal from '../../modal/TickModal';
+import useModal from "../../modal/useModal"
+import TickedModal from "../../modal/TickModal"
+
+// Styled Components
+const Wrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100%;
+  width: 100%;
+`
+
+const FormContainer = styled.div`
+  width: 100%;
+  max-width: 48rem; /* ~768px */
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+`
+
+const AvatarWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+`
+
+const Avatar = styled.div`
+  width: 3rem;
+  height: 3rem;
+  background-color: white;
+  border: 4px solid #d1d5db; /* gray-300 */
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`
+
+const FieldRow = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3rem;
+`
+
+const FieldWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`
+
+const ToggleWrapper = styled.div`
+  padding-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`
+
+const ToggleRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`
+
+const SwitchWrapper = styled.div`
+  position: relative;
+`
+
+const SwitchBackground = styled.div`
+  width: 3rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background-color: ${props => (props.active ? "#3B82F6" : "#D1D5DB")}; /* blue-500 or gray-300 */
+  transition: background-color 0.3s;
+`
+
+const SwitchThumb = styled.div`
+  position: absolute;
+  top: 0.125rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  background-color: white;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
+  transform: ${props => (props.active ? "translateX(1.5rem)" : "translateX(0.125rem)")};
+  transition: transform 0.3s ease-in-out;
+`
+
+const SaveButtonWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  padding-top: 0.25rem;
+`
 
 export function Profile() {
-  const [darkMode, setDarkMode] = useState(false)
-  const [autoSave, setAutoSave] = useState(false)
-
-  // Input states
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [dateJoined, setDateJoined] = useState("")
-  const [role, setRole] = useState("")
-
-  // Modal state
+  const { data: profile, isLoading } = useUserProfile();
+  const updateProfile = useUpdateProfile();
   const { showModal, hideModal } = useModal();
 
-  // Handle Save button click
-  const handleSave = () => {
-    showModal({
-      modal: (
-        <TickedModal
-          title="Changes Saved!"
-          description="Your profile settings have been updated successfully."
-        />
-      ),
-    });
-    setTimeout(() => {
-      hideModal();
-    }, 2500);
-  }
+  const [darkMode, setDarkMode] = useState(false);
+  const [autoSave, setAutoSave] = useState(true);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [dateJoined, setDateJoined] = useState("");
+  const [role, setRole] = useState("");
 
+  // Load profile into form
+  useEffect(() => {
+    if (profile) {
+      setName(profile.username || "");
+      setEmail(profile.email || "");
+      setDateJoined(profile.date_joined?.split("T")[0] || ""); // e.g., "2025-06-01T12:00:00Z" → "2025-06-01"
+      setRole(profile.role || "");
+      setDarkMode(profile.pref_darkmode || false);
+      setAutoSave(profile.pref_autosave || false);
+    }
+  }, [profile]);
+
+  const handleSave = () => {
+    const updated = {
+      username: name,
+      email,
+      role,
+      pref_darkmode: darkMode,
+      pref_autosave: autoSave,
+    };
+
+    updateProfile.mutate(updated, {
+      onSuccess: () => {
+        showModal({
+          modal: (
+            <TickedModal
+              title="Changes Saved!"
+              description="Your profile settings have been updated successfully."
+            />
+          ),
+        });
+        setTimeout(() => {
+          hideModal();
+        }, 2500);
+      },
+    });
+  };
+
+  if (isLoading) return <div>Loading profile...</div>;
 
   return (
-    <div className="flex justify-center items-center min-h-full w-full">
-      <div className="w-full max-w-2xl space-y-8">
-        {/* Profile Avatar */}
-        <div className="flex justify-center">
-          <div className="w-12 h-12 bg-white border-4 border-gray-300 rounded-full flex items-center justify-center">
-            <User className="w-6 h-6 text-gray-400" />
-          </div>
-        </div>
+    <Wrapper>
+      <FormContainer>
+        <AvatarWrapper>
+          <Avatar>
+            <User size={24} color="#9CA3AF" /> {/* gray-400 */}
+          </Avatar>
+        </AvatarWrapper>
 
-        {/* Form Fields */}
-        <div className="space-y-8">
-          {/* Name and Email Row */}
-          <div className="grid grid-cols-2 gap-12">
-            <div className="space-y-3">
-              <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                Name
-              </Label>
+        <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+          <FieldRow>
+            <FieldWrapper>
+              <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
-                placeholder={name || "Your Name"}
-                className="h-10 border-gray-300 rounded-md"
+                placeholder={profile?.username || "Your Name"}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
-            </div>
-            <div className="space-y-3">
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                Email
-              </Label>
+            </FieldWrapper>
+            <FieldWrapper>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder={email || "Your Email Address"}
-                className="h-10 border-gray-300 rounded-md"
+                placeholder={profile?.email || "Your Email Address"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-            </div>
-          </div>
+            </FieldWrapper>
+          </FieldRow>
 
-          {/* Date Joined and Role Row */}
-          <div className="grid grid-cols-2 gap-12">
-            <div className="space-y-3">
-              <Label htmlFor="dateJoined" className="text-sm font-medium text-gray-700">
-                Date Joined
-              </Label>
+          <FieldRow>
+            <FieldWrapper>
+              <Label htmlFor="dateJoined">Date Joined</Label>
               <Input
                 id="dateJoined"
-                placeholder={dateJoined || "14/5/2025"}
-                className="h-10 border-gray-300 rounded-md"
+                placeholder={profile?.date_joined?.split("T")[0] || "14/5/2025"}
                 value={dateJoined}
                 disabled
               />
-            </div>
-            <div className="space-y-3">
-              <Label htmlFor="role" className="text-sm font-medium text-gray-700">
-                Role
-              </Label>
+            </FieldWrapper>
+            <FieldWrapper>
+              <Label htmlFor="role">Role</Label>
               <Input
                 id="role"
-                placeholder={role || "Your Role"}
-                className="h-10 border-gray-300 rounded-md"
+                placeholder={profile?.role || "Your Role"}
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
               />
-            </div>
-          </div>
+            </FieldWrapper>
+          </FieldRow>
         </div>
 
-        {/* Toggle Switches */}
-        <div className="space-y-6 pt-10">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-gray-700">Dark Mode</Label>
-            <div className="relative">
+        <ToggleWrapper>
+          <ToggleRow>
+            <Label>Dark Mode</Label>
+            <SwitchWrapper>
               <input
                 type="checkbox"
-                className="sr-only"
                 id="darkMode"
                 checked={darkMode}
                 onChange={(e) => setDarkMode(e.target.checked)}
+                style={{ display: "none" }}
               />
-              <label htmlFor="darkMode" className="flex items-center cursor-pointer">
-                <div className="relative">
-                  <div
-                    className={`w-12 h-6 rounded-full shadow-inner transition-colors duration-300 ${darkMode ? "bg-blue-500" : "bg-gray-300"
-                      }`}
-                  ></div>
-                  <div
-                    className={`absolute w-5 h-5 bg-white rounded-full shadow top-0.5 transition-transform duration-300 ease-in-out ${darkMode ? "translate-x-6" : "translate-x-0.5"
-                      }`}
-                  ></div>
-                </div>
+              <label htmlFor="darkMode" style={{ cursor: "pointer" }}>
+                <SwitchBackground active={darkMode} />
+                <SwitchThumb active={darkMode} />
               </label>
-            </div>
-          </div>
+            </SwitchWrapper>
+          </ToggleRow>
 
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-gray-700">Auto Save Test History</Label>
-            <div className="relative">
+          <ToggleRow>
+            <Label>Auto Save Test History</Label>
+            <SwitchWrapper>
               <input
                 type="checkbox"
-                className="sr-only"
                 id="autoSave"
                 checked={autoSave}
                 onChange={(e) => setAutoSave(e.target.checked)}
+                style={{ display: "none" }}
               />
-              <label htmlFor="autoSave" className="flex items-center cursor-pointer">
-                <div className="relative">
-                  <div
-                    className={`w-12 h-6 rounded-full shadow-inner transition-colors duration-300 ${autoSave ? "bg-blue-500" : "bg-gray-300"
-                      }`}
-                  ></div>
-                  <div
-                    className={`absolute w-5 h-5 bg-white rounded-full shadow top-0.5 transition-transform duration-300 ease-in-out ${autoSave ? "translate-x-6" : "translate-x-0.5"
-                      }`}
-                  ></div>
-                </div>
+              <label htmlFor="autoSave" style={{ cursor: "pointer" }}>
+                <SwitchBackground active={autoSave} />
+                <SwitchThumb active={autoSave} />
               </label>
-            </div>
-          </div>
-        </div>
+            </SwitchWrapper>
+          </ToggleRow>
+        </ToggleWrapper>
 
-        {/* Save Button */}
-        <div className="flex justify-center pt-1">
+        <SaveButtonWrapper>
           <Button
             className="w-32 h-12 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-md"
             onClick={handleSave}
           >
             Save
           </Button>
-        </div>
-      </div>
-    </div>
+        </SaveButtonWrapper>
+      </FormContainer>
+    </Wrapper>
   )
 }

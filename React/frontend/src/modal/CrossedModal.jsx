@@ -26,11 +26,7 @@ const Description = styled.p`
     color: ${COLORS.darkGrey};
 `;
 
-const StyledButton = styled(Button)`
-  width: 5rem;
-  height: 3rem;
-  background-color: ${COLORS.blue} !important;
-`;
+
 
 
 export default function CrossedModal({ title, description, hideModal }) {

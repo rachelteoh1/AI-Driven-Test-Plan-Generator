@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from "react"
 import * as React from 'react'
 import Button from '@mui/material/Button'
-import { Send, Loader2, Upload } from "lucide-react"
+import { Send, Loader2, Upload, X, FileText } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/reusable/Tooltip"
 import { COLORS, SPACING, FONTSIZE, FONTWEIGHT } from "../lib/styles"
 import styled, { keyframes } from "styled-components"
 import { CircleUserRound } from "lucide-react"
+import pdfIcon from '../assets/pdf.png';
+
 
 
 // Animation
@@ -116,8 +118,8 @@ const MessageTextArea = styled.textarea`
 `
 const SubmitButton = styled(Button)`
   position: absolute;
-  left: 690px;
-  bottom: 40px; 
+  left: 600px;
+  bottom: 43px; 
   background: none;
   border: none;
   cursor: pointer;
@@ -128,8 +130,27 @@ const SubmitButton = styled(Button)`
   background-color: transparent;
   color: ${COLORS.grey};
   opacity: ${props => (props.$isLoading || !props.$hasValue) ? 0.5 : 1};
-  
 `
+
+const UploadButton = styled(Button)`
+  position: relative;
+  top: -15px; /* 👈 move it higher */
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: ${COLORS.grey};
+  font-size: ${FONTSIZE.sm};
+
+  &:hover {
+    background-color: ${COLORS.darkblue};
+  }
+`
+
 
 const CopyButton = styled(Button)`
   position: absolute;
@@ -152,11 +173,14 @@ const MessageForm = styled.form`
 const TextAreaWrapper = styled.div`
   position: relative;
   width: 100%;
-`
+`;
+
 
 // Main Export Component
-export default function ChatInterface({ chat = { messages: [] }, onSendMessage, isLoading }) {
+export default function ChatInterface({ chat , onSendMessage, isLoading }) {
   const [inputValue, setInputValue] = useState("")
+  const [pdfFile, setPdfFile] = useState(null) // ✅ Add this
+
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
@@ -167,30 +191,40 @@ export default function ChatInterface({ chat = { messages: [] }, onSendMessage, 
     scrollToBottom()
   }, [chat.messages, isLoading])
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (inputValue.trim() && !isLoading) {
-      onSendMessage(inputValue)
-      setInputValue("")
+const handleSubmit = (e) => {
+  e.preventDefault()
+  if (!isLoading) {
+    if (inputValue.trim()) {
+      // If there is text input, send it along with PDF file if any
+      onSendMessage(inputValue, pdfFile)
+    } else if (pdfFile) {
+      // If no text but PDF uploaded, send the PDF file name only
+      onSendMessage(null, pdfFile)
     }
+    setInputValue("")
+    setPdfFile(null)
   }
+}
+
 
   return (
     <Container>
       <MessagesContainer>
         {chat.messages.map((message) => (
-          <Message key={message.id} message={message} />
+          <Message key={message.message_id} message={message} />
         ))}
         {isLoading && <LoadingIndicator />}
         <div ref={messagesEndRef} />
       </MessagesContainer>
 
       <InputArea>
-        <MessageInput 
+        <MessageInput
           value={inputValue}
           onChange={setInputValue}
           onSubmit={handleSubmit}
           isLoading={isLoading}
+          pdfFile={pdfFile}             // ✅ pass the file
+          setPdfFile={setPdfFile}       // ✅ pass the setter
         />
       </InputArea>
     </Container>
@@ -208,18 +242,18 @@ function Message({ message }) {
 
 function UserMessage({ message }) {
   return (
-    
+
     <UserMessageContainer>
       <UserMessageBubble>
-      <UserMessageContent>
-        {message.content}
-      </UserMessageContent>
+        <UserMessageContent>
+          {message.content}
+        </UserMessageContent>
       </UserMessageBubble>
-      
+
       <CircleUserRound />
-       
+
     </UserMessageContainer>
-   
+
   )
 }
 
@@ -256,8 +290,9 @@ function LoadingIndicator() {
   )
 }
 
-function MessageInput({ value, onChange, onSubmit, isLoading }) {
+function MessageInput({ value, onChange, onSubmit, isLoading, pdfFile, setPdfFile }) {
   const textareaRef = useRef(null)
+  const [pdfUrl, setPdfUrl] = useState(null);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -265,6 +300,20 @@ function MessageInput({ value, onChange, onSubmit, isLoading }) {
       onSubmit(e)
     }
   }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type === "application/pdf") {
+        setPdfFile(file);
+      } else {
+        alert("Only PDF files are allowed.");
+      }
+    }
+    // Reset input value to allow re-uploading the same file
+    e.target.value = null;
+  };
+
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -274,27 +323,85 @@ function MessageInput({ value, onChange, onSubmit, isLoading }) {
   }, [value])
 
   return (
-    <MessageForm onSubmit={onSubmit}>
-      <TextAreaWrapper>
-      <MessageTextArea
-        ref={textareaRef}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="Type message (Shift+Enter for newline)"
-        rows={1}
-        $isLoading={isLoading}
-        disabled={isLoading}
-      />
-      <SubmitButton
-        type="submit"
-        size="icon"
-        disabled={isLoading || !value.trim()}
-      >
-        {isLoading ? <LoadingIcon /> : <Send size={16} />}
-      </SubmitButton>
-      </TextAreaWrapper>
-    </MessageForm>
-  )
+    <>
+      {pdfFile && (
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "8px 12px",
+          marginBottom: "1rem",
+          border: "1px solid #ccc",
+          borderRadius: "8px",
+          backgroundColor: "#f9f9f9",
+          maxWidth: "33%",
+          marginLeft: "4.5rem",
+        }}>
+          <span style={{ display: "flex", alignItems: "center", gap: "8px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: '0.9rem' }}>
+            <img
+              src={pdfIcon}
+              alt="PDF icon"
+              style={{ width: 18, height: 18 }}
+            />
+            {pdfFile.name}
+          </span>
+          <button
+            onClick={() => setPdfFile(null)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#999",
+              cursor: "pointer",
+              padding: 0,
+              display: "flex",
+              alignItems: "center",
+            }}
+            aria-label="Remove PDF"
+            type="button"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
+
+      <MessageForm onSubmit={onSubmit}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <UploadButton component="label">
+            <Upload size={16} style={{ marginRight: 4 }} />
+            <input
+              key={pdfFile ? pdfFile.name : "empty"} // force remount input on file change
+              type="file"
+              hidden
+              accept="application/pdf"
+              onChange={handleFileChange}
+            />
+          </UploadButton>
+
+          <TextAreaWrapper style={{ flex: 1, position: 'relative' }}>
+            <MessageTextArea
+              ref={textareaRef}
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type message (Shift+Enter for newline)"
+              rows={1}
+              $isLoading={isLoading}
+              disabled={isLoading}
+            />
+            <SubmitButton
+              type="submit"
+              size="icon"
+              disabled={isLoading || (!value.trim() && !pdfFile)}
+              $isLoading={isLoading}
+              $hasValue={!!value.trim() || !!pdfFile}
+            >
+              {isLoading ? <LoadingIcon /> : <Send size={16} />}
+            </SubmitButton>
+
+          </TextAreaWrapper>
+        </div>
+      </MessageForm>
+    </>
+  );
 }
