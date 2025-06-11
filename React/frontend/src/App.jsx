@@ -24,7 +24,7 @@ function App() {
     typeof user?.id === "string" ? user.id : user?.id?.id || "";
 
   // Hooks
-  const { data: chats = [] } = useChats(safeUserId);
+  const { data: chats = [] ,  isLoading: isChatsLoading,} = useChats(safeUserId);
 
   const onSelectChat = (chatId) => {
     setActiveChatId(chatId);
@@ -40,6 +40,7 @@ function App() {
               chats={chats}
               activeChatId={activeChatId}
               setActiveChatId={setActiveChatId}
+              isChatsLoading= {isChatsLoading}
             />
           }
         />

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/lichee/FYP/AI-Driven-Test-Plan-Generator/KeysightGPT/KeysightGPT.csproj": {}
+    "/Users/lichee/FYP/temp-clean-repo/KeysightGPT/KeysightGPT.csproj": {}
   },
   "projects": {
-    "/Users/lichee/FYP/AI-Driven-Test-Plan-Generator/KeysightGPT/KeysightGPT.csproj": {
+    "/Users/lichee/FYP/temp-clean-repo/KeysightGPT/KeysightGPT.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/lichee/FYP/AI-Driven-Test-Plan-Generator/KeysightGPT/KeysightGPT.csproj",
+        "projectUniqueName": "/Users/lichee/FYP/temp-clean-repo/KeysightGPT/KeysightGPT.csproj",
         "projectName": "KeysightGPT",
-        "projectPath": "/Users/lichee/FYP/AI-Driven-Test-Plan-Generator/KeysightGPT/KeysightGPT.csproj",
+        "projectPath": "/Users/lichee/FYP/temp-clean-repo/KeysightGPT/KeysightGPT.csproj",
         "packagesPath": "/Users/lichee/.nuget/packages/",
-        "outputPath": "/Users/lichee/FYP/AI-Driven-Test-Plan-Generator/KeysightGPT/obj/",
+        "outputPath": "/Users/lichee/FYP/temp-clean-repo/KeysightGPT/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/lichee/.nuget/NuGet/NuGet.Config"
