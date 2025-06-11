@@ -3,6 +3,7 @@ from ..entities.entities import Dashboard
 from .models import DashboardCreate
 from uuid import UUID
 from app.entities.entities import OptimizedTestSequence, ChatLog, ChatSession, ScpiCommand
+from datetime import timedelta
 
 def create_dashboard(db: Session, data: DashboardCreate):
     dashboard_entry = Dashboard(
@@ -48,3 +49,41 @@ def calculate_dashboard_metrics(db: Session, user_id: UUID):
         "total_minutes_saved": estimated_saved_minutes,
         "most_used_device": most_used_device,
     }
+    
+def get_weekly_stats(db: Session, user_id: UUID):
+    today = date.today()
+    monday_this_week = today - timedelta(days=today.weekday())
+    
+    stats = []
+
+    for i in range(4):  # Last 4 weeks
+        week_start = monday_this_week - timedelta(weeks=i)
+        week_end = week_start + timedelta(days=6)
+
+        test_plans = db.query(OptimizedTestSequence) \
+            .join(ChatLog, ChatLog.message_id == OptimizedTestSequence.message_id) \
+            .join(ChatSession, ChatSession.session_id == ChatLog.session_id) \
+            .filter(ChatSession.id == user_id) \
+            .filter(OptimizedTestSequence.created_date >= week_start) \
+            .filter(OptimizedTestSequence.created_date <= week_end) \
+            .all()
+
+        test_plan_count = len(test_plans)
+
+        command_count = db.query(ScpiCommand) \
+            .join(OptimizedTestSequence, OptimizedTestSequence.sequence_id == ScpiCommand.sequence_id) \
+            .join(ChatLog, ChatLog.message_id == OptimizedTestSequence.message_id) \
+            .join(ChatSession, ChatSession.session_id == ChatLog.session_id) \
+            .filter(ChatSession.id == user_id) \
+            .filter(OptimizedTestSequence.created_date >= week_start) \
+            .filter(OptimizedTestSequence.created_date <= week_end) \
+            .count()
+
+        stats.append({
+            "week_start": week_start,
+            "test_plans_created": test_plan_count,
+            "commands_generated": command_count,
+            "minutes_saved": int(command_count * 0.5)
+        })
+
+    return stats

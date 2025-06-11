@@ -2,6 +2,7 @@ import { BarChart3 } from "lucide-react";
 import styled from "styled-components";
 import { ShadMetricsChart } from "./ShadMetricsChart";
 import { ShadCircularProgress } from "./ShadCircularProgress";
+import { useUserDashboard } from "../../hook/useDashboard";
 
 const Container = styled.div`
   display: flex;
@@ -119,13 +120,24 @@ const MetricHeader = styled.div`
 `;
 
 export function DashboardContent() {
-  const metricsData = [
-    { name: "Week 1", value: 5 },
-    { name: "Week 2", value: 8 },
-    { name: "Week 3", value: 12 },
-    { name: "Week 4", value: 15 },
-  ];
-  const progressValue = 38;
+    const { data, isLoading, isError } = useUserDashboard();
+
+  if (isLoading) return <Container>Loading...</Container>;
+  if (isError) return <Container>Error loading dashboard data.</Container>;
+
+  const {
+    total_test_plans,
+    total_commands_generated,
+    total_minutes_saved,
+    most_used_device,
+    month,
+  } = data;
+
+  const metricsData = data.weekly_stats.map((item, index) => ({
+  week: `Week ${data.weekly_stats.length - index}`,
+  value: item.minutes_saved,
+}));
+
 
   return (
     <Container>
@@ -142,7 +154,7 @@ export function DashboardContent() {
 
                 <div>
                   <StatTitle>Total test plan generated</StatTitle>
-                  <StatValue>12</StatValue>
+                  <StatValue>{total_test_plans}</StatValue>
                 </div>
               </FlexColumnSpaceY4>
             </CardContent>
@@ -159,7 +171,7 @@ export function DashboardContent() {
 
                 <div>
                   <StatTitle>Total SCPI generated</StatTitle>
-                  <StatValue>22</StatValue>
+                  <StatValue>{total_commands_generated}</StatValue>
                 </div>
               </FlexColumnSpaceY4>
             </CardContent>
@@ -176,7 +188,7 @@ export function DashboardContent() {
 
                 <div>
                   <StatTitle>Most Used Instrument</StatTitle>
-                  <InstrumentValue>Oscilloscope</InstrumentValue>
+                  <InstrumentValue>{most_used_device}</InstrumentValue>
                 </div>
               </FlexColumnSpaceY4>
             </CardContent>
@@ -191,7 +203,7 @@ export function DashboardContent() {
                   <SmallerIconWrapper>
                     <BarChart3 />
                   </SmallerIconWrapper>
-                  <span>This month</span>
+                  <span>{new Date(month).toLocaleString("default", { month: "long" })}</span>
                 </MetricHeader>
 
                 <div>
@@ -203,7 +215,7 @@ export function DashboardContent() {
                       marginBottom: "0.5rem",
                     }}
                   >
-                    15%
+                    {Math.min(Math.round((total_minutes_saved / 60) * 100), 100)}%
                   </p>
                   <p style={{ fontSize: "0.875rem", color: "#6B7280" }}>
                     Reduced execution time
@@ -238,14 +250,14 @@ export function DashboardContent() {
                       marginBottom: "0.5rem",
                     }}
                   >
-                    {progressValue} Mins
+                    {total_minutes_saved} Mins
                   </p>
                   <p style={{ fontSize: "0.875rem", color: "#6B7280" }}>
                     Minutes Saved
                   </p>
                 </TextCenter>
 
-                <ShadCircularProgress value={progressValue} max={60} size={125} />
+                <ShadCircularProgress value={total_minutes_saved} max={60} size={125} />
               </div>
             </CardContent>
           </StyledCard>
