@@ -109,7 +109,7 @@ const ExampleButton = styled.button`
     background-color: ${COLORS.background.medium};
   }
 `;
-export const Home = ({chats, isChatsLaoding, activeChatId, setActiveChatId}) => {
+export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => {
   const { user ,isLoading} = useContext(UserStatusContext); 
   const { data: activeChatLogs = [] } = useChatLogs(activeChatId);
   const newChatMutation = useNewChat();
@@ -120,11 +120,11 @@ export const Home = ({chats, isChatsLaoding, activeChatId, setActiveChatId}) => 
 
 
  useEffect(() => {
-  if (!isChatsLaoding && !isLoading && user && chats.length === 0) {
-    console.log(isChatsLaoding);
+  if (!isChatsLoading && !isLoading && user && chats.length === 0) {
+    console.log(isChatsLoading);
     handleNewChat();
   }
-}, [isChatsLaoding, isLoading, user, chats]);
+}, [isChatsLoading, isLoading, user, chats]);
 
   const handleNewChat = async () => {
     try {
