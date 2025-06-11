@@ -50,3 +50,14 @@ def get_chat_log_by_user(db: Session, session_id):
     except Exception as e:
         logger.error(f"Failed to get chat logs for session {session_id}: {str(e)}")
         raise InternalServerError(str(e))
+
+def detect_intent(db: Session, request):
+    processed_text, scpi_commands = preprocess_input(request.content)
+    #intent = classify_intent_rule_based(processed_text, scpi_commands)
+    intent = classify_intent_ml(processed_text)  
+    response = ""
+    return {
+        "intent": intent,
+        "scpi_commands": scpi_commands,
+        "processed_text": processed_text,
+    }

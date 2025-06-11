@@ -28,4 +28,8 @@ async def get_chat_logs(session_id :UUID,db:DbSession):
     return service.get_chat_log_by_user(db, session_id)
 
 
+@router.post("/detect-intent", response_model = models.LogResponse)
+async def detect_intent(request: models.LogCreate , db: DbSession):
+    service.detect_intent(db, request)
+
 

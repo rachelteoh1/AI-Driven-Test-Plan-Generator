@@ -156,6 +156,11 @@ export function AppSidebar({
           ))}
         </SidebarMenu>
       </SidebarFooter>
+      <ExportModal
+        open={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        testData={testResults}
+      />
     </Sidebar>
   );
 }

@@ -5,13 +5,11 @@ import ChatInterface from "./Conversation";
 import { useState, useEffect, useContext } from "react";
 import styled from "styled-components";
 import { FONTSIZE, FONTWEIGHT, SPACING, COLORS } from "../lib/styles";
-import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   useAddChatLog,
   useChatLogs,
   useDeleteChat,
   useNewChat,
-  useChats,
   useRenameChat,
 } from "../hook/useChat";
 import UserStatusContext from "../lib/UserStatusContext";
@@ -111,28 +109,22 @@ const ExampleButton = styled.button`
     background-color: ${COLORS.background.medium};
   }
 `;
-export const Home = ({chats, activeChatId, setActiveChatId}) => {
+export const Home = ({chats, isChatsLaoding, activeChatId, setActiveChatId}) => {
   const { user ,isLoading} = useContext(UserStatusContext); 
-  const [searchParams, setSearchParams] = useSearchParams();
-
-
- 
-
   const { data: activeChatLogs = [] } = useChatLogs(activeChatId);
   const newChatMutation = useNewChat();
   const renameChatMutation = useRenameChat();
   const deleteChatMutation = useDeleteChat();
   const addChatLogMutation = useAddChatLog();
 
-  // const isLoading = newChatMutation.isLoading || addChatLogMutation.isLoading;
 
-  useEffect(() => {
-    if (!isLoading && user && searchParams.get("newchat") === "true") {
-      handleNewChat();
-      searchParams.delete("newchat");
-      setSearchParams(searchParams);
-    }
-  }, [searchParams]);
+
+ useEffect(() => {
+  if (!isChatsLaoding && !isLoading && user && chats.length === 0) {
+    console.log(isChatsLaoding);
+    handleNewChat();
+  }
+}, [isChatsLaoding, isLoading, user, chats]);
 
   const handleNewChat = async () => {
     try {
@@ -274,6 +266,7 @@ const [isReplyLoading, setIsReplyLoading] = useState(false);
   return (
     <SidebarProvider defaultOpen={true}>
       <PageContainer>
+        <div className="flex min-h-screen w-full">
         <AppSidebar
           chats={chats}
           activeChat={activeChat}
@@ -317,229 +310,8 @@ const [isReplyLoading, setIsReplyLoading] = useState(false);
             />
           </ChatWrapper>
         </MainContent>
+        </div>
       </PageContainer>
     </SidebarProvider>
   );
 };
-// export const Home = (chats,setChats, activeChatId, setActiveChatId) => {
-//   const [searchParams, setSearchParams] = useSearchParams();
-//   const { user } = useContext(UserStatusContext);
-//   const newChatMutation = useNewChat();
-//   const renameChatMutation = useRenameChat();
-//   const deleteChatMutation = useDeleteChat();
-//   const useAddChatLogMutation = useAddChatLog();
-//   const navigate = useNavigate();
-//   // const { data: chatLogs = [], isLoading: logsLoading } = useChatLogs(activeChatId);
-//   const [chatLogs, setChatLogs] = useState([]);
-
-//   const fetchChats = useChats(user ? user.id : null);
-//    useEffect(() => {
-//     if (!user) {
-//       navigate("/signin");
-//     }
-//   }, [user, navigate]);
-
-// // console.log(user.id);
-//   useEffect(() => {
-//     if (user && fetchChats?.data && Array.isArray(fetchChats.data)) {
-//       setChats(fetchChats.data);
-//     }
-//   }, [user, fetchChats.data]);
-
-//   // get chatlogs if available
-//   const fetchChatLogs = useChatLogs(activeChatId);
-//   useEffect(() => {
-//     if (fetchChatLogs?.data && Array.isArray(fetchChatLogs.data)) {
-//       setChatLogs(fetchChatLogs.data);
-//     }
-//   }, [user, fetchChatLogs.data]);
-
-//   const handleNewChat = () => {
-//     newChatMutation.mutate(
-//       { id: user.id, title: `Chat ${chats.length + 1}` },
-//       {
-//         onSuccess: (newChat) => {
-//           setChats((prev) => [newChat, ...prev]);
-//           setActiveChatId(newChat.session_id);
-//         },
-//       }
-//     );
-//   };
-
-//   useEffect(() => {
-//     if (searchParams.get("newchat") === "true") {
-//       handleNewChat();
-//       // remove query param after using it
-//       searchParams.delete("newchat");
-//       setSearchParams(searchParams);
-//     }
-//   }, [searchParams]);
-
-//   const [isLoading, setIsLoading] = useState(false);
-//   const activeChat = chats.find((chat) => chat.session_id === activeChatId);
-//   const hasConversation = chatLogs.length > 0;
-
-//   const handleSelectChat = (id) => {
-//     setActiveChatId(id);
-//   };
-
-//   const handleRenameChat = async (id, newName) => {
-//     console.log("Attempting rename:", id, newName);
-
-//     renameChatMutation.mutate(
-//       { session_id: id, title: newName },
-//       {
-//         onSuccess: () => {
-//           return true;
-//         },
-//         onError: (err) => {
-//           console.error("Rename failed:", err);
-//           return false;
-//         },
-//       }
-//     );
-//   };
-
-//   const handleDeleteChat = async (id) => {
-//     deleteChatMutation.mutate(
-//       { session_id: id },
-//       {
-//         onSuccess: () => {
-//           setChats((prev) => {
-//             const updatedChats = prev.filter((chat) => chat.session_id !== id);
-//             const deletedIndex = prev.findIndex(
-//               (chat) => chat.session_id === id
-//             );
-//             const nextChat =
-//               updatedChats[deletedIndex] ||
-//               updatedChats[deletedIndex - 1] ||
-//               null;
-//             setActiveChatId(nextChat ? nextChat.session_id : null);
-//             return updatedChats;
-//           });
-//           return true;
-//         },
-//         onError: (err) => {
-//           console.error("Deletion failed", err);
-//           return false;
-//         },
-//       }
-//     );
-//   };
-
-//   const handleSendMessage = async (message) => {
-//     const userMessage = { role: "user", content: message };
-
-//     const botMessage = {
-//       role: "assistant",
-//       content: `You said: "${message}"`,
-//     };
-
-//     // Step 1: Immediately add the user message
-//     setChatLogs((prevChatLogs) =>
-//       prevChatLogs.map((chatLogs) =>
-//         chatLogs.session_id === activeChatId
-//           ? {
-//               ...chatLogs,
-//               messages: [...chatLogs.messages, userMessage],
-//             }
-//           : chatLogs
-//       )
-//     );
-
-//     setIsLoading(true);
-
-//     // Step 2: Add bot response after delay
-//     setTimeout(() => {
-//       setChatLogs((prevChats) =>
-//         prevChats.map((chatLogs) =>
-//           chatLogs.session_id === activeChatId
-//             ? {
-//                 ...chatLogs,
-//                 messages: [...chatLogs.messages, botMessage],
-//               }
-//             : chatLogs
-//         )
-//       );
-//       setIsLoading(false);
-//     }, 1000);
-//     //store to database
-//     useAddChatLogMutation.mutate({
-//       session_id: activeChatId,
-//       user_input: userMessage.content,
-//       llm_response: botMessage.content,
-//     });
-//   };
-
-//   // const[examples, onSelectExample]= useState([
-//   //   "Generate test case to measure the voltage on channel 1.",
-//   //   "Test case to perform a diode forward voltage check.",
-//   //   "Explain ROUT:SCAN (@101:110).",
-//   // ])
-
-//   const examples = [
-//     // direct array declaration
-//     "Generate test case to measure the voltage on channel 1.",
-//     "Test case to perform a diode forward voltage check.",
-//     "Explain ROUT:SCAN (@101:110).",
-//   ];
-
-//   return (
-//     <SidebarProvider defaultOpen={true}>
-//       <PageContainer>
-//         <AppSidebar
-//           chats={chats}
-//           activeChat={activeChat}
-//           onNewChat={handleNewChat}
-//           onSelectChat={handleSelectChat}
-//           onRenameChat={handleRenameChat}
-//           onDeleteChat={handleDeleteChat}
-//           onSetChat={setChats}
-//         />
-//         <MainContent>
-//           <HeaderWrapper>
-//             <Header />
-//           </HeaderWrapper>
-//           <ContentContainer>
-//             {!hasConversation && (
-//               <CenterContainer>
-//                 <TextContainer>
-//                   <Title>Welcome to KeysightGPT</Title>
-//                 </TextContainer>
-//                 <div>Examples</div>
-//                 <ExamplesGrid>
-//                   {examples.map((example, index) => (
-//                     <ExampleButton
-//                       key={index}
-//                       onClick={() => handleSendMessage(example)}
-//                     >
-//                       "{example}"
-//                     </ExampleButton>
-//                   ))}
-//                 </ExamplesGrid>
-//               </CenterContainer>
-//             )}
-//           </ContentContainer>
-//           <ChatWrapper>
-//             <ChatInterface
-//               chat={chatLogs.flatMap((m) => [
-//                 {
-//                   message_id: m.message_id,
-//                   content: m.user_input,
-//                   role: "user",
-//                 },
-//                 {
-//                   message_id: m.message_id,
-//                   content: m.llm_response,
-//                   role: "bot",
-//                 },
-//               ])}
-//               onSendMessage={handleSendMessage}
-//               isLoading={isLoading}
-//             />
-//           </ChatWrapper>
-//         </MainContent>
-//       </PageContainer>
-//     </SidebarProvider>
-//   );
-// };

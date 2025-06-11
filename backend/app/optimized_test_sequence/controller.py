@@ -62,3 +62,29 @@ async def optimize_sequence(
             ) for cmd in commands
         ]
     )
+
+@router.get("/{sequence_id}", response_model=models.SequenceResponse)
+async def read_sequence(
+    sequence_id: UUID,
+    db: DbSession,
+):
+    data = service.get_sequence_with_commands(db, sequence_id)
+    if not data:
+        raise HTTPException(status_code=404, detail="Sequence not found")
+    
+    response = models.SequenceResponse(
+        sequence_id=data["sequence"].sequence_id,
+        message_id=data["sequence"].message_id,
+        created_date=data["sequence"].created_date,
+        commands=[
+            models.ScpiCommandResponse(
+                command_id=cmd.command_id,
+                command_text=cmd.command_text,
+                order_index=cmd.order_index,
+            )
+            for cmd in data["commands"]
+        ],
+    )
+    return response
+
+
