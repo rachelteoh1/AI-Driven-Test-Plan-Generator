@@ -50,7 +50,6 @@ class OptimizedTestSequence(Base):
     sequence_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     message_id = Column(UUID(as_uuid=True), ForeignKey("chat_logs.message_id"), nullable=False)
     created_date = Column(DateTime, default=datetime.utcnow)
-    instrument = Column(String)
 
 
 class ScpiCommand(Base):

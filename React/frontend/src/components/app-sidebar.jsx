@@ -27,17 +27,148 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "./ui/sidebar"
-import { Button } from "./ui/button"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useState } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
 import useModal from "../modal/useModal";
 import { useLogout } from "../hook/useAuth";
+import styled, { css } from "styled-components";
+import { COLORS, FONTSIZE, FONTWEIGHT, SPACING } from "../lib/styles";
+import * as Dropdown from "@radix-ui/react-dropdown-menu";
+import { Check, ChevronRight, Circle } from "lucide-react";
+import * as React from "react"
+import { PanelLeft } from "lucide-react"
+
+// Button variants
+const variantStyles = {
+  default: css`
+    background-color: ${COLORS.lightgreyblue};
+    color: ${COLORS.dark};
+    &:hover { background-color: ${COLORS.greyblue}dd; }
+  `,
+  ghost: css`
+    background: transparent;
+    color: ${COLORS.dark};
+    &:hover { background-color: ${COLORS.lightgreyblue}; }
+  `,
+};
+
+const sizeStyles = {
+  default: css`
+    padding: 0 ${SPACING.md};
+    height: 2.5rem;
+  `,
+  icon: css`
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    justify-content: center;
+  `,
+};
+
+// Base button
+const Button = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: left;
+  gap: ${SPACING.sm};
+  font-size: ${FONTSIZE.sm};
+  font-weight: ${FONTWEIGHT.medium};
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  
+  ${({ variant = "default" }) => variantStyles[variant]};
+  ${({ size = "default" }) => sizeStyles[size]};
+
+  &:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${COLORS.accent};
+    outline-offset: 2px;
+  }
+`;
+
+
+// dropdown menu
+const menuItem = css`
+  display: flex;
+  align-items: center;
+  gap: ${SPACING.sm};
+  padding: ${SPACING.sm};
+  font-size: ${FONTSIZE.sm};
+  color: ${COLORS.dark};
+  cursor: pointer;
+  border-radius: 0.375rem;
+  min-width: 8rem;
+  &:hover,
+  &[data-highlighted] {
+    background-color: ${COLORS.lightgreyblue};
+  }
+  &[data-disabled] {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+`;
+
+// Styled components
+const DropdownMenuContent = styled(Dropdown.Content)`
+  background-color: white;
+  border: 1px solid ${COLORS.grey};
+  border-radius: 0.375rem;
+  padding: ${SPACING.xs};
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+`;
+
+const DropdownMenuItem = styled(Dropdown.Item)`
+  ${menuItem}
+`;
+
+const DropdownMenuCheckboxItem = styled(Dropdown.CheckboxItem)`
+  ${menuItem}
+  padding-left: ${SPACING.lg};
+`;
+
+const DropdownMenuRadioItem = styled(Dropdown.RadioItem)`
+  ${menuItem}
+  padding-left: ${SPACING.lg};
+`;
+
+const DropdownMenuSubTrigger = styled(Dropdown.SubTrigger)`
+  ${menuItem}
+  justify-content: space-between;
+`;
+
+const DropdownMenuSubContent = styled(Dropdown.SubContent)`
+  background-color: white;
+  border: 1px solid ${COLORS.grey};
+  border-radius: 0.375rem;
+  padding: ${SPACING.xs};
+  margin-left: ${SPACING.sm};
+`;
+
+const DropdownMenuLabel = styled(Dropdown.Label)`
+  padding: ${SPACING.xs} ${SPACING.sm};
+  font-size: ${FONTSIZE.sm};
+  font-weight: bold;
+`;
+
+const DropdownMenuSeparator = styled(Dropdown.Separator)`
+  height: 1px;
+  background-color: ${COLORS.grey};
+  margin: ${SPACING.sm} 0;
+`;
+
+const DropdownMenuShortcut = styled.span`
+  margin-left: auto;
+  font-size: ${FONTSIZE.xs};
+  opacity: 0.6;
+`;
+const DropdownMenu = Dropdown.Root;
+const DropdownMenuTrigger = Dropdown.Trigger;
 
 export function AppSidebar({
   chats,
@@ -156,11 +287,6 @@ export function AppSidebar({
           ))}
         </SidebarMenu>
       </SidebarFooter>
-      <ExportModal
-        open={exportModalOpen}
-        onClose={() => setExportModalOpen(false)}
-        testData={testResults}
-      />
     </Sidebar>
   );
 }

@@ -1,14 +1,12 @@
-"use client"
+"use client";
 
 import { useState, useEffect } from "react";
 import { useUserProfile, useUpdateProfile } from "../../hook/useProfile";
-import styled from "styled-components"
-import { Input } from "../ui/input"
-import { Label } from "../ui/label"
-import { Button } from "../ui/button"
-import { User } from "lucide-react"
-import useModal from "../../modal/useModal"
-import TickedModal from "../../modal/TickModal"
+import styled from "styled-components";
+import { User } from "lucide-react";
+import useModal from "../../modal/useModal";
+import TickedModal from "../../modal/TickModal";
+import { COLORS, FONTSIZE, FONTWEIGHT, SPACING } from "../../lib/styles";
 
 // Styled Components
 const Wrapper = styled.div`
@@ -17,68 +15,81 @@ const Wrapper = styled.div`
   align-items: center;
   min-height: 100%;
   width: 100%;
-`
+  background-color: ${COLORS.background.light};
+`;
 
 const FormContainer = styled.div`
   width: 100%;
-  max-width: 48rem; /* ~768px */
+  max-width: 48rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-`
+  gap: ${SPACING.xl};
+`;
 
 const AvatarWrapper = styled.div`
   display: flex;
   justify-content: center;
-`
+`;
 
 const Avatar = styled.div`
   width: 3rem;
   height: 3rem;
   background-color: white;
-  border: 4px solid #d1d5db; /* gray-300 */
+  border: 4px solid ${COLORS.grey};
   border-radius: 9999px;
   display: flex;
   align-items: center;
   justify-content: center;
-`
+`;
 
 const FieldRow = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 3rem;
-`
+  gap: ${SPACING["2xl"]};
+`;
 
 const FieldWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-`
+  gap: ${SPACING.sm};
+
+  label {
+    font-size: ${FONTSIZE.base};
+    font-weight: ${FONTWEIGHT.medium};
+    color: ${COLORS.dark};
+  }
+`;
 
 const ToggleWrapper = styled.div`
-  padding-top: 2.5rem;
+  padding-top: ${SPACING.xl};
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-`
+  gap: ${SPACING.lg};
+`;
 
 const ToggleRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-`
+
+  label {
+    font-size: ${FONTSIZE.base};
+    font-weight: ${FONTWEIGHT.medium};
+    color: ${COLORS.dark};
+  }
+`;
 
 const SwitchWrapper = styled.div`
   position: relative;
-`
+`;
 
 const SwitchBackground = styled.div`
   width: 3rem;
   height: 1.5rem;
   border-radius: 9999px;
-  background-color: ${props => (props.active ? "#3B82F6" : "#D1D5DB")}; /* blue-500 or gray-300 */
+  background-color: ${(props) => (props.$active ? COLORS.secondary : COLORS.grey)};
   transition: background-color 0.3s;
-`
+`;
 
 const SwitchThumb = styled.div`
   position: absolute;
@@ -87,16 +98,76 @@ const SwitchThumb = styled.div`
   height: 1.25rem;
   background-color: white;
   border-radius: 9999px;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
-  transform: ${props => (props.active ? "translateX(1.5rem)" : "translateX(0.125rem)")};
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+  transform: ${(props) => (props.$active ? "translateX(1.5rem)" : "translateX(0.125rem)")};
   transition: transform 0.3s ease-in-out;
-`
+`;
+
+const StyledLabel = styled.label`
+  font-size: ${FONTSIZE.sm};
+  font-weight: ${FONTWEIGHT.medium};
+  line-height: 1.25rem;
+  color: ${COLORS.dark};
+
+  &[disabled] {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+`;
+const StyledInput = styled.input`
+  height: 2.5rem;
+  width: 100%;
+  padding: 0 ${SPACING.md};
+  font-size: ${FONTSIZE.sm};
+  border: 1px solid ${COLORS.inputBorder || COLORS.grey};
+  background-color: ${COLORS.background.light};
+  color: ${COLORS.dark};
+  border-radius: 0.375rem;
+
+  &:focus-visible {
+    outline: 2px solid ${COLORS.accent};
+    outline-offset: 2px;
+  }
+
+  &::placeholder {
+    color: ${COLORS.placeholder || COLORS.grey};
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+`;
+
 
 const SaveButtonWrapper = styled.div`
   display: flex;
   justify-content: center;
-  padding-top: 0.25rem;
-`
+  padding-top: ${SPACING.sm};
+`;
+
+const StyledButton = styled.button`
+  width: 8rem;
+  height: 3rem;
+  border-radius: 0.375rem;
+  background-color: ${COLORS.lightgreyblue};
+  color: ${COLORS.dark};
+  font-weight: ${FONTWEIGHT.medium};
+  font-size: ${FONTSIZE.base};
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: ${COLORS.greyblue}; // darker on hover
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${COLORS.accent};
+    outline-offset: 2px;
+  }
+`;
+
 
 export function Profile() {
   const { data: profile, isLoading } = useUserProfile();
@@ -110,12 +181,11 @@ export function Profile() {
   const [dateJoined, setDateJoined] = useState("");
   const [role, setRole] = useState("");
 
-  // Load profile into form
   useEffect(() => {
     if (profile) {
       setName(profile.username || "");
       setEmail(profile.email || "");
-      setDateJoined(profile.date_joined?.split("T")[0] || ""); // e.g., "2025-06-01T12:00:00Z" → "2025-06-01"
+      setDateJoined(profile.date_joined?.split("T")[0] || "");
       setRole(profile.role || "");
       setDarkMode(profile.pref_darkmode || false);
       setAutoSave(profile.pref_autosave || false);
@@ -155,27 +225,22 @@ export function Profile() {
       <FormContainer>
         <AvatarWrapper>
           <Avatar>
-            <User size={24} color="#9CA3AF" /> {/* gray-400 */}
+            <User size={24} color={COLORS.light} />
           </Avatar>
         </AvatarWrapper>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: SPACING.xl }}>
           <FieldRow>
             <FieldWrapper>
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                placeholder={profile?.username || "Your Name"}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+              <StyledLabel htmlFor="name">Name</StyledLabel>
+              <StyledInput id="name" value={name} onChange={(e) => setName(e.target.value)} />
             </FieldWrapper>
             <FieldWrapper>
-              <Label htmlFor="email">Email</Label>
-              <Input
+              <StyledLabel htmlFor="email">Email</StyledLabel>
+              <StyledInput
                 id="email"
                 type="email"
-                placeholder={profile?.email || "Your Email Address"}
+                placeholder="Your Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -184,19 +249,13 @@ export function Profile() {
 
           <FieldRow>
             <FieldWrapper>
-              <Label htmlFor="dateJoined">Date Joined</Label>
-              <Input
-                id="dateJoined"
-                placeholder={profile?.date_joined?.split("T")[0] || "14/5/2025"}
-                value={dateJoined}
-                disabled
-              />
+              <StyledLabel htmlFor="dateJoined">Date Joined</StyledLabel>
+              <StyledInput id="dateJoined" value={dateJoined} disabled />
             </FieldWrapper>
             <FieldWrapper>
-              <Label htmlFor="role">Role</Label>
-              <Input
+              <StyledLabel htmlFor="role">Role</StyledLabel>
+              <StyledInput
                 id="role"
-                placeholder={profile?.role || "Your Role"}
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
               />
@@ -206,7 +265,7 @@ export function Profile() {
 
         <ToggleWrapper>
           <ToggleRow>
-            <Label>Dark Mode</Label>
+            <StyledLabel>Dark Mode</StyledLabel>
             <SwitchWrapper>
               <input
                 type="checkbox"
@@ -216,14 +275,14 @@ export function Profile() {
                 style={{ display: "none" }}
               />
               <label htmlFor="darkMode" style={{ cursor: "pointer" }}>
-                <SwitchBackground active={darkMode} />
-                <SwitchThumb active={darkMode} />
+                <SwitchBackground $active={darkMode} />
+                <SwitchThumb $active={darkMode} />
               </label>
             </SwitchWrapper>
           </ToggleRow>
 
           <ToggleRow>
-            <Label>Auto Save Test History</Label>
+            <StyledLabel>Auto Save Test History</StyledLabel>
             <SwitchWrapper>
               <input
                 type="checkbox"
@@ -233,22 +292,21 @@ export function Profile() {
                 style={{ display: "none" }}
               />
               <label htmlFor="autoSave" style={{ cursor: "pointer" }}>
-                <SwitchBackground active={autoSave} />
-                <SwitchThumb active={autoSave} />
+                <SwitchBackground $active={autoSave} />
+                <SwitchThumb $active={autoSave} />
               </label>
             </SwitchWrapper>
           </ToggleRow>
         </ToggleWrapper>
 
         <SaveButtonWrapper>
-          <Button
-            className="w-32 h-12 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-md"
+          <StyledButton
             onClick={handleSave}
           >
             Save
-          </Button>
+          </StyledButton>
         </SaveButtonWrapper>
       </FormContainer>
     </Wrapper>
-  )
+  );
 }

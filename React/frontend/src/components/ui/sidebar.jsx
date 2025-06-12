@@ -1,9 +1,11 @@
+// sidebar.jsx
 "use client"
 
 import * as React from "react"
 import { PanelLeft } from "lucide-react"
-import { cn } from "../../lib/utils"
+import styled from "styled-components"
 import { Button } from "./button"
+import { COLORS, FONTSIZE, FONTWEIGHT, SPACING } from "../../lib/styles";
 
 const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
@@ -17,6 +19,111 @@ function useSidebar() {
   }
   return context
 }
+
+const SidebarWrapper = styled.div`
+  --sidebar-width: ${SIDEBAR_WIDTH};
+  --sidebar-width-icon: ${SIDEBAR_WIDTH_ICON};
+  display: flex;
+  min-height: 100svh;
+  width: 100%;
+`
+
+const StyledSidebar = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: ${SIDEBAR_WIDTH};
+  background-color: ${COLORS.background.light};
+  border-right: 1px solid ${COLORS.grey};
+
+  &[data-collapsible="offcanvas"] {
+    // Add collapsible styles if needed
+  }
+`
+
+const StyledSidebarTrigger = styled(Button)`
+  height: 1.75rem;
+  width: 1.75rem;
+`
+
+const SidebarSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${SPACING.sm};
+  padding: ${SPACING.sm};
+`
+
+const SidebarContentWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${SPACING.sm};
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+`
+
+const SidebarGroupWrapper = styled.div`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  padding: ${SPACING.sm};
+`
+
+const SidebarGroupContentWrapper = styled.div`
+  width: 100%;
+  font-size: ${FONTSIZE.sm};
+`
+
+const SidebarMenuWrapper = styled.ul`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  min-width: 0;
+`
+
+const SidebarMenuItemWrapper = styled.li`
+  position: relative;
+  display: block;
+`
+
+const SidebarMenuButtonStyled = styled.button`
+  display: flex;
+  align-items: center;
+  gap: ${SPACING.sm};
+  width: 100%;
+  overflow: hidden;
+  border-radius: 0.375rem;
+  padding: ${SPACING.sm};
+  font-size: ${FONTSIZE.sm};
+  text-align: left;
+  outline: none;
+  background-color: transparent;
+  color: ${COLORS.dark};
+  transition: background-color 0.2s, color 0.2s;
+  font-weight: ${FONTWEIGHT.normal};
+
+  &:hover {
+    background-color: ${COLORS.lightgreyblue};
+    color: ${COLORS.light};
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px ${COLORS.accent};
+  }
+
+  &[data-active="true"] {
+    background-color: ${COLORS.accent};
+    color: ${COLORS.light};
+  }
+
+  &:disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+`
 
 const SidebarProvider = React.forwardRef(
   ({ defaultOpen = true, open: openProp, onOpenChange: setOpenProp, className, style, children, ...props }, ref) => {
@@ -55,54 +162,24 @@ const SidebarProvider = React.forwardRef(
 
     return (
       <SidebarContext.Provider value={contextValue}>
-        <div
-          style={{
-            "--sidebar-width": SIDEBAR_WIDTH,
-            "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
-            ...style,
-          }}
-          className={cn("group/sidebar-wrapper flex min-h-svh w-full", className)}
-          ref={ref}
-          {...props}
-        >
+        <SidebarWrapper className={className} style={style} ref={ref} {...props}>
           {children}
-        </div>
+        </SidebarWrapper>
       </SidebarContext.Provider>
     )
   },
 )
 SidebarProvider.displayName = "SidebarProvider"
 
-const Sidebar = React.forwardRef(
-  ({ side = "left", variant = "sidebar", collapsible = "offcanvas", className, children, ...props }, ref) => {
-    const { state } = useSidebar()
-
-    return (
-      <div
-        ref={ref}
-        className={cn("flex h-full w-64 flex-col bg-background border-r", className)}
-        data-state={state}
-        data-collapsible={state === "collapsed" ? collapsible : ""}
-        data-variant={variant}
-        data-side={side}
-        {...props}
-      >
-        {children}
-      </div>
-    )
-  },
-)
-Sidebar.displayName = "Sidebar"
-
 const SidebarTrigger = React.forwardRef(({ className, onClick, ...props }, ref) => {
   const { toggleSidebar } = useSidebar()
 
   return (
-    <Button
+    <StyledSidebarTrigger
       ref={ref}
       variant="ghost"
       size="icon"
-      className={cn("h-7 w-7", className)}
+      className={className}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
@@ -111,74 +188,22 @@ const SidebarTrigger = React.forwardRef(({ className, onClick, ...props }, ref) 
     >
       <PanelLeft />
       <span className="sr-only">Toggle Sidebar</span>
-    </Button>
+    </StyledSidebarTrigger>
   )
 })
 SidebarTrigger.displayName = "SidebarTrigger"
 
-const SidebarHeader = React.forwardRef(({ className, ...props }, ref) => {
-  return <div ref={ref} className={cn("flex flex-col gap-2 p-2", className)} {...props} />
-})
-SidebarHeader.displayName = "SidebarHeader"
-
-const SidebarFooter = React.forwardRef(({ className, ...props }, ref) => {
-  return <div ref={ref} className={cn("flex flex-col gap-2 p-2", className)} {...props} />
-})
-SidebarFooter.displayName = "SidebarFooter"
-
-const SidebarContent = React.forwardRef(({ className, ...props }, ref) => {
-  return <div ref={ref} className={cn("flex min-h-0 flex-1 flex-col gap-2 overflow-auto", className)} {...props} />
-})
-SidebarContent.displayName = "SidebarContent"
-
-const SidebarGroup = React.forwardRef(({ className, ...props }, ref) => {
-  return <div ref={ref} className={cn("relative flex w-full min-w-0 flex-col p-2", className)} {...props} />
-})
-SidebarGroup.displayName = "SidebarGroup"
-
-const SidebarGroupContent = React.forwardRef(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("w-full text-sm", className)} {...props} />
-))
-SidebarGroupContent.displayName = "SidebarGroupContent"
-
-const SidebarMenu = React.forwardRef(({ className, ...props }, ref) => (
-  <ul ref={ref} className={cn("flex w-full min-w-0 flex-col gap-1", className)} {...props} />
-))
-SidebarMenu.displayName = "SidebarMenu"
-
-const SidebarMenuItem = React.forwardRef(({ className, ...props }, ref) => (
-  <li ref={ref} className={cn("group/menu-item relative", className)} {...props} />
-))
-SidebarMenuItem.displayName = "SidebarMenuItem"
-
-const SidebarMenuButton = React.forwardRef(({asChild = false, isActive = false, className, ...props }, ref) => {
-  const Comp = asChild ? "span" : "button"
-
-  return (
-    <Comp
-      ref={ref}
-      className={cn(
-        "flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-        isActive && "bg-accent text-accent-foreground",
-        className,
-      )}
-      {...props}
-    />
-  )
-})
-SidebarMenuButton.displayName = "SidebarMenuButton"
-
 export {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+  StyledSidebar as Sidebar,
+  SidebarContentWrapper as SidebarContent,
+  SidebarSection as SidebarFooter,
+  SidebarGroupWrapper as SidebarGroup,
+  SidebarGroupContentWrapper as SidebarGroupContent,
+  SidebarSection as SidebarHeader,
+  SidebarMenuWrapper as SidebarMenu,
+  SidebarMenuButtonStyled as SidebarMenuButton,
+  SidebarMenuItemWrapper as SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
   useSidebar,
-}
+} 

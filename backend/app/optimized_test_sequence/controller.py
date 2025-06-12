@@ -52,7 +52,7 @@ async def optimize_sequence(
         sequence_id=sequence.sequence_id,
         message_id=sequence.message_id,
         created_date=sequence.created_date,
-        instrument=sequence.instrument,
+        # instrument=sequence.instrument,
         explanation=explanation.explanation_text,
         commands=[
             models.ScpiCommandResponse(

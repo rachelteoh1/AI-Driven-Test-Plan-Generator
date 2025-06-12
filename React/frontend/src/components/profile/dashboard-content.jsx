@@ -1,8 +1,9 @@
-import { BarChart3 } from "lucide-react";
-import styled from "styled-components";
-import { ShadMetricsChart } from "./ShadMetricsChart";
-import { ShadCircularProgress } from "./ShadCircularProgress";
-import { useUserDashboard } from "../../hook/useDashboard";
+import { BarChart3 } from "lucide-react"
+import styled from "styled-components"
+import { ShadMetricsChart } from "./ShadMetricsChart"
+import { ShadCircularProgress } from "./ShadCircularProgress"
+import { useUserDashboard } from "../../hook/useDashboard"
+import { COLORS, FONTSIZE, FONTWEIGHT, SPACING } from "../../lib/styles"
 
 const Container = styled.div`
   display: flex;
@@ -10,40 +11,40 @@ const Container = styled.div`
   align-items: center;
   min-height: 100%;
   width: 100%;
-`;
+  background-color: ${COLORS.background.light};
+`
 
 const Wrapper = styled.div`
   width: 100%;
   max-width: 768px;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* Reduced vertical gap */
-`;
+  gap: ${SPACING.lg};
+`
 
 const Grid = styled.div`
   display: grid;
-  gap: 1rem; /* Reduced gap between cards */
-`;
+  gap: ${SPACING.md};
+`
 
 const ThreeColGrid = styled(Grid)`
   grid-template-columns: repeat(3, 1fr);
-`;
+`
 
 const TwoColGrid = styled(Grid)`
   grid-template-columns: repeat(2, 1fr);
-  padding-top: 0rem; /* Reduced padding top */
-`;
+`
 
 const StyledCard = styled.div`
   background-color: white;
-  border: 1px solid #e5e7eb;
+  border: 1px solid ${COLORS.grey};
   border-radius: 0.375rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-`;
+`
 
 const CardContent = styled.div`
-  padding: 2rem;
-`;
+  padding: ${SPACING.xl};
+`
 
 const StatIcon = styled.div`
   width: 1.5rem;
@@ -52,78 +53,66 @@ const StatIcon = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-`;
+`
 
 const StatTitle = styled.p`
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-bottom: 0.5rem;
-`;
+  font-size: ${FONTSIZE.sm};
+  color: ${COLORS.medium};
+  margin-bottom: ${SPACING.sm};
+`
 
 const StatValue = styled.p`
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #111827;
-`;
+  font-size: ${FONTSIZE["2xl"]};
+  font-weight: ${FONTWEIGHT.bold};
+  color: ${COLORS.dark};
+`
 
 const InstrumentValue = styled.p`
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #111827;
-`;
+  font-size: ${FONTSIZE.lg};
+  font-weight: ${FONTWEIGHT.medium};
+  color: ${COLORS.dark};
+`
 
 const TextCenter = styled.div`
   text-align: center;
-`;
+`
 
-const FlexColumnSpaceY4 = styled.div`
+const FlexColumn = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1rem; /* controls spacing between elements vertically */
-`;
+  gap: ${SPACING.md};
+`
 
-const FlexRowCenterGap2 = styled.div`
+const FlexRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 0rem;
-`;
-
-const SmallIconWrapper = styled(StatIcon)`
-  & > svg {
-    height: 0.75rem; /* 12px */
-    width: 0.75rem;
-  }
-`;
+  gap: ${SPACING.sm};
+`
 
 const SmallerIconWrapper = styled(StatIcon)`
   width: 1rem;
   height: 1rem;
   background-color: #fbcfe8;
-  border-radius: 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
   & > svg {
-    height: 0.5rem; /* 8px */
     width: 0.5rem;
+    height: 0.5rem;
     color: #db2777;
   }
-`;
+`
 
 const MetricHeader = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 0.875rem;
-  color: #6b7280;
-`;
+  gap: ${SPACING.sm};
+  font-size: ${FONTSIZE.sm};
+  color: ${COLORS.medium};
+`
 
 export function DashboardContent() {
-    const { data, isLoading, isError } = useUserDashboard();
+  const { data, isLoading, isError } = useUserDashboard()
 
-  if (isLoading) return <Container>Loading...</Container>;
-  if (isError) return <Container>Error loading dashboard data.</Container>;
+  if (isLoading) return <Container>Loading...</Container>
+  if (isError) return <Container>Error loading dashboard data.</Container>
 
   const {
     total_test_plans,
@@ -131,15 +120,12 @@ export function DashboardContent() {
     total_minutes_saved,
     most_used_device,
     month,
-  } = data;
+  } = data
 
-  const metricsData = [...data.weekly_stats]
-  .reverse()
-  .map((item, index) => ({
+  const metricsData = [...data.weekly_stats].reverse().map((item, index) => ({
     week: `Week ${index + 1}`,
     value: item.minutes_saved,
-}));
-
+  }))
 
   return (
     <Container>
@@ -147,52 +133,49 @@ export function DashboardContent() {
         <ThreeColGrid>
           <StyledCard>
             <CardContent>
-              <FlexColumnSpaceY4>
-                <FlexRowCenterGap2>
+              <FlexColumn>
+                <FlexRow>
                   <StatIcon style={{ backgroundColor: "#DBEAFE" }}>
-                    <BarChart3 style={{ height: 12, width: 12, color: "#2563EB" }} />
+                    <BarChart3 style={{ height: 12, width: 12, color: COLORS.secondary }} />
                   </StatIcon>
-                </FlexRowCenterGap2>
-
+                </FlexRow>
                 <div>
                   <StatTitle>Total test plan generated</StatTitle>
                   <StatValue>{total_test_plans}</StatValue>
                 </div>
-              </FlexColumnSpaceY4>
+              </FlexColumn>
             </CardContent>
           </StyledCard>
 
           <StyledCard>
             <CardContent>
-              <FlexColumnSpaceY4>
-                <FlexRowCenterGap2>
+              <FlexColumn>
+                <FlexRow>
                   <StatIcon style={{ backgroundColor: "#EDE9FE" }}>
                     <BarChart3 style={{ height: 12, width: 12, color: "#7C3AED" }} />
                   </StatIcon>
-                </FlexRowCenterGap2>
-
+                </FlexRow>
                 <div>
                   <StatTitle>Total SCPI generated</StatTitle>
                   <StatValue>{total_commands_generated}</StatValue>
                 </div>
-              </FlexColumnSpaceY4>
+              </FlexColumn>
             </CardContent>
           </StyledCard>
 
           <StyledCard>
             <CardContent>
-              <FlexColumnSpaceY4>
-                <FlexRowCenterGap2>
+              <FlexColumn>
+                <FlexRow>
                   <StatIcon style={{ backgroundColor: "#D1FAE5" }}>
                     <BarChart3 style={{ height: 12, width: 12, color: "#16A34A" }} />
                   </StatIcon>
-                </FlexRowCenterGap2>
-
+                </FlexRow>
                 <div>
                   <StatTitle>Most Used Instrument</StatTitle>
                   <InstrumentValue>{most_used_device}</InstrumentValue>
                 </div>
-              </FlexColumnSpaceY4>
+              </FlexColumn>
             </CardContent>
           </StyledCard>
         </ThreeColGrid>
@@ -200,34 +183,36 @@ export function DashboardContent() {
         <TwoColGrid>
           <StyledCard>
             <CardContent>
-              <FlexColumnSpaceY4>
+              <FlexColumn>
                 <MetricHeader>
                   <SmallerIconWrapper>
                     <BarChart3 />
                   </SmallerIconWrapper>
-                  <span>{new Date(month).toLocaleString("default", { month: "long" })}</span>
+                  <span>
+                    {new Date(month).toLocaleString("default", { month: "long" })}
+                  </span>
                 </MetricHeader>
 
                 <div>
                   <p
                     style={{
-                      fontSize: "1.875rem",
-                      fontWeight: "bold",
-                      color: "#111827",
-                      marginBottom: "0.5rem",
+                      fontSize: FONTSIZE["3xl"],
+                      fontWeight: FONTWEIGHT.bold,
+                      color: COLORS.dark,
+                      marginBottom: SPACING.sm,
                     }}
                   >
                     {Math.min(Math.round((total_minutes_saved / 60) * 100), 100)}%
                   </p>
-                  <p style={{ fontSize: "0.875rem", color: "#6B7280" }}>
+                  <p style={{ fontSize: FONTSIZE.sm, color: COLORS.medium }}>
                     Reduced execution time
                   </p>
                 </div>
 
-                <div style={{ marginTop: "0.5rem" }}>
+                <div style={{ marginTop: SPACING.sm }}>
                   <ShadMetricsChart data={metricsData} />
                 </div>
-              </FlexColumnSpaceY4>
+              </FlexColumn>
             </CardContent>
           </StyledCard>
 
@@ -240,31 +225,35 @@ export function DashboardContent() {
                   alignItems: "center",
                   justifyContent: "center",
                   height: "100%",
-                  gap: "1.5rem",
+                  gap: SPACING.lg,
                 }}
               >
                 <TextCenter>
                   <p
                     style={{
-                      fontSize: "1.875rem",
-                      fontWeight: "bold",
-                      color: "#111827",
-                      marginBottom: "0.5rem",
+                      fontSize: FONTSIZE["3xl"],
+                      fontWeight: FONTWEIGHT.bold,
+                      color: COLORS.dark,
+                      marginBottom: SPACING.sm,
                     }}
                   >
                     {total_minutes_saved} Mins
                   </p>
-                  <p style={{ fontSize: "0.875rem", color: "#6B7280" }}>
+                  <p style={{ fontSize: FONTSIZE.sm, color: COLORS.medium }}>
                     Minutes Saved
                   </p>
                 </TextCenter>
 
-                <ShadCircularProgress value={total_minutes_saved} max={60} size={125} />
+                <ShadCircularProgress
+                  value={total_minutes_saved}
+                  max={60}
+                  size={125}
+                />
               </div>
             </CardContent>
           </StyledCard>
         </TwoColGrid>
       </Wrapper>
     </Container>
-  );
+  )
 }
