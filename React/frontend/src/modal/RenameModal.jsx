@@ -1,9 +1,16 @@
 import styled from "styled-components";
 import { Button } from "@mui/material";
-import { COLORS, FONTSIZE, FONTWEIGHT } from "../lib/styles";
+import { COLORS, FONTSIZE, FONTWEIGHT, lightTheme, darkTheme } from "../lib/styles";
 import { useState } from "react";
 import CrossedModal from "./CrossedModal";
 import TickedModal from "./TickModal";
+
+const ModalWrapper = styled.div`
+  background-color: ${({ theme }) => theme.background};
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
 
 const CenteredDiv = styled.div`
   display: flex;
@@ -13,27 +20,34 @@ const CenteredDiv = styled.div`
   gap: 2rem;
   min-height: 40vh;
   margin: 0 auto;
+  background-color: ${({ theme }) => theme.background};
 `;
 
 const Title = styled.h1`
   font-size: ${FONTSIZE["xl"]};
   font-weight: ${FONTWEIGHT.semiBold};
+  color: ${({ theme }) => theme.text};
   text-align: center;
 `;
 
 const Input = styled.input`
-  width: 100%;
-  text-align: center;
-  border: none;
-  background-color: #f9fafb;
-  border-radius: 16px;
-  padding: 12px 0;
-  color: #6b7280;
-  font-size: 1rem;
-  &::placeholder {
-    color: #9ca3af;
-  }
+  width: 30rem;
+  max-width: 30rem;
+  min-height: 2.5rem;
+  padding: 12px 40px 12px 16px;
+  background-color: ${({ theme }) => theme.backgroundMedium};
+  border: 1px solid ${({ theme }) => theme.status.tick};
+  border-radius: 1rem;
   outline: none;
+  color: ${({ theme }) => theme.text};
+  font-size: ${FONTSIZE.base};
+  font-family: inherit;
+  opacity: 1;
+  line-height: 1.5;
+  box-sizing: border-box;
+  &::placeholder {
+    color: ${({ theme }) => theme.greys.dark};
+  }
 `;
 
 const RowDiv = styled.div`
@@ -41,6 +55,7 @@ const RowDiv = styled.div`
   flex-direction: row;
   justify-content: space-around;
   gap: 5rem;
+  background-color: ${({ theme }) => theme.background};
 `;
 
 export default function RenameModal({ chat, onRename, hideModal }) {
@@ -82,6 +97,7 @@ const [status, setStatus] = useState('editing');
 
 
   return (
+    <ModalWrapper>
     <CenteredDiv>
       <Title>Rename Chat</Title>
       <Input
@@ -109,5 +125,6 @@ const [status, setStatus] = useState('editing');
         </Button>
       </RowDiv>
     </CenteredDiv>
+    </ModalWrapper>
   );
 }

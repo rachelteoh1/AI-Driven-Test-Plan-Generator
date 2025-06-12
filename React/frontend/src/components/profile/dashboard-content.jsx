@@ -11,7 +11,7 @@ const Container = styled.div`
   align-items: center;
   min-height: 100%;
   width: 100%;
-  background-color: ${COLORS.background.light};
+  background-color: ${({ theme }) => theme.background};
 `
 
 const Wrapper = styled.div`
@@ -36,8 +36,8 @@ const TwoColGrid = styled(Grid)`
 `
 
 const StyledCard = styled.div`
-  background-color: white;
-  border: 1px solid ${COLORS.grey};
+  background-color: ${({ theme }) => theme.card};
+  border: 1px solid ${({ theme }) => theme.greys.medium};
   border-radius: 0.375rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 `
@@ -57,20 +57,20 @@ const StatIcon = styled.div`
 
 const StatTitle = styled.p`
   font-size: ${FONTSIZE.sm};
-  color: ${COLORS.medium};
+  color: ${({ theme }) => theme.greys.light};
   margin-bottom: ${SPACING.sm};
 `
 
 const StatValue = styled.p`
   font-size: ${FONTSIZE["2xl"]};
   font-weight: ${FONTWEIGHT.bold};
-  color: ${COLORS.dark};
+  color: ${({ theme }) => theme.text};
 `
 
 const InstrumentValue = styled.p`
   font-size: ${FONTSIZE.lg};
   font-weight: ${FONTWEIGHT.medium};
-  color: ${COLORS.dark};
+  color: ${({ theme }) => theme.text};
 `
 
 const TextCenter = styled.div`
@@ -105,7 +105,7 @@ const MetricHeader = styled.div`
   align-items: center;
   gap: ${SPACING.sm};
   font-size: ${FONTSIZE.sm};
-  color: ${COLORS.medium};
+  color: ${({ theme }) => theme.greys.light};
 `
 
 export function DashboardContent() {
@@ -194,16 +194,9 @@ export function DashboardContent() {
                 </MetricHeader>
 
                 <div>
-                  <p
-                    style={{
-                      fontSize: FONTSIZE["3xl"],
-                      fontWeight: FONTWEIGHT.bold,
-                      color: COLORS.dark,
-                      marginBottom: SPACING.sm,
-                    }}
-                  >
+                  <StatValue>
                     {Math.min(Math.round((total_minutes_saved / 60) * 100), 100)}%
-                  </p>
+                  </StatValue>
                   <p style={{ fontSize: FONTSIZE.sm, color: COLORS.medium }}>
                     Reduced execution time
                   </p>
@@ -229,16 +222,9 @@ export function DashboardContent() {
                 }}
               >
                 <TextCenter>
-                  <p
-                    style={{
-                      fontSize: FONTSIZE["3xl"],
-                      fontWeight: FONTWEIGHT.bold,
-                      color: COLORS.dark,
-                      marginBottom: SPACING.sm,
-                    }}
-                  >
+                  <StatValue>
                     {total_minutes_saved} Mins
-                  </p>
+                  </StatValue>
                   <p style={{ fontSize: FONTSIZE.sm, color: COLORS.medium }}>
                     Minutes Saved
                   </p>

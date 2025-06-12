@@ -5,18 +5,17 @@ import styled from "styled-components"
 import { Header } from "../header"
 import { Profile } from "./profile"
 import { DashboardContent } from "./dashboard-content"
-import { COLORS, FONTSIZE, FONTWEIGHT, SPACING } from "../../lib/styles"
+import { COLORS, FONTSIZE, FONTWEIGHT, SPACING, lightTheme, darkTheme } from "../../lib/styles"
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: ${COLORS.background.light};
+  background-color: ${({ theme }) => theme.background};
 `
 
 const TabWrapper = styled.div`
   padding: 0 ${SPACING.sm};
-  border-bottom: 1px solid ${COLORS.grey};
 `
 
 const Tabs = styled.div`
@@ -45,7 +44,7 @@ const Content = styled.div`
   flex: 1;
   padding: ${SPACING["2xl"]};
   overflow: auto;
-  background-color: ${COLORS.background.light};
+  background-color: ${({ theme }) => theme.background};
 `
 
 export function MainDashboard() {

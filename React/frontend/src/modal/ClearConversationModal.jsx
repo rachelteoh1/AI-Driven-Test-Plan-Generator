@@ -19,12 +19,13 @@ const CenteredDiv = styled.div`
   width: 100%;
   margin: 0 auto;
   padding: 1rem;
+  background-color: ${({ theme }) => theme.background};
 `;
 
 const Title = styled.h1`
   font-size: ${FONTSIZE["2xl"]};
   font-weight: ${FONTWEIGHT.medium};
-  color: ${COLORS.black};
+  color: ${({ theme }) => theme.text};
 `;
 
 const RowDiv = styled.div`

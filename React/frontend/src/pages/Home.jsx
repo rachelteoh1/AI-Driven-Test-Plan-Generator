@@ -3,8 +3,8 @@ import { AppSidebar } from "../components/app-sidebar";
 import { Header } from "../components/header";
 import ChatInterface from "./Conversation";
 import { useState, useEffect, useContext } from "react";
-import styled from "styled-components";
-import { FONTSIZE, FONTWEIGHT, SPACING, COLORS } from "../lib/styles";
+import styled, { ThemeProvider } from "styled-components";
+import { FONTSIZE, FONTWEIGHT, SPACING, COLORS, lightTheme, darkTheme } from "../lib/styles";
 import {
   useAddChatLog,
   useChatLogs,
@@ -24,20 +24,21 @@ const PageContainer = styled.div`
 
 const MainContent = styled.main`
   margin-left: 8rem;
-  background-color: ${COLORS.background.light};
+  background-color: ${({ theme }) => theme.background};
   height: 100vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: center;
 `;
+
 const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
   flex: 1;
   padding: ${SPACING.L};
   overflow-y: auto;
-  background-color: ${COLORS.background.light};
+  background-color: ${({ theme }) => theme.background};
   height: calc(100vh - ${SPACING.xl} - 64px); /* still needed */
   margin-top: ${SPACING.xl};
   margin-bottom: 64px;
@@ -59,7 +60,7 @@ const ChatWrapper = styled.div`
   bottom: 0;
   width: 50rem;
   max-width: calc(100vw - 2rem);
-  background-color: ${COLORS.white};
+  background-color: ${({ theme }) => theme.card};
   z-index: 10;
   overflow-y: auto;
   /* Hide scrollbar for Chrome, Safari */
@@ -75,7 +76,7 @@ const TextContainer = styled.div`
 const Title = styled.h1`
   font-size: ${FONTSIZE.XL};
   font-weight: ${FONTWEIGHT.bold};
-  color: ${COLORS.black};
+  color: ${({ theme }) => theme.text};
   margin-bottom: ${SPACING.md};
 `;
 const HeaderWrapper = styled.div`
@@ -84,9 +85,9 @@ const HeaderWrapper = styled.div`
   left: 16rem; /* width of the sidebar */
   right: 0;
   height: ${SPACING.xl};
-  background-color: ${COLORS.white};
+  background-color: ${({ theme }) => theme.card};
   z-index: 20;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid ${({ theme }) => theme.greys?.light ?? "#e5e7eb"};
 `;
 const ExamplesGrid = styled.div`
   display: flex;
@@ -99,16 +100,19 @@ const ExampleButton = styled.button`
   width: 100%;
   text-align: left;
   padding: ${SPACING.md};
-  border: 1px;
+  border: none;
   border-radius: 0.5rem;
-  background-color: ${COLORS.background.light};
+  background-color: ${({ theme }) => theme.primaryLight};
+  color: ${({ theme }) => theme.text};
+
   cursor: pointer;
   transition: background-color 0.2s;
 
   &:hover {
-    background-color: ${COLORS.background.medium};
+    background-color: ${({ theme }) => theme.hover};
   }
 `;
+
 export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => {
   const { user ,isLoading} = useContext(UserStatusContext); 
   const { data: activeChatLogs = [] } = useChatLogs(activeChatId);

@@ -5,14 +5,14 @@ import { COLORS, FONTSIZE, FONTWEIGHT, SPACING } from "../../lib/styles";
 // Button variants
 const variantStyles = {
   default: css`
-    background-color: ${COLORS.lightgreyblue};
-    color: ${COLORS.dark};
-    &:hover { background-color: ${COLORS.greyblue}dd; }
+    background-color: ${({ theme }) => theme.newChat};
+    color: ${({ theme }) => theme.greys.dark};
+    &:hover { background-color:  ${({ theme }) => theme.hover}; }
   `,
   ghost: css`
     background: transparent;
-    color: ${COLORS.dark};
-    &:hover { background-color: ${COLORS.lightgreyblue}; }
+    color: ${({ theme }) => theme.greys.dark};
+    &:hover { background-color: ${({ theme }) => theme.hover}; }
   `,
 };
 

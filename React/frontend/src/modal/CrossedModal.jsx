@@ -12,18 +12,19 @@ const CenteredDiv = styled.div`
     align-items: center;
     gap: 1rem;
     min-height: 65vh;
+    background-color: ${({ theme }) => theme.background};
 `;
 
 const Title = styled.h1`
     font-size: ${FONTSIZE['2xl']};
     font-weight: ${FONTWEIGHT.medium};
-    color: ${COLORS.black};
+    color: ${({ theme }) => theme.text}
 `;
 
 const Description = styled.p`
     font-size: ${FONTSIZE.lg};
     font-weight: ${FONTWEIGHT.normal};
-    color: ${COLORS.darkGrey};
+    color: ${({ theme }) => theme.text}
 `;
 
 

@@ -6,7 +6,7 @@ import styled from "styled-components";
 import { User } from "lucide-react";
 import useModal from "../../modal/useModal";
 import TickedModal from "../../modal/TickModal";
-import { COLORS, FONTSIZE, FONTWEIGHT, SPACING } from "../../lib/styles";
+import { COLORS, FONTSIZE, FONTWEIGHT, SPACING, lightTheme, darkTheme } from "../../lib/styles";
 
 // Styled Components
 const Wrapper = styled.div`
@@ -15,7 +15,7 @@ const Wrapper = styled.div`
   align-items: center;
   min-height: 100%;
   width: 100%;
-  background-color: ${COLORS.background.light};
+  background-color: ${({ theme }) => theme.background};
 `;
 
 const FormContainer = styled.div`
@@ -34,8 +34,8 @@ const AvatarWrapper = styled.div`
 const Avatar = styled.div`
   width: 3rem;
   height: 3rem;
-  background-color: white;
-  border: 4px solid ${COLORS.grey};
+  background-color: ${({ theme }) => theme.card};
+  border: 4px solid ${({ theme }) => theme.status.cancel};
   border-radius: 9999px;
   display: flex;
   align-items: center;
@@ -56,7 +56,7 @@ const FieldWrapper = styled.div`
   label {
     font-size: ${FONTSIZE.base};
     font-weight: ${FONTWEIGHT.medium};
-    color: ${COLORS.dark};
+    color: ${({ theme }) => theme.text};
   }
 `;
 
@@ -75,7 +75,7 @@ const ToggleRow = styled.div`
   label {
     font-size: ${FONTSIZE.base};
     font-weight: ${FONTWEIGHT.medium};
-    color: ${COLORS.dark};
+    color: ${({ theme }) => theme.text};
   }
 `;
 
@@ -107,7 +107,7 @@ const StyledLabel = styled.label`
   font-size: ${FONTSIZE.sm};
   font-weight: ${FONTWEIGHT.medium};
   line-height: 1.25rem;
-  color: ${COLORS.dark};
+  color: ${({ theme }) => theme.greys.dark};
 
   &[disabled] {
     opacity: 0.7;
@@ -119,18 +119,18 @@ const StyledInput = styled.input`
   width: 100%;
   padding: 0 ${SPACING.md};
   font-size: ${FONTSIZE.sm};
-  border: 1px solid ${COLORS.inputBorder || COLORS.grey};
-  background-color: ${COLORS.background.light};
-  color: ${COLORS.dark};
+  border: 1px solid ${({ theme }) => theme.greys.medium};
+  background-color: ${({ theme }) => theme.background};
+  color: ${({ theme }) => theme.greys.dark};
   border-radius: 0.375rem;
 
   &:focus-visible {
-    outline: 2px solid ${COLORS.accent};
+    outline: 2px solid ${({ theme }) => theme.accent};
     outline-offset: 2px;
   }
 
   &::placeholder {
-    color: ${COLORS.placeholder || COLORS.grey};
+    color: ${({ theme }) => theme.greys.light};
   }
 
   &:disabled {
@@ -150,8 +150,8 @@ const StyledButton = styled.button`
   width: 8rem;
   height: 3rem;
   border-radius: 0.375rem;
-  background-color: ${COLORS.lightgreyblue};
-  color: ${COLORS.dark};
+  background-color: ${({ theme }) => theme.newChat};
+  color: ${({ theme }) => theme.greys.dark};
   font-weight: ${FONTWEIGHT.medium};
   font-size: ${FONTSIZE.base};
   border: none;
@@ -159,11 +159,11 @@ const StyledButton = styled.button`
   transition: background-color 0.2s ease;
 
   &:hover {
-    background-color: ${COLORS.greyblue}; // darker on hover
+    background-color: ${({ theme }) => theme.hover};
   }
 
   &:focus-visible {
-    outline: 2px solid ${COLORS.accent};
+    outline: 2px solid ${({ theme }) => theme.accent};
     outline-offset: 2px;
   }
 `;

@@ -41,14 +41,14 @@ import { PanelLeft } from "lucide-react"
 // Button variants
 const variantStyles = {
   default: css`
-    background-color: ${COLORS.lightgreyblue};
-    color: ${COLORS.dark};
-    &:hover { background-color: ${COLORS.greyblue}dd; }
+    background-color: ${({ theme }) => theme.newChat};
+    color: ${({ theme }) => theme.greys.dark};
+    &:hover { background-color:  ${({ theme }) => theme.hover}; }
   `,
   ghost: css`
     background: transparent;
-    color: ${COLORS.dark};
-    &:hover { background-color: ${COLORS.lightgreyblue}; }
+    color: ${({ theme }) => theme.greys.dark};
+    &:hover { background-color: ${({ theme }) => theme.hover}; }
   `,
 };
 
@@ -87,11 +87,10 @@ const Button = styled.button`
   }
 
   &:focus-visible {
-    outline: 2px solid ${COLORS.accent};
+    outline: 2px solid ${({ theme }) => theme.accent};
     outline-offset: 2px;
   }
 `;
-
 
 // dropdown menu
 const menuItem = css`
@@ -100,13 +99,13 @@ const menuItem = css`
   gap: ${SPACING.sm};
   padding: ${SPACING.sm};
   font-size: ${FONTSIZE.sm};
-  color: ${COLORS.dark};
+  color:  ${({ theme }) => theme.greys.dark};
   cursor: pointer;
   border-radius: 0.375rem;
   min-width: 8rem;
   &:hover,
   &[data-highlighted] {
-    background-color: ${COLORS.lightgreyblue};
+    background-color:  ${({ theme }) => theme.newChat};
   }
   &[data-disabled] {
     opacity: 0.5;
@@ -114,10 +113,29 @@ const menuItem = css`
   }
 `;
 
-// Styled components
+// chat item
+const StyledChatItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: ${SPACING.sm};
+  cursor: pointer;
+  border-radius: 0.375rem;
+
+  background-color: ${({ isActive, theme }) =>
+    isActive ? theme.newChat : "transparent"};
+  color: ${({ theme }) => theme.greys.dark};
+
+  &:hover {
+    background-color: ${({ isActive, theme }) =>
+    isActive ? theme.newChat : theme.hover};
+  }
+`;
+
+// rename n delete
 const DropdownMenuContent = styled(Dropdown.Content)`
-  background-color: white;
-  border: 1px solid ${COLORS.grey};
+  background-color: ${({ theme }) => theme.background};
+  border: 1px solid  ${({ theme }) => theme.greys.medium};
   border-radius: 0.375rem;
   padding: ${SPACING.xs};
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -144,7 +162,7 @@ const DropdownMenuSubTrigger = styled(Dropdown.SubTrigger)`
 
 const DropdownMenuSubContent = styled(Dropdown.SubContent)`
   background-color: white;
-  border: 1px solid ${COLORS.grey};
+  border: 1px solid  ${({ theme }) => theme.greys.medium};
   border-radius: 0.375rem;
   padding: ${SPACING.xs};
   margin-left: ${SPACING.sm};
@@ -158,7 +176,7 @@ const DropdownMenuLabel = styled(Dropdown.Label)`
 
 const DropdownMenuSeparator = styled(Dropdown.Separator)`
   height: 1px;
-  background-color: ${COLORS.grey};
+  background-color: ${({ theme }) => theme.greys.medium};
   margin: ${SPACING.sm} 0;
 `;
 
@@ -223,21 +241,22 @@ export function AppSidebar({
     {
       title: "My account",
       icon: User,
-      action: (chats={chats}) => navigate("/profile"),
+      action: (chats = { chats }) => navigate("/profile"),
     },
     {
       title: "Log out",
       icon: LogOut,
-      action: () => {logout(); 
-        navigate("/");}
+      action: () => {
+        logout();
+        navigate("/");
+      }
     },
   ];
 
   return (
-    <Sidebar className="w-64 border-r border-gray-200 fixed top-0 left-0 h-full bg-white z-10">
+    <Sidebar className="w-64 h-screen flex flex-col border-r border-gray-200 fixed top-0 left-0 bg-white z-10">
       <SidebarHeader className="p-4">
         <Button
-          className="w-full justify-start gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200 no-underline"
           onClick={onNewChat}
         >
           <Plus className="h-4 w-4" />
@@ -273,15 +292,17 @@ export function AppSidebar({
               className="list-none"
             >
               <SidebarMenuButton asChild>
-                <button
-                  className={`flex items-center gap-2 px-3 py-2 text-sm w-full text-left no-underline ${item.disabled ? "text-gray-400 cursor-not-allowed" : "text-gray-600 hover:text-gray-900"
-                    }`}
+                <Button
+                  variant="ghost"
+                  size="default"
                   onClick={!item.disabled ? item.action : undefined}
                   disabled={item.disabled}
+                  as="button"
+                  style={{ width: "100%", textAlign: "left" }}
                 >
                   <item.icon className={`h-4 w-4 ${item.disabled ? "text-gray-400" : ""}`} />
                   <span>{item.title}</span>
-                </button>
+                </Button>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
@@ -300,9 +321,8 @@ function ChatItem({ chat, isActive, onSelect, onRename, onDelete }) {
 
 
   return (
-    <div
-      className={`flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-gray-100 group ${isActive ? "bg-gray-200" : ""
-        }`}
+    <StyledChatItem
+      isActive={isActive}
       onClick={onSelect}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -310,11 +330,7 @@ function ChatItem({ chat, isActive, onSelect, onRename, onDelete }) {
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <MessageSquare size={16} className="text-gray-600" />
         {isEditing ? (
-          <input
-            type="text"
-            value={newName}
-
-          />
+          <input type="text" value={newName} />
         ) : (
           <span className="truncate text-sm">{chat.title}</span>
         )}
@@ -372,6 +388,6 @@ function ChatItem({ chat, isActive, onSelect, onRename, onDelete }) {
           </DropdownMenuContent>
         </DropdownMenu>
       )}
-    </div>
+    </StyledChatItem>
   );
 }

@@ -31,10 +31,9 @@ const SidebarWrapper = styled.div`
 const StyledSidebar = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100vh;
   width: ${SIDEBAR_WIDTH};
-  background-color: ${COLORS.background.light};
-  border-right: 1px solid ${COLORS.grey};
+  background-color: ${({ theme }) => theme.card};
 
   &[data-collapsible="offcanvas"] {
     // Add collapsible styles if needed
@@ -101,22 +100,22 @@ const SidebarMenuButtonStyled = styled.button`
   text-align: left;
   outline: none;
   background-color: transparent;
-  color: ${COLORS.dark};
+  color: ${({ theme }) => theme.greys.dark};
   transition: background-color 0.2s, color 0.2s;
   font-weight: ${FONTWEIGHT.normal};
 
   &:hover {
-    background-color: ${COLORS.lightgreyblue};
-    color: ${COLORS.light};
+    background-color: ${({ theme }) => theme.hover};
+    color: ${({ theme }) => theme.greys.light};
   }
 
   &:focus-visible {
-    box-shadow: 0 0 0 2px ${COLORS.accent};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.accent};
   }
 
   &[data-active="true"] {
-    background-color: ${COLORS.accent};
-    color: ${COLORS.light};
+    background-color: ${({ theme }) => theme.newChat};
+    color: ${({ theme }) => theme.greys.light};
   }
 
   &:disabled {

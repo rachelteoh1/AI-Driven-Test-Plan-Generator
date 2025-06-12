@@ -21,8 +21,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: ${COLORS.background.light};
-  
+  background-color: ${({ theme }) => theme.background};
 `
 
 const MessagesContainer = styled.div`
@@ -36,8 +35,7 @@ const MessagesContainer = styled.div`
 
 const InputArea = styled.div`
   padding: ${SPACING.lg};
-
-  background-color: ${COLORS.background.light};
+  background-color: ${({ theme }) => theme.background};
 `
 
 const UserMessageContainer = styled.div`
@@ -49,17 +47,18 @@ const UserMessageContainer = styled.div`
 
 `
 const UserMessageBubble = styled.div`
-  background-color: ${COLORS.greyblue};
+  background-color: ${({ theme }) => theme.newChat};
   border-radius: 1rem;
-  padding: 10px 25px 10px 25px;
-  margin-right:1rem;
+  padding: 10px 25px;
+  margin-right: 1rem;
   max-width: 44rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 `
 
 const UserMessageContent = styled.div`
-  color: ${COLORS.black};
-  font-weight: ${FONTWEIGHT.medium};
+  color: ${({ theme }) => theme.text};
+  font-weight: ${FONTWEIGHT.normal};
+  font-size: ${FONTSIZE.sm};
   word-wrap: break-word;
   white-space: pre-wrap;
 `
@@ -68,16 +67,16 @@ const BotMessageContainer = styled.div`
   position: relative;
 `
 const BotMessageContent = styled.div`
-  color: ${COLORS.black};
+  color: ${({ theme }) => theme.text};
+  font-weight: ${FONTWEIGHT.normal};
   line-height: 1.625;
   max-width: 64rem;
   word-wrap: break-word;
   white-space: pre-wrap;
-  font-family: sans-serif;
 `
 
 const LoadingContainer = styled.div`
-  color: ${COLORS.black};
+  color: ${({ theme }) => theme.text};
   line-height: 1.625;
   max-width: 64rem;
 `
@@ -86,7 +85,7 @@ const LoadingContent = styled.div`
   display: flex;
   align-items: center;
   gap: ${SPACING.sm};
-  color: ${COLORS.black};
+  color: ${({ theme }) => theme.text};
 `
 
 const LoadingIcon = styled(Loader2)`
@@ -95,59 +94,43 @@ const LoadingIcon = styled(Loader2)`
   animation: ${spin} 1s linear infinite;
 `
 
-
-
 const MessageTextArea = styled.textarea`
   width: 100%;
   min-height: 2.5rem;
   max-height: 12rem;
   padding: 12px 40px 12px 16px;
-  background-color: ${props => props.$isLoading ? COLORS.background.light : COLORS.background.medium};
-  border: 1px solid ${COLORS.lightblue};
+  background-color: ${({ $isLoading, theme }) =>
+    $isLoading ? theme.background : theme.backgroundMedium};
+  border: 1px solid ${({ theme }) => theme.status.tick};
   border-radius: 1rem;
   outline: none;
-  color: ${COLORS.black};
-  opacity: ${props => props.$isLoading ? 0.5 : 1};
+  color: ${({ theme }) => theme.text};
+  opacity: ${({ $isLoading }) => ($isLoading ? 0.5 : 1)};
   resize: none;
   line-height: 1.5;
   font-family: inherit;
   font-size: ${FONTSIZE.base};
   overflow-y: auto;
   box-sizing: border-box;
-  
 `
 const SubmitButton = styled(Button)`
   position: absolute;
   left: 600px;
-  bottom: 43px; 
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  bottom: 43px;
   background-color: transparent;
-  color: ${COLORS.grey};
-  opacity: ${props => (props.$isLoading || !props.$hasValue) ? 0.5 : 1};
+  color: ${({ theme }) => theme.status.cancel};
+  opacity: ${({ $isLoading, $hasValue }) => ($isLoading || !$hasValue ? 0.5 : 1)};
 `
 
 const UploadButton = styled(Button)`
   position: relative;
-  top: -15px; /* 👈 move it higher */
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  top: -15px;
   background-color: transparent;
-  color: ${COLORS.grey};
+  color: ${({ theme }) => theme.status.cancel};
   font-size: ${FONTSIZE.sm};
 
   &:hover {
-    background-color: ${COLORS.darkblue};
+    background-color: ${({ theme }) => theme.hover};
   }
 `
 
@@ -157,8 +140,8 @@ const CopyButton = styled(Button)`
   right: ${SPACING.md};
   top: 50%;
   transform: translateY(-50%);
-  background-color: ${COLORS.blue};
-  border: 1px solid ${COLORS.border};
+  background-color: ${({ theme }) => theme.accent};
+  border: 1px solid ${({ theme }) => theme.status.tick};
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   opacity: 0;
   transition: opacity 200ms;
@@ -175,9 +158,59 @@ const TextAreaWrapper = styled.div`
   width: 100%;
 `;
 
+// pdf
+const PdfContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: ${SPACING.sm} ${SPACING.md};
+  margin-bottom: ${SPACING.md};
+  border: 1px solid ${({ theme }) => theme.greys.light};
+  border-radius: 8px;
+  background-color: ${({ theme }) => theme.primaryLight};
+  max-width: 33%;
+  margin-left: 4.5rem;
+
+  @media (max-width: 768px) {
+    max-width: 90%;
+    margin-left: 1rem;
+  }
+`;
+
+const PdfName = styled.span`
+  display: flex;
+  align-items: center;
+  gap: ${SPACING.sm};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: ${FONTSIZE.sm};
+  color: ${({ theme }) => theme.text};
+`;
+
+const PdfIcon = styled.img`
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+`;
+
+const RemoveButton = styled.button`
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.greys.medium};
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: ${({ theme }) => theme.status.delete};
+  }
+`;
 
 // Main Export Component
-export default function ChatInterface({ chat , onSendMessage, isLoading }) {
+export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   const [inputValue, setInputValue] = useState("")
   const [pdfFile, setPdfFile] = useState(null) // ✅ Add this
 
@@ -191,20 +224,20 @@ export default function ChatInterface({ chat , onSendMessage, isLoading }) {
     scrollToBottom()
   }, [chat.messages, isLoading])
 
-const handleSubmit = (e) => {
-  e.preventDefault()
-  if (!isLoading) {
-    if (inputValue.trim()) {
-      // If there is text input, send it along with PDF file if any
-      onSendMessage(inputValue, pdfFile)
-    } else if (pdfFile) {
-      // If no text but PDF uploaded, send the PDF file name only
-      onSendMessage(null, pdfFile)
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!isLoading) {
+      if (inputValue.trim()) {
+        // If there is text input, send it along with PDF file if any
+        onSendMessage(inputValue, pdfFile)
+      } else if (pdfFile) {
+        // If no text but PDF uploaded, send the PDF file name only
+        onSendMessage(null, pdfFile)
+      }
+      setInputValue("")
+      setPdfFile(null)
     }
-    setInputValue("")
-    setPdfFile(null)
   }
-}
 
 
   return (
@@ -325,46 +358,16 @@ function MessageInput({ value, onChange, onSubmit, isLoading, pdfFile, setPdfFil
   return (
     <>
       {pdfFile && (
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "8px 12px",
-          marginBottom: "1rem",
-          border: "1px solid #ccc",
-          borderRadius: "8px",
-          backgroundColor: "#f9f9f9",
-          maxWidth: "33%",
-          marginLeft: "4.5rem",
-        }}>
-          <span style={{ display: "flex", alignItems: "center", gap: "8px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: '0.9rem' }}>
-            <img
-              src={pdfIcon}
-              alt="PDF icon"
-              style={{ width: 18, height: 18 }}
-            />
+        <PdfContainer>
+          <PdfName>
+            <PdfIcon src={pdfIcon} alt="PDF icon" />
             {pdfFile.name}
-          </span>
-          <button
-            onClick={() => setPdfFile(null)}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#999",
-              cursor: "pointer",
-              padding: 0,
-              display: "flex",
-              alignItems: "center",
-            }}
-            aria-label="Remove PDF"
-            type="button"
-          >
+          </PdfName>
+          <RemoveButton onClick={() => setPdfFile(null)} aria-label="Remove PDF" type="button">
             <X size={16} />
-          </button>
-        </div>
+          </RemoveButton>
+        </PdfContainer>
       )}
-
-
       <MessageForm onSubmit={onSubmit}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <UploadButton component="label">
