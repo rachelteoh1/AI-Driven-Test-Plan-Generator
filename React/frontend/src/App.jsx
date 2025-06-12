@@ -16,7 +16,7 @@ import { useChats } from "./hook/useChat";
 function App() {
   const [activeChatId, setActiveChatId] = useState(null);
 
-  const { user } = useContext(UserStatusContext); // <-- assuming your `user` object comes from context
+  const { user ,isLoading} = useContext(UserStatusContext); // <-- assuming your `user` object comes from context
 
   
 
@@ -24,7 +24,19 @@ function App() {
     typeof user?.id === "string" ? user.id : user?.id?.id || "";
 
   // Hooks
-  const { data: chats = [] ,  isLoading: isChatsLoading,} = useChats(safeUserId);
+  // const { data: chats = [] ,  isLoading: isChatsLoading,} = useChats(safeUserId);
+  const { 
+  data: chats = [], 
+  isLoading: isChatsLoading,
+  refetch: refetchChats 
+} = useChats(safeUserId);
+
+// Use useEffect for side effects
+useEffect(() => {
+  if (!isLoading && safeUserId) {
+    refetchChats();  // Trigger once user is known
+  }
+}, [safeUserId, isLoading, refetchChats]);
 
   const onSelectChat = (chatId) => {
     setActiveChatId(chatId);
@@ -33,6 +45,7 @@ function App() {
   return (
     <>
       <Routes>
+    
         <Route
           path="/home"
           element={

@@ -26,9 +26,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "./ui/sidebar"
-import { Button } from "./ui/button"
-import { useNavigate, useLocation } from "react-router-dom"
+} from "./ui/sidebar";
+import { Button } from "./ui/button";
+import { useNavigate, useLocation } from "react-router-dom";
 import ExportModal from "../modal/ExportModal"; // adjust path if needed
 import { useState } from "react";
 import {
@@ -48,14 +48,15 @@ export function AppSidebar({
   onRenameChat,
   onDeleteChat,
   onSetChat,
+  isChatsLoading,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isChatSessionPage = location.pathname.startsWith("/home"); // update if your route is different
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const testResults = [
-    { test: 'Voltage Test', result: 'Pass', time: '2.1s' },
-    { test: 'Resistance Test', result: 'Fail', time: '3.5s' },
+    { test: "Voltage Test", result: "Pass", time: "2.1s" },
+    { test: "Resistance Test", result: "Fail", time: "3.5s" },
   ]; // dummy data, should fetch from chat session later on
   const { showModal, hideModal } = useModal();
   const logout = useLogout();
@@ -77,7 +78,6 @@ export function AppSidebar({
               chats={chats}
               onSelectChat={(selectedId) => onSelectChat(selectedId)}
               hideModal={hideModal}
-
             />
           ),
         });
@@ -95,23 +95,23 @@ export function AppSidebar({
               onSetChat={onSetChat}
               activeChat={activeChat}
               hideModal={hideModal}
-
             />
           ),
         });
-
       },
     },
     {
       title: "My account",
       icon: User,
-      action: (chats={chats}) => navigate("/profile"),
+      action: (chats = { chats }) => navigate("/profile"),
     },
     {
       title: "Log out",
       icon: LogOut,
-      action: () => {logout(); 
-        navigate("/");}
+      action: () => {
+        logout();
+        navigate("/");
+      },
     },
   ];
 
@@ -131,17 +131,23 @@ export function AppSidebar({
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="list-none">
-              {(chats ?? []).map((chat) => (
-                <SidebarMenuItem key={chat.session_id} className="list-none">
-                  <ChatItem
-                    chat={chat}
-                    isActive={activeChat?.session_id === chat.session_id}
-                    onSelect={() => onSelectChat(chat.session_id)}
-                    onRename={(newName) => onRenameChat(chat.session_id, newName)}
-                    onDelete={(session_id) => onDeleteChat(session_id)}
-                  />
-                </SidebarMenuItem>
-              ))}
+              {isChatsLoading ? (
+                <p className="text-gray-500 px-4 py-2">Loading chats...</p>
+              ) : (
+                (chats ?? []).map((chat) => (
+                  <SidebarMenuItem key={chat.session_id} className="list-none">
+                    <ChatItem
+                      chat={chat}
+                      isActive={activeChat?.session_id === chat.session_id}
+                      onSelect={() => onSelectChat(chat.session_id)}
+                      onRename={(newName) =>
+                        onRenameChat(chat.session_id, newName)
+                      }
+                      onDelete={(session_id) => onDeleteChat(session_id)}
+                    />
+                  </SidebarMenuItem>
+                ))
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -156,12 +162,19 @@ export function AppSidebar({
             >
               <SidebarMenuButton asChild>
                 <button
-                  className={`flex items-center gap-2 px-3 py-2 text-sm w-full text-left no-underline ${item.disabled ? "text-gray-400 cursor-not-allowed" : "text-gray-600 hover:text-gray-900"
-                    }`}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm w-full text-left no-underline ${
+                    item.disabled
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
                   onClick={!item.disabled ? item.action : undefined}
                   disabled={item.disabled}
                 >
-                  <item.icon className={`h-4 w-4 ${item.disabled ? "text-gray-400" : ""}`} />
+                  <item.icon
+                    className={`h-4 w-4 ${
+                      item.disabled ? "text-gray-400" : ""
+                    }`}
+                  />
                   <span>{item.title}</span>
                 </button>
               </SidebarMenuButton>
@@ -184,12 +197,11 @@ function ChatItem({ chat, isActive, onSelect, onRename, onDelete }) {
   const [isHovered, setIsHovered] = useState(false);
   const { showModal, hideModal } = useModal();
 
-
-
   return (
     <div
-      className={`flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-gray-100 group ${isActive ? "bg-gray-200" : ""
-        }`}
+      className={`flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-gray-100 group ${
+        isActive ? "bg-gray-200" : ""
+      }`}
       onClick={onSelect}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -197,11 +209,7 @@ function ChatItem({ chat, isActive, onSelect, onRename, onDelete }) {
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <MessageSquare size={16} className="text-gray-600" />
         {isEditing ? (
-          <input
-            type="text"
-            value={newName}
-
-          />
+          <input type="text" value={newName} />
         ) : (
           <span className="truncate text-sm">{chat.title}</span>
         )}

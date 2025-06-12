@@ -16,6 +16,10 @@ export const deleteChat = (sessionId) => api.delete(`/chatSession/${sessionId}`)
 export const fetchChatLogs = (sessionId) => api.get(`/chatLog/${sessionId}`);
 export const createChatLog = (data) => api.post(`/chatLog/`, data);
 export const deleteChatLog = ( sessionId ) => api.delete(`/chatLog/${sessionId}`);
+export const detectIntent = (data)=> api.post(`/chatLog/detect-intent`,data);
+export const modifyChatLog = (data)=> api.put(`/chatLog/modify`,data);
+export const getVersionChatLog = (messageId)=> api.get(`/chatLog/versions/${messageId}`);
+
 
 
 
