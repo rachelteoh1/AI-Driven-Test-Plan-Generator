@@ -32,13 +32,13 @@ class ChatLog(Base):
     message_id = Column(UUID, primary_key=True, default=uuid.uuid4)
     session_id = Column(UUID, ForeignKey("chat_sessions.session_id"), nullable=False)
     parent_id = Column(UUID, ForeignKey("chat_logs.message_id"), nullable=True)
-    version_of = Column(UUID, ForeignKey("chat_logs.message_id"), nullable=True)
+    version_of = Column(UUID, ForeignKey("chat_log_versions.version_id"), nullable=True)
     role = Column(String)
     content = Column(Text)
     timestamp = Column(DateTime, default=datetime.utcnow)
     is_active = Column(Boolean, default=True)
     has_been_modified = Column(Boolean, default=False)
-
+    updated_at  = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
    
 
 class ChatLogVersion(Base):

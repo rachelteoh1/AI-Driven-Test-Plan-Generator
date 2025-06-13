@@ -25,18 +25,14 @@ function App() {
 
   // Hooks
   // const { data: chats = [] ,  isLoading: isChatsLoading,} = useChats(safeUserId);
-  const { 
-  data: chats = [], 
+const {
+  data: chats = [],
   isLoading: isChatsLoading,
-  refetch: refetchChats 
-} = useChats(safeUserId);
+} = useChats(safeUserId, {
+  enabled: !!safeUserId && !isLoading,   // <- important
+});
 
-// Use useEffect for side effects
-useEffect(() => {
-  if (!isLoading && safeUserId) {
-    refetchChats();  // Trigger once user is known
-  }
-}, [safeUserId, isLoading, refetchChats]);
+
 
   const onSelectChat = (chatId) => {
     setActiveChatId(chatId);

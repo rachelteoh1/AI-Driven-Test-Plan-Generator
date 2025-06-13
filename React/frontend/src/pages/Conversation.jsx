@@ -35,7 +35,6 @@ const spin = keyframes`
   to { transform: rotate(360deg); }
 `;
 
-
 // Styled Components
 const Container = styled.div`
   display: flex;
@@ -212,7 +211,6 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   const messagesEndRef = useRef(null);
   const modifyChatLogMutation = useModifyChatLog();
 
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -261,8 +259,6 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
 
       setEditingMessageId(null);
       setEditContent("");
-
-   
     } catch (err) {
       console.error("Edit failed:", err);
     }
@@ -273,22 +269,20 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     setEditContent("");
   };
 
- 
+  const handleViewVersion = async (messageId) => {
+    try {
+      const data = await getVersionChatLogs(messageId);
+      setVersionData({ [messageId]: data || [] });
+      setViewingHistory(messageId);
+    } catch (err) {
+      console.error("Error fetching version:", err);
+    }
+  };
 
-   const handleViewVersion = async (messageId) => {
-  try {
-    const data = await getVersionChatLogs(messageId);
-    setVersionData({ [messageId]: data || [] });
-    setViewingHistory(messageId);
-  } catch (err) {
-    console.error("Error fetching version:", err);
-  }
-};
-  
   const handleBackToCurrent = () => {
-  setViewingHistory(null);
-  setVersionData({});
-};
+    setViewingHistory(null);
+    setVersionData({});
+  };
   const getMessageContent = (message) => {
     if (viewingHistory === message.message_id) {
       const versions = messageVersions[message.message_id] || [];
@@ -298,7 +292,6 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     }
     return message.content;
   };
-
 
   const handleUpload = (content) => {
     // Simulate upload functionality
@@ -316,43 +309,44 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   return (
     <Container>
       <MessagesContainer>
-       {viewingHistory && versionData[viewingHistory] ? (
-    (() => {
-      console.log("🧠 Version Viewer Debug Info:");
-      console.log("viewingHistory:", viewingHistory);
-      console.log("versionData:", versionData);
-      console.log("versionData[viewingHistory]:", versionData[viewingHistory]);
-      console.log("Number of response:", versionData.responses);
+        {viewingHistory && versionData[viewingHistory]
+          ? (() => {
+              console.log("🧠 Version Viewer Debug Info:");
+              console.log("viewingHistory:", viewingHistory);
+              console.log("versionData:", versionData);
+              console.log(
+                "versionData[viewingHistory]:",
+                versionData[viewingHistory]
+              );
+              console.log("Number of response:", versionData.responses);
 
-      return (
-        <PreviousVersionViewer
-          versions={versionData[viewingHistory]}
-          onBack={handleBackToCurrent}
-        />
-      );
-    })()
-  ): (
-  chat.messages.map((message) => (
-    <Message
-      key={message.message_id}
-      message={message}
-      isEditing={editingMessageId === message.message_id}
-      editContent={editContent}
-      setEditContent={setEditContent}
-      onSaveEdit={handleSaveEdit}
-      onCancelEdit={handleCancelEdit}
-      onCopy={copyToClipboard}
-      onEdit={handleEditMessage}
-      onUpload={handleUpload}
-      versions={messageVersions[message.message_id] || []}
-      currentVersionIndex={currentVersions[message.message_id]}
-      isViewingHistory={viewingHistory === message.message_id}
-      onViewVersion={handleViewVersion}
-      onBackToCurrent={handleBackToCurrent}
-      getMessageContent={getMessageContent}
-    />
-  ))
-)}
+              return (
+                <PreviousVersionViewer
+                  versions={versionData[viewingHistory]}
+                  onBack={handleBackToCurrent}
+                />
+              );
+            })()
+          : chat.messages.map((message) => (
+              <Message
+                key={message.message_id}
+                message={message}
+                isEditing={editingMessageId === message.message_id}
+                editContent={editContent}
+                setEditContent={setEditContent}
+                onSaveEdit={handleSaveEdit}
+                onCancelEdit={handleCancelEdit}
+                onCopy={copyToClipboard}
+                onEdit={handleEditMessage}
+                onUpload={handleUpload}
+                versions={messageVersions[message.message_id] || []}
+                currentVersionIndex={currentVersions[message.message_id]}
+                isViewingHistory={viewingHistory === message.message_id}
+                onViewVersion={handleViewVersion}
+                onBackToCurrent={handleBackToCurrent}
+                getMessageContent={getMessageContent}
+              />
+            ))}
         {isLoading && <LoadingIndicator />}
         <div ref={messagesEndRef} />
       </MessagesContainer>
@@ -376,7 +370,16 @@ function PreviousVersionViewer({ versions, onBack }) {
         <div key={logVersion.version_id}>
           <div style={{ marginBottom: "1rem" }}>
             <strong>Edited at:</strong>{" "}
-            {new Date(logVersion.edited_at).toLocaleString()}
+             {new Date(logVersion.edited_at).toLocaleString()}
+            <UserMessageContainer>
+              <UserMessageBubble>
+                <UserMessageContent>
+                  {logVersion.old_content}
+                </UserMessageContent>
+              </UserMessageBubble>
+              <CircleUserRound />
+            </UserMessageContainer>
+            
           </div>
           {logVersion.responses.map((response) =>
             response.role === "user" ? (

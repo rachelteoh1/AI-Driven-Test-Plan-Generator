@@ -18,13 +18,20 @@ logger = logging.getLogger(__name__)
 
 def create_chat_log(db: Session, request):
     try:
+        previous = (
+        db.query(ChatLog)
+        .filter_by(session_id=request.session_id, is_active=True)
+        .order_by(ChatLog.timestamp.desc())
+        .first()
+    )   
+        parent_id = previous.message_id if previous else None
         new_chat_log = ChatLog(
-            message_id=uuid4(),
-            session_id=request.session_id,
-            role=request.role,
-            content=request.content,
-            timestamp=datetime.utcnow()
-            
+        message_id=uuid4(),
+        session_id=request.session_id,
+        role=request.role,
+        content=request.content,
+        timestamp=datetime.utcnow(),
+        parent_id=parent_id
         )
         db.add(new_chat_log)
         db.commit()
@@ -35,11 +42,12 @@ def create_chat_log(db: Session, request):
         logging.exception(f"Failed to create chat log: {str(e)}")
         raise ChatCreationError(str(e))
     
-def deactivate_descendants(db: Session, message_id: UUID):
+def deactivate_descendants(db: Session, message_id: UUID, version_id:UUID):
     to_deactivate = db.query(ChatLog).filter_by(parent_id=message_id, is_active=True).all()
     for msg in to_deactivate:
         msg.is_active = False
-        deactivate_descendants(db, msg.message_id)  
+        msg.version_of = version_id
+        deactivate_descendants(db, msg.message_id,version_id)  
     
 def modify_chat_log(db: Session, request):
     chat_log = db.query(ChatLog).filter_by(message_id=request.message_id).first()
@@ -55,21 +63,17 @@ def modify_chat_log(db: Session, request):
             edited_at=datetime.utcnow()
         )
         db.add(version)
+        db.flush()
         
         # Deactivate all descendants
-        descendants = db.query(ChatLog).filter(
-            ChatLog.session_id == chat_log.session_id,
-            ChatLog.timestamp > chat_log.timestamp
-        ).all()
-        
-        for msg in descendants:
-            msg.is_active = False
+        deactivate_descendants(db, chat_log.message_id, version.version_id)
         
         # Update current message
         chat_log.content = request.content
-        chat_log.timestamp = datetime.utcnow()
+        chat_log.updated_at = datetime.utcnow()
         chat_log.has_been_modified = True
-        chat_log.is_active = True
+        db.commit()
+        db.refresh(chat_log)
         
         llm_request = LogCreate(
             session_id=chat_log.session_id,
@@ -77,8 +81,6 @@ def modify_chat_log(db: Session, request):
             content=chat_log.content
         )
         llm_response = detect_intent(db, llm_request)
-
-        db.commit()
       
         return llm_response
     except Exception as e:
@@ -92,11 +94,12 @@ def get_chat_log_versions_with_replies(message_id, db: Session):
 
         for v in versions:
             # Find responses that occurred after this version was edited
-            children = db.query(ChatLog).filter(
-                ChatLog.session_id == v.session_id,
-                ChatLog.timestamp >= v.edited_at,
-                ChatLog.is_active == False
-            ).order_by(ChatLog.timestamp).all()
+            children = (
+                db.query(ChatLog)
+                .filter_by(version_of=v.version_id, is_active=False)
+                .order_by(ChatLog.timestamp)
+                .all()
+            )
 
             version_data.append({
                 "version_id": v.version_id,
@@ -142,12 +145,19 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
 
         if intent == "unknown":
             response_text = "Sorry, we could not identify your intent, please type in your request again."
+            
+        elif intent =="generate_scpi":
+         response_text = (
+            f"Intent: {intent}\n"
+            f"SCPI Commands: {', '.join(scpi_commands) or 'None,please specify the SCPI command if available.'}\n"
+            f"Conditions: {', '.join(conditions) or 'None, please specify the confition if available.'}\n"
+            f"Target: {', '.join(targets) or 'None, please specify your testing target.'}"
+         )
+
         else:
          response_text = (
             f"Intent: {intent}\n"
-            f"SCPI Commands: {', '.join(scpi_commands) or 'none'}\n"
-            f"Conditions: {', '.join(conditions) or 'none'}\n"
-            f"Target: {', '.join(targets) or 'none'}"
+            f"SCPI Commands: {', '.join(scpi_commands) or 'None,please specify the SCPI command.'}\n"
          )
 
         new_log = LogCreate(
