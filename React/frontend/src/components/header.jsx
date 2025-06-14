@@ -2,7 +2,7 @@
 import logo from "../assets/keysight.png"
 import { X } from "lucide-react"
 import styled from "styled-components"
-import { COLORS, SPACING, FONTSIZE, FONTWEIGHT } from "../lib/styles"
+import { COLORS, SPACING, FONTSIZE, FONTWEIGHT, lightTheme, darkTheme } from "../lib/styles"
 
 // Styled Components
 const HeaderContainer = styled.header`
@@ -10,9 +10,9 @@ const HeaderContainer = styled.header`
   align-items: center;
   justify-content: center;
   padding: ${SPACING.lg};
-  background-color: ${COLORS.background.light};
-  border-bottom: 1px ;
-`
+  background-color: ${({ theme }) => theme.card};  // was COLORS.background.light
+`;
+
 
 const LogoContainer = styled.div`
   display: flex;
@@ -30,8 +30,8 @@ const LogoImage = styled.img`
 const LogoText = styled.span`
   font-size: ${FONTSIZE["3xl"]};
   font-weight: ${FONTWEIGHT.bold};
-  color: ${COLORS.black};
-`
+  color: ${({ theme }) => theme.text};
+`;
 
 
 
@@ -39,11 +39,13 @@ const LogoText = styled.span`
 const CloseIcon = styled(X)`
   width: ${FONTSIZE.md};
   height: ${FONTSIZE.md};
-   position: absolute;
-   margin-top:-2rem;
+  color: ${({ theme }) => theme.text};
+  position: absolute;
+  margin-top: -2rem;
   right: 3rem;
   cursor: pointer;
-`
+`;
+
 
 // Component
 export function Header() {

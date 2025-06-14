@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "cB/nv52xL9T6bDkbE4rqaX2U0E5bIxs0cTnaeiUHbeReDL2ct5w4YeOPP+/vYWwYpw3ZZcmX6WcZeUbEF6CWwA==",
+  "dgSpecHash": "45nfxG0Q4dv55OL5lNRg3W9Jnlmp31Byuaa/76SSIzI5LkmEmoILPoa0U1wkiU1jetQWVVLfza4oXwtKgxX1Tg==",
   "success": true,
-  "projectFilePath": "/Users/lichee/FYP/AI-Driven-Test-Plan-Generator/KeysightGPT/KeysightGPT.csproj",
+  "projectFilePath": "/Users/lichee/FYP/temp-clean-repo/KeysightGPT/KeysightGPT.csproj",
   "expectedPackageFiles": [
     "/Users/lichee/.nuget/packages/microsoft.netcore.platforms/1.1.0/microsoft.netcore.platforms.1.1.0.nupkg.sha512",
     "/Users/lichee/.nuget/packages/netstandard.library/2.0.3/netstandard.library.2.0.3.nupkg.sha512",

@@ -1,40 +1,45 @@
-import * as React from "react"
-import { cn } from "../../lib/utils"
+import styled, { css } from "styled-components";
+import React from "react";
+import { COLORS, FONTSIZE, FONTWEIGHT, SPACING } from "../../lib/styles";
 
-const Button = React.forwardRef(
-  ({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {
-    const Comp = asChild ? "span" : "button"
+// Button variants
+const variantStyles = {
+  default: css`
+    background-color: ${({ theme }) => theme.newChat};
+    color: ${({ theme }) => theme.greys.dark};
+    &:hover { background-color:  ${({ theme }) => theme.hover}; }
+  `,
+  ghost: css`
+    background: transparent;
+    color: ${({ theme }) => theme.greys.dark};
+    &:hover { background-color: ${({ theme }) => theme.hover}; }
+  `,
+};
 
-    const variants = {
-      default: "bg-primary text-primary-foreground hover:bg-primary/90",
-      destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-      outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-      secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-      ghost: "hover:bg-accent hover:text-accent-foreground",
-      link: "text-primary underline-offset-4 hover:underline",
-    }
+// Base styled button
+const StyledButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: left;
+  gap: ${SPACING.sm};
+  padding: 0 ${SPACING.md};
+  height: 2.5rem;
+  font-size: ${FONTSIZE.sm};
+  font-weight: ${FONTWEIGHT.medium};
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  ${({ variant = "default" }) => variantStyles[variant]};
+  &:disabled { opacity: 0.5; pointer-events: none; }
+  &:focus-visible {
+    outline: 2px solid ${COLORS.accent};
+    outline-offset: 2px;
+  }
+`;
 
-    const sizes = {
-      default: "h-10 px-4 py-2",
-      sm: "h-9 rounded-md px-3",
-      lg: "h-11 rounded-md px-8",
-      icon: "h-10 w-10",
-    }
-
-    return (
-      <Comp
-        className={cn(
-          "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-          variants[variant],
-          sizes[size],
-          className,
-        )}
-        ref={ref}
-        {...props}
-      />
-    )
-  },
-)
-Button.displayName = "Button"
-
-export { Button }
+// Forward ref wrapper
+export const Button = React.forwardRef(({ variant, size, ...props }, ref) => (
+  <StyledButton ref={ref} variant={variant} {...props} />
+));
+Button.displayName = "Button";

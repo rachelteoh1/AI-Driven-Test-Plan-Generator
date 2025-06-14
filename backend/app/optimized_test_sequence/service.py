@@ -79,7 +79,7 @@ def optimize_sequence(db: Session, sequence_id: UUID, instrument: str) -> Tuple[
             sequence_id=uuid4(),
             message_id=data["sequence"].message_id,
             created_date=datetime.utcnow(),
-            instrument=instrument
+            # instrument=instrument
         )
         db.add(new_sequence)
         db.flush()

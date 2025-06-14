@@ -2,6 +2,14 @@ import styled from "styled-components";
 import { Button } from "@mui/material";
 import { useState, useMemo } from "react";
 import { MessageSquare, X } from "lucide-react";
+import { COLORS, FONTSIZE, FONTWEIGHT } from "../lib/styles";
+
+const ModalWrapper = styled.div`
+  background-color: ${({ theme }) => theme.background};
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
 
 // Centered main container
 const CenteredDiv = styled.div`
@@ -12,21 +20,27 @@ const CenteredDiv = styled.div`
   gap: 2rem;
   min-height: 40vh;
   margin: 0 auto;
+  background-color: ${({ theme }) => theme.background};
 `;
 
 // Styled input field
 const Input = styled.input`
   width: 30rem;
-  border: none;
-  background-color: #f9fafb;
-  border-radius: 16px;
-  padding: 12px 0 8px 16px;
-  color: #6b7280;
-  font-size: 1rem;
-  &::placeholder {
-    color: #9ca3af;
-  }
+  min-height: 2.5rem;
+  padding: 12px 40px 12px 16px;
+  background-color: ${({ theme }) => theme.backgroundMedium};
+  border: 1px solid ${({ theme }) => theme.status.tick};
+  border-radius: 1rem;
   outline: none;
+  color: ${({ theme }) => theme.text};
+  font-size: ${FONTSIZE.base};
+  font-family: inherit;
+  opacity: 1;
+  line-height: 1.5;
+  box-sizing: border-box;
+  &::placeholder {
+    color: ${({ theme }) => theme.greys.dark};
+  }
 `;
 
 // Row for input and close button
@@ -49,6 +63,13 @@ const ScrollableChatList = styled.div`
   padding-left: 5px;
 `;
 
+const ChatTitle = styled.span`
+  color: ${({ theme }) => theme.text};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
 export default function SearchChatModal({ chats, onSelectChat, hideModal }) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -69,6 +90,7 @@ export default function SearchChatModal({ chats, onSelectChat, hideModal }) {
   };
 
   return (
+    <ModalWrapper>
     <CenteredDiv>
       <RowDiv>
         <Input
@@ -96,7 +118,7 @@ export default function SearchChatModal({ chats, onSelectChat, hideModal }) {
               className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer w-11/12"
             >
               <MessageSquare className="h-5 w-5 text-gray-600" />
-              <span className="text-gray-900 truncate">{chat.title}</span>
+              <ChatTitle>{chat.title}</ChatTitle>
             </div>
           ))
         ) : (
@@ -106,5 +128,6 @@ export default function SearchChatModal({ chats, onSelectChat, hideModal }) {
         )}
       </ScrollableChatList>
     </CenteredDiv>
+    </ModalWrapper>
   );
 }

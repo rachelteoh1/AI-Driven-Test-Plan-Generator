@@ -7,6 +7,12 @@ import TickedModal from "./TickModal";
 import CrossedModal from "./CrossedModal";
 import { useState } from "react";
 
+const ModalWrapper = styled.div`
+  background-color: ${({ theme }) => theme.background};
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
 
 const CenteredDiv = styled.div`
   display: flex;
@@ -17,12 +23,13 @@ const CenteredDiv = styled.div`
    min-height: 40vh;
    max-width: 300px;      
   margin: 0 auto;  
+  background-color: ${({ theme }) => theme.background};
 `;
 
 const Title = styled.h1`
   font-size: ${FONTSIZE["2xl"]};
   font-weight: ${FONTWEIGHT.medium};
-  color: ${COLORS.black};
+  color: ${({ theme }) => theme.text};
 `;
 
 
@@ -31,11 +38,12 @@ const RowDiv = styled.div`
   flex-direction: row;
   justify-content: space-around;
   gap: 5rem;
+  background-color: ${({ theme }) => theme.background};
 `;
 const Description = styled.p`
     font-size: ${FONTSIZE.sm};
     font-weight: ${FONTWEIGHT.normal};
-    color: ${COLORS.darkGrey};
+    color: ${({ theme }) => theme.text};
 `;
 
 export default function DeleteModal({ chat, onDelete ,hideModal}) {
@@ -65,6 +73,7 @@ export default function DeleteModal({ chat, onDelete ,hideModal}) {
   }
 
   return (
+    <ModalWrapper>
     <CenteredDiv>
       <Title>Delete Chat?</Title>
       {chat.name && <Description>This will delete <strong>{chat.name}</strong>.</Description>}
@@ -78,5 +87,6 @@ export default function DeleteModal({ chat, onDelete ,hideModal}) {
         </Button>
       </RowDiv>
     </CenteredDiv>
+    </ModalWrapper>
   );
 }

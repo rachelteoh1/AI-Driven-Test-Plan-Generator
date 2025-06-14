@@ -3,16 +3,15 @@ import { AppSidebar } from "../components/app-sidebar";
 import { Header } from "../components/header";
 import ChatInterface from "./Conversation";
 import { useState, useEffect, useContext } from "react";
-import styled from "styled-components";
-import { FONTSIZE, FONTWEIGHT, SPACING, COLORS } from "../lib/styles";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import styled, { ThemeProvider } from "styled-components";
+import { FONTSIZE, FONTWEIGHT, SPACING, COLORS, lightTheme, darkTheme } from "../lib/styles";
 import {
   useAddChatLog,
   useChatLogs,
   useDeleteChat,
   useNewChat,
-  useChats,
   useRenameChat,
+  useDetectIntent,
 } from "../hook/useChat";
 import UserStatusContext from "../lib/UserStatusContext";
 
@@ -26,20 +25,21 @@ const PageContainer = styled.div`
 
 const MainContent = styled.main`
   margin-left: 8rem;
-  background-color: ${COLORS.background.light};
+  background-color: ${({ theme }) => theme.background};
   height: 100vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: center;
 `;
+
 const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
   flex: 1;
   padding: ${SPACING.L};
   overflow-y: auto;
-  background-color: ${COLORS.background.light};
+  background-color: ${({ theme }) => theme.background};
   height: calc(100vh - ${SPACING.xl} - 64px); /* still needed */
   margin-top: ${SPACING.xl};
   margin-bottom: 64px;
@@ -61,7 +61,7 @@ const ChatWrapper = styled.div`
   bottom: 0;
   width: 50rem;
   max-width: calc(100vw - 2rem);
-  background-color: ${COLORS.white};
+  background-color: ${({ theme }) => theme.card};
   z-index: 10;
   overflow-y: auto;
   /* Hide scrollbar for Chrome, Safari */
@@ -77,7 +77,7 @@ const TextContainer = styled.div`
 const Title = styled.h1`
   font-size: ${FONTSIZE.XL};
   font-weight: ${FONTWEIGHT.bold};
-  color: ${COLORS.black};
+  color: ${({ theme }) => theme.text};
   margin-bottom: ${SPACING.md};
 `;
 const HeaderWrapper = styled.div`
@@ -86,9 +86,9 @@ const HeaderWrapper = styled.div`
   left: 16rem; /* width of the sidebar */
   right: 0;
   height: ${SPACING.xl};
-  background-color: ${COLORS.white};
+  background-color: ${({ theme }) => theme.card};
   z-index: 20;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid ${({ theme }) => theme.greys?.light ?? "#e5e7eb"};
 `;
 const ExamplesGrid = styled.div`
   display: flex;
@@ -101,38 +101,34 @@ const ExampleButton = styled.button`
   width: 100%;
   text-align: left;
   padding: ${SPACING.md};
-  border: 1px;
+  border: none;
   border-radius: 0.5rem;
-  background-color: ${COLORS.background.light};
+  background-color: ${({ theme }) => theme.primaryLight};
+  color: ${({ theme }) => theme.text};
+
   cursor: pointer;
   transition: background-color 0.2s;
 
   &:hover {
-    background-color: ${COLORS.background.medium};
+    background-color: ${({ theme }) => theme.hover};
   }
 `;
-export const Home = ({chats, activeChatId, setActiveChatId}) => {
-  const { user ,isLoading} = useContext(UserStatusContext); 
-  const [searchParams, setSearchParams] = useSearchParams();
 
-
- 
-
+export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => {
+  const { user, isLoading} = useContext(UserStatusContext); 
   const { data: activeChatLogs = [] } = useChatLogs(activeChatId);
   const newChatMutation = useNewChat();
   const renameChatMutation = useRenameChat();
   const deleteChatMutation = useDeleteChat();
   const addChatLogMutation = useAddChatLog();
-
-  // const isLoading = newChatMutation.isLoading || addChatLogMutation.isLoading;
+  const detectIntentMutation  = useDetectIntent();
 
   useEffect(() => {
-    if (!isLoading && user && searchParams.get("newchat") === "true") {
+    if (!isChatsLoading && !isLoading && user && chats.length === 0) {
+      console.log(isChatsLoading);
       handleNewChat();
-      searchParams.delete("newchat");
-      setSearchParams(searchParams);
     }
-  }, [searchParams]);
+  }, [isChatsLoading, isLoading, user, chats]);
 
   const handleNewChat = async () => {
     try {
@@ -237,30 +233,33 @@ export const Home = ({chats, activeChatId, setActiveChatId}) => {
       return false;
     }
   };
-const [isReplyLoading, setIsReplyLoading] = useState(false);
+  const [isReplyLoading, setIsReplyLoading] = useState(false);
   const handleSendMessage = async (message) => {
-  setIsReplyLoading(true);
-  try {
-    await addChatLogMutation.mutateAsync({
-      session_id: activeChatId,
-      role: "user",
-      content: message,
-    });
-
-    setTimeout(() => {
-      console.log("Sending LLM response...");
-      addChatLogMutation.mutateAsync({
+    setIsReplyLoading(true);
+    try {
+      await addChatLogMutation.mutateAsync({
         session_id: activeChatId,
-        role: "llm_response",
-        content: `You said: "${message}"`,
+        role: "user",
+        content: message,
       });
-      setIsReplyLoading(false); 
-    }, 1000);
-  } catch (err) {
-    console.error("Message send failed:", err);
-    setIsReplyLoading(false); // ensure reset on error too
-  }
-};
+
+      console.log("Sending LLM response via detectIntent...");
+      console.log("detect intent tetsing" ,activeChatId, message);
+      await detectIntentMutation.mutateAsync({
+        session_id: activeChatId,
+        role: "user",
+        content: message,
+      },{onError:(error)=>{
+        const content = error.response?.data?.detail;
+        return content;
+      } });
+      setIsReplyLoading(false);
+    } catch (err) {
+      console.error("Message send failed:", err);
+    } finally {
+      setIsReplyLoading(false);
+    }
+  };
 
   const activeChat = chats.find((chat) => chat.session_id === activeChatId);
   const hasConversation = activeChatLogs.length > 0;
@@ -274,272 +273,53 @@ const [isReplyLoading, setIsReplyLoading] = useState(false);
   return (
     <SidebarProvider defaultOpen={true}>
       <PageContainer>
-        <AppSidebar
-          chats={chats}
-          activeChat={activeChat}
-          onNewChat={handleNewChat}
-          onSelectChat={handleSelectChat}
-          onRenameChat={handleRenameChat}
-          onDeleteChat={handleDeleteChat}
-        />
-        <MainContent>
-          <HeaderWrapper>
-            <Header />
-          </HeaderWrapper>
-          <ContentContainer>
-            {!hasConversation && (
-              <CenterContainer>
-                <TextContainer>
-                  <Title>Welcome to KeysightGPT</Title>
-                </TextContainer>
-                <div>Examples</div>
-                <ExamplesGrid>
-                  {examples.map((example, index) => (
-                    <ExampleButton
-                      key={index}
-                      onClick={() => handleSendMessage(example)}
-                    >
-                      "{example}"
-                    </ExampleButton>
-                  ))}
-                </ExamplesGrid>
-              </CenterContainer>
-            )}
-          </ContentContainer>
-          <ChatWrapper>
-            <ChatInterface
-              chat={{
-                ...activeChat,
-                messages: activeChatLogs,
-              }}
-              onSendMessage={handleSendMessage}
-              isLoading={isReplyLoading}
-            />
-          </ChatWrapper>
-        </MainContent>
+        <div className="flex min-h-screen w-full">
+          <AppSidebar
+            chats={chats}
+            activeChat={activeChat}
+            onNewChat={handleNewChat}
+            onSelectChat={handleSelectChat}
+            onRenameChat={handleRenameChat}
+            onDeleteChat={handleDeleteChat}
+            isChatsLoading={isChatsLoading}
+          />
+          <MainContent>
+            <HeaderWrapper>
+              <Header />
+            </HeaderWrapper>
+            <ContentContainer>
+              {!hasConversation && (
+                <CenterContainer>
+                  <TextContainer>
+                    <Title>Welcome to KeysightGPT</Title>
+                  </TextContainer>
+                  <div>Examples</div>
+                  <ExamplesGrid>
+                    {examples.map((example, index) => (
+                      <ExampleButton
+                        key={index}
+                        onClick={() => handleSendMessage(example)}
+                      >
+                        "{example}"
+                      </ExampleButton>
+                    ))}
+                  </ExamplesGrid>
+                </CenterContainer>
+              )}
+            </ContentContainer>
+            <ChatWrapper>
+              <ChatInterface
+                chat={{
+                  ...activeChat,
+                  messages: activeChatLogs,
+                }}
+                onSendMessage={handleSendMessage}
+                isLoading={isReplyLoading}
+              />
+            </ChatWrapper>
+          </MainContent>
+        </div>
       </PageContainer>
     </SidebarProvider>
   );
 };
-// export const Home = (chats,setChats, activeChatId, setActiveChatId) => {
-//   const [searchParams, setSearchParams] = useSearchParams();
-//   const { user } = useContext(UserStatusContext);
-//   const newChatMutation = useNewChat();
-//   const renameChatMutation = useRenameChat();
-//   const deleteChatMutation = useDeleteChat();
-//   const useAddChatLogMutation = useAddChatLog();
-//   const navigate = useNavigate();
-//   // const { data: chatLogs = [], isLoading: logsLoading } = useChatLogs(activeChatId);
-//   const [chatLogs, setChatLogs] = useState([]);
-
-//   const fetchChats = useChats(user ? user.id : null);
-//    useEffect(() => {
-//     if (!user) {
-//       navigate("/signin");
-//     }
-//   }, [user, navigate]);
-
-// // console.log(user.id);
-//   useEffect(() => {
-//     if (user && fetchChats?.data && Array.isArray(fetchChats.data)) {
-//       setChats(fetchChats.data);
-//     }
-//   }, [user, fetchChats.data]);
-
-//   // get chatlogs if available
-//   const fetchChatLogs = useChatLogs(activeChatId);
-//   useEffect(() => {
-//     if (fetchChatLogs?.data && Array.isArray(fetchChatLogs.data)) {
-//       setChatLogs(fetchChatLogs.data);
-//     }
-//   }, [user, fetchChatLogs.data]);
-
-//   const handleNewChat = () => {
-//     newChatMutation.mutate(
-//       { id: user.id, title: `Chat ${chats.length + 1}` },
-//       {
-//         onSuccess: (newChat) => {
-//           setChats((prev) => [newChat, ...prev]);
-//           setActiveChatId(newChat.session_id);
-//         },
-//       }
-//     );
-//   };
-
-//   useEffect(() => {
-//     if (searchParams.get("newchat") === "true") {
-//       handleNewChat();
-//       // remove query param after using it
-//       searchParams.delete("newchat");
-//       setSearchParams(searchParams);
-//     }
-//   }, [searchParams]);
-
-//   const [isLoading, setIsLoading] = useState(false);
-//   const activeChat = chats.find((chat) => chat.session_id === activeChatId);
-//   const hasConversation = chatLogs.length > 0;
-
-//   const handleSelectChat = (id) => {
-//     setActiveChatId(id);
-//   };
-
-//   const handleRenameChat = async (id, newName) => {
-//     console.log("Attempting rename:", id, newName);
-
-//     renameChatMutation.mutate(
-//       { session_id: id, title: newName },
-//       {
-//         onSuccess: () => {
-//           return true;
-//         },
-//         onError: (err) => {
-//           console.error("Rename failed:", err);
-//           return false;
-//         },
-//       }
-//     );
-//   };
-
-//   const handleDeleteChat = async (id) => {
-//     deleteChatMutation.mutate(
-//       { session_id: id },
-//       {
-//         onSuccess: () => {
-//           setChats((prev) => {
-//             const updatedChats = prev.filter((chat) => chat.session_id !== id);
-//             const deletedIndex = prev.findIndex(
-//               (chat) => chat.session_id === id
-//             );
-//             const nextChat =
-//               updatedChats[deletedIndex] ||
-//               updatedChats[deletedIndex - 1] ||
-//               null;
-//             setActiveChatId(nextChat ? nextChat.session_id : null);
-//             return updatedChats;
-//           });
-//           return true;
-//         },
-//         onError: (err) => {
-//           console.error("Deletion failed", err);
-//           return false;
-//         },
-//       }
-//     );
-//   };
-
-//   const handleSendMessage = async (message) => {
-//     const userMessage = { role: "user", content: message };
-
-//     const botMessage = {
-//       role: "assistant",
-//       content: `You said: "${message}"`,
-//     };
-
-//     // Step 1: Immediately add the user message
-//     setChatLogs((prevChatLogs) =>
-//       prevChatLogs.map((chatLogs) =>
-//         chatLogs.session_id === activeChatId
-//           ? {
-//               ...chatLogs,
-//               messages: [...chatLogs.messages, userMessage],
-//             }
-//           : chatLogs
-//       )
-//     );
-
-//     setIsLoading(true);
-
-//     // Step 2: Add bot response after delay
-//     setTimeout(() => {
-//       setChatLogs((prevChats) =>
-//         prevChats.map((chatLogs) =>
-//           chatLogs.session_id === activeChatId
-//             ? {
-//                 ...chatLogs,
-//                 messages: [...chatLogs.messages, botMessage],
-//               }
-//             : chatLogs
-//         )
-//       );
-//       setIsLoading(false);
-//     }, 1000);
-//     //store to database
-//     useAddChatLogMutation.mutate({
-//       session_id: activeChatId,
-//       user_input: userMessage.content,
-//       llm_response: botMessage.content,
-//     });
-//   };
-
-//   // const[examples, onSelectExample]= useState([
-//   //   "Generate test case to measure the voltage on channel 1.",
-//   //   "Test case to perform a diode forward voltage check.",
-//   //   "Explain ROUT:SCAN (@101:110).",
-//   // ])
-
-//   const examples = [
-//     // direct array declaration
-//     "Generate test case to measure the voltage on channel 1.",
-//     "Test case to perform a diode forward voltage check.",
-//     "Explain ROUT:SCAN (@101:110).",
-//   ];
-
-//   return (
-//     <SidebarProvider defaultOpen={true}>
-//       <PageContainer>
-//         <AppSidebar
-//           chats={chats}
-//           activeChat={activeChat}
-//           onNewChat={handleNewChat}
-//           onSelectChat={handleSelectChat}
-//           onRenameChat={handleRenameChat}
-//           onDeleteChat={handleDeleteChat}
-//           onSetChat={setChats}
-//         />
-//         <MainContent>
-//           <HeaderWrapper>
-//             <Header />
-//           </HeaderWrapper>
-//           <ContentContainer>
-//             {!hasConversation && (
-//               <CenterContainer>
-//                 <TextContainer>
-//                   <Title>Welcome to KeysightGPT</Title>
-//                 </TextContainer>
-//                 <div>Examples</div>
-//                 <ExamplesGrid>
-//                   {examples.map((example, index) => (
-//                     <ExampleButton
-//                       key={index}
-//                       onClick={() => handleSendMessage(example)}
-//                     >
-//                       "{example}"
-//                     </ExampleButton>
-//                   ))}
-//                 </ExamplesGrid>
-//               </CenterContainer>
-//             )}
-//           </ContentContainer>
-//           <ChatWrapper>
-//             <ChatInterface
-//               chat={chatLogs.flatMap((m) => [
-//                 {
-//                   message_id: m.message_id,
-//                   content: m.user_input,
-//                   role: "user",
-//                 },
-//                 {
-//                   message_id: m.message_id,
-//                   content: m.llm_response,
-//                   role: "bot",
-//                 },
-//               ])}
-//               onSendMessage={handleSendMessage}
-//               isLoading={isLoading}
-//             />
-//           </ChatWrapper>
-//         </MainContent>
-//       </PageContainer>
-//     </SidebarProvider>
-//   );
-// };

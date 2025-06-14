@@ -13,6 +13,8 @@ class SequenceCreateRequest(BaseModel):
     message_id: UUID   
     commands: List[ScpiCommandCreateRequest]
 
+
+
 class ScpiCommandResponse(BaseModel):
     command_id: UUID
     command_text: str

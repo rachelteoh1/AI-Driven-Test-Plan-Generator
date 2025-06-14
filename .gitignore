@@ -1,0 +1,21 @@
+# Python virtual environment
+backend/env/
+
+# SpaCy language models
+**/site-packages/en_core_web_lg/
+**/site-packages/*/vocab/vectors
+
+# Jupyter notebooks checkpoints
+**/.ipynb_checkpoints
+
+# VSCode settings
+.vscode/
+
+# __pycache__ and compiled Python
+__pycache__/
+*.pyc
+
+# Mac system files
+.DS_Store
+
+

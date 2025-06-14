@@ -1,5 +1,7 @@
 from uuid import UUID
 from pydantic import BaseModel
+from datetime import datetime
+from typing import List
 
 #pydantic modal for data validation purposes
 
@@ -9,11 +11,29 @@ class LogCreate(BaseModel):  #save message
     content: str
     
 
-class LogResponse(BaseModel):  # display message
-    message_id:UUID
-    session_id:UUID
+class LogResponse(BaseModel):
+    message_id: UUID
+    session_id: UUID
     role: str
     content: str
+    timestamp: datetime
+    has_been_modified: bool  
+    
+class ModifyLog(BaseModel):
+    message_id: UUID
+    session_id: UUID
+    role: str
+    content: str
+    has_been_modified: bool 
+    
+class ChatLogVersionResponse(BaseModel):
+    version_id: UUID
+    message_id: UUID
+    session_id: UUID
+    old_content: str
+    edited_at: datetime
+    responses: List[LogResponse] = []
+
 
 
 

@@ -5,16 +5,17 @@ import styled from "styled-components"
 import { Header } from "../header"
 import { Profile } from "./profile"
 import { DashboardContent } from "./dashboard-content"
+import { COLORS, FONTSIZE, FONTWEIGHT, SPACING, lightTheme, darkTheme } from "../../lib/styles"
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
+  background-color: ${({ theme }) => theme.background};
 `
 
 const TabWrapper = styled.div`
-  padding: 0 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 0 ${SPACING.sm};
 `
 
 const Tabs = styled.div`
@@ -25,21 +26,25 @@ const Tabs = styled.div`
 `
 
 const TabButton = styled.button`
-  padding: 1rem 0;
+  padding: ${SPACING.md} 0;
   text-align: center;
-  font-weight: 500;
+  font-weight: ${FONTWEIGHT.medium};
+  font-size: ${FONTSIZE.sm};
+  border: none;
   border-bottom: 2px solid
-    ${(props) => (props.active ? "#3B82F6" : "transparent")};
-  color: ${(props) => (props.active ? "#2563EB" : "#6B7280")};
-  background: transparent;
+    ${(props) => (props.active ? COLORS.accent : "transparent")};
+  color: ${(props) => (props.active ? COLORS.accent : COLORS.medium)};
+  background-color: transparent;
   cursor: pointer;
+  transition: all 0.2s ease;
+  }
 `
 
 const Content = styled.div`
   flex: 1;
-  padding: 2.5rem;
+  padding: ${SPACING["2xl"]};
   overflow: auto;
-  background-color: #f9fafb;
+  background-color: ${({ theme }) => theme.background};
 `
 
 export function MainDashboard() {

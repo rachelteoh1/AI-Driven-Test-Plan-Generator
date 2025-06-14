@@ -89,3 +89,51 @@ export const useDeleteChatLog = () => {
     },
   });
 };
+
+export const useDetectIntent = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: service.detectChatIntent,
+    onMutate: async (userInput) => {
+      await queryClient.cancelQueries(['chatLogs', userInput.session_id]);
+
+      const previousMessages = queryClient.getQueryData(['chatLogs', userInput.session_id]);
+
+      return { previousMessages };
+    },
+    onSuccess: (botResponse, userInput) => {
+      queryClient.setQueryData(['chatLogs', userInput.session_id], (old = []) => [
+        ...old,
+        botResponse, // bot message returned from backend
+      ]);
+    },
+    onError: (_err, userInput, context) => {
+      if (context?.previousMessages) {
+        queryClient.setQueryData(['chatLogs', userInput.session_id], context.previousMessages);
+      }
+    },
+    onSettled: (_data, _err, variables) => {
+      queryClient.invalidateQueries(['chatLogs', variables.session_id]);
+    },
+  });
+};
+export const useModifyChatLog = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: service.modifyChatLog,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries(['chats', variables.session_id]);
+    },
+  });
+};
+
+// export const useVersionChatLogs = (messageId) => {
+//   return useQuery({
+//     queryKey: ['versionChatLogs', messageId],
+//     queryFn: () => service.getVersionChatLog(messageId), 
+//     enabled: !!messageId,
+//   });
+// };
+
+
