@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, Text,  DateTime, ForeignKey,Integer, Boolean, Date
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 import uuid
 from ..database import Base 
 from datetime import datetime
@@ -32,16 +33,29 @@ class ChatSession(Base):
     
    
 class ChatLog(Base):
-    __tablename__ = "chat_logs"  #name table
-   
-    message_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    session_id = Column(UUID(as_uuid=True), ForeignKey("chat_sessions.session_id"), nullable=False)  # FK to ChatSession
-    role=Column(Text)
+    __tablename__ = "chat_logs"
+
+    message_id = Column(UUID, primary_key=True, default=uuid.uuid4)
+    session_id = Column(UUID, ForeignKey("chat_sessions.session_id"), nullable=False)
+    parent_id = Column(UUID, ForeignKey("chat_logs.message_id"), nullable=True)
+    version_of = Column(UUID, ForeignKey("chat_log_versions.version_id"), nullable=True)
+    role = Column(String)
     content = Column(Text)
     timestamp = Column(DateTime, default=datetime.utcnow)
+    is_active = Column(Boolean, default=True)
+    has_been_modified = Column(Boolean, default=False)
+    updated_at  = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+   
 
-# class Examples(Base):
-#     __tablename__ = "examples"
+class ChatLogVersion(Base):
+    __tablename__ = "chat_log_versions"
+    version_id = Column(UUID, primary_key=True, default=uuid.uuid4)
+    message_id = Column(UUID, ForeignKey("chat_logs.message_id"))
+    session_id = Column(UUID, ForeignKey("chat_sessions.session_id"))
+    old_content = Column(Text)
+    edited_at = Column(DateTime, default=datetime.utcnow)
+
+   
 
 
 class OptimizedTestSequence(Base):

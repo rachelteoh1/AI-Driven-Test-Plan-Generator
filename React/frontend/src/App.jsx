@@ -28,14 +28,22 @@ const GlobalStyle = createGlobalStyle`
 
 function App() {
   const [activeChatId, setActiveChatId] = useState(null);
-  const { user } = useContext(UserStatusContext); // <-- assuming your `user` object comes from context
+  const { user, isLoading } = useContext(UserStatusContext); // <-- assuming your `user` object comes from context
   const isLoggedIn = !!user;
 
   const safeUserId =
     typeof user?.id === "string" ? user.id : user?.id?.id || "";
 
   // Hooks
-  const { data: chats = [], isLoading: isChatsLoading, } = useChats(safeUserId);
+  // const { data: chats = [] ,  isLoading: isChatsLoading,} = useChats(safeUserId);
+const {
+  data: chats = [],
+  isLoading: isChatsLoading,
+} = useChats(safeUserId, {
+  enabled: !!safeUserId && !isLoading,   // <- important
+});
+
+
 
   const onSelectChat = (chatId) => {
     setActiveChatId(chatId);

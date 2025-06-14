@@ -11,6 +11,7 @@ import {
   useDeleteChat,
   useNewChat,
   useRenameChat,
+  useDetectIntent,
 } from "../hook/useChat";
 import UserStatusContext from "../lib/UserStatusContext";
 
@@ -114,21 +115,20 @@ const ExampleButton = styled.button`
 `;
 
 export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => {
-  const { user ,isLoading} = useContext(UserStatusContext); 
+  const { user, isLoading} = useContext(UserStatusContext); 
   const { data: activeChatLogs = [] } = useChatLogs(activeChatId);
   const newChatMutation = useNewChat();
   const renameChatMutation = useRenameChat();
   const deleteChatMutation = useDeleteChat();
   const addChatLogMutation = useAddChatLog();
+  const detectIntentMutation  = useDetectIntent();
 
-
-
- useEffect(() => {
-  if (!isChatsLoading && !isLoading && user && chats.length === 0) {
-    console.log(isChatsLoading);
-    handleNewChat();
-  }
-}, [isChatsLoading, isLoading, user, chats]);
+  useEffect(() => {
+    if (!isChatsLoading && !isLoading && user && chats.length === 0) {
+      console.log(isChatsLoading);
+      handleNewChat();
+    }
+  }, [isChatsLoading, isLoading, user, chats]);
 
   const handleNewChat = async () => {
     try {
@@ -233,30 +233,33 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
       return false;
     }
   };
-const [isReplyLoading, setIsReplyLoading] = useState(false);
+  const [isReplyLoading, setIsReplyLoading] = useState(false);
   const handleSendMessage = async (message) => {
-  setIsReplyLoading(true);
-  try {
-    await addChatLogMutation.mutateAsync({
-      session_id: activeChatId,
-      role: "user",
-      content: message,
-    });
-
-    setTimeout(() => {
-      console.log("Sending LLM response...");
-      addChatLogMutation.mutateAsync({
+    setIsReplyLoading(true);
+    try {
+      await addChatLogMutation.mutateAsync({
         session_id: activeChatId,
-        role: "llm_response",
-        content: `You said: "${message}"`,
+        role: "user",
+        content: message,
       });
-      setIsReplyLoading(false); 
-    }, 1000);
-  } catch (err) {
-    console.error("Message send failed:", err);
-    setIsReplyLoading(false); // ensure reset on error too
-  }
-};
+
+      console.log("Sending LLM response via detectIntent...");
+      console.log("detect intent tetsing" ,activeChatId, message);
+      await detectIntentMutation.mutateAsync({
+        session_id: activeChatId,
+        role: "user",
+        content: message,
+      },{onError:(error)=>{
+        const content = error.response?.data?.detail;
+        return content;
+      } });
+      setIsReplyLoading(false);
+    } catch (err) {
+      console.error("Message send failed:", err);
+    } finally {
+      setIsReplyLoading(false);
+    }
+  };
 
   const activeChat = chats.find((chat) => chat.session_id === activeChatId);
   const hasConversation = activeChatLogs.length > 0;
@@ -271,49 +274,50 @@ const [isReplyLoading, setIsReplyLoading] = useState(false);
     <SidebarProvider defaultOpen={true}>
       <PageContainer>
         <div className="flex min-h-screen w-full">
-        <AppSidebar
-          chats={chats}
-          activeChat={activeChat}
-          onNewChat={handleNewChat}
-          onSelectChat={handleSelectChat}
-          onRenameChat={handleRenameChat}
-          onDeleteChat={handleDeleteChat}
-        />
-        <MainContent>
-          <HeaderWrapper>
-            <Header />
-          </HeaderWrapper>
-          <ContentContainer>
-            {!hasConversation && (
-              <CenterContainer>
-                <TextContainer>
-                  <Title>Welcome to KeysightGPT</Title>
-                </TextContainer>
-                <div>Examples</div>
-                <ExamplesGrid>
-                  {examples.map((example, index) => (
-                    <ExampleButton
-                      key={index}
-                      onClick={() => handleSendMessage(example)}
-                    >
-                      "{example}"
-                    </ExampleButton>
-                  ))}
-                </ExamplesGrid>
-              </CenterContainer>
-            )}
-          </ContentContainer>
-          <ChatWrapper>
-            <ChatInterface
-              chat={{
-                ...activeChat,
-                messages: activeChatLogs,
-              }}
-              onSendMessage={handleSendMessage}
-              isLoading={isReplyLoading}
-            />
-          </ChatWrapper>
-        </MainContent>
+          <AppSidebar
+            chats={chats}
+            activeChat={activeChat}
+            onNewChat={handleNewChat}
+            onSelectChat={handleSelectChat}
+            onRenameChat={handleRenameChat}
+            onDeleteChat={handleDeleteChat}
+            isChatsLoading={isChatsLoading}
+          />
+          <MainContent>
+            <HeaderWrapper>
+              <Header />
+            </HeaderWrapper>
+            <ContentContainer>
+              {!hasConversation && (
+                <CenterContainer>
+                  <TextContainer>
+                    <Title>Welcome to KeysightGPT</Title>
+                  </TextContainer>
+                  <div>Examples</div>
+                  <ExamplesGrid>
+                    {examples.map((example, index) => (
+                      <ExampleButton
+                        key={index}
+                        onClick={() => handleSendMessage(example)}
+                      >
+                        "{example}"
+                      </ExampleButton>
+                    ))}
+                  </ExamplesGrid>
+                </CenterContainer>
+              )}
+            </ContentContainer>
+            <ChatWrapper>
+              <ChatInterface
+                chat={{
+                  ...activeChat,
+                  messages: activeChatLogs,
+                }}
+                onSendMessage={handleSendMessage}
+                isLoading={isReplyLoading}
+              />
+            </ChatWrapper>
+          </MainContent>
         </div>
       </PageContainer>
     </SidebarProvider>

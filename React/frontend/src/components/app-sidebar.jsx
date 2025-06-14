@@ -196,6 +196,7 @@ export function AppSidebar({
   onRenameChat,
   onDeleteChat,
   onSetChat,
+  isChatsLoading,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -213,7 +214,6 @@ export function AppSidebar({
               chats={chats}
               onSelectChat={(selectedId) => onSelectChat(selectedId)}
               hideModal={hideModal}
-
             />
           ),
         });
@@ -231,11 +231,9 @@ export function AppSidebar({
               onSetChat={onSetChat}
               activeChat={activeChat}
               hideModal={hideModal}
-
             />
           ),
         });
-
       },
     },
     {
@@ -268,17 +266,23 @@ export function AppSidebar({
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="list-none">
-              {(chats ?? []).map((chat) => (
-                <SidebarMenuItem key={chat.session_id} className="list-none">
-                  <ChatItem
-                    chat={chat}
-                    isActive={activeChat?.session_id === chat.session_id}
-                    onSelect={() => onSelectChat(chat.session_id)}
-                    onRename={(newName) => onRenameChat(chat.session_id, newName)}
-                    onDelete={(session_id) => onDeleteChat(session_id)}
-                  />
-                </SidebarMenuItem>
-              ))}
+              {isChatsLoading ? (
+                <p className="text-gray-500 px-4 py-2">Loading chats...</p>
+              ) : (
+                (chats ?? []).map((chat) => (
+                  <SidebarMenuItem key={chat.session_id} className="list-none">
+                    <ChatItem
+                      chat={chat}
+                      isActive={activeChat?.session_id === chat.session_id}
+                      onSelect={() => onSelectChat(chat.session_id)}
+                      onRename={(newName) =>
+                        onRenameChat(chat.session_id, newName)
+                      }
+                      onDelete={(session_id) => onDeleteChat(session_id)}
+                    />
+                  </SidebarMenuItem>
+                ))
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -300,7 +304,11 @@ export function AppSidebar({
                   as="button"
                   style={{ width: "100%", textAlign: "left" }}
                 >
-                  <item.icon className={`h-4 w-4 ${item.disabled ? "text-gray-400" : ""}`} />
+                  <item.icon
+                    className={`h-4 w-4 ${
+                      item.disabled ? "text-gray-400" : ""
+                    }`}
+                  />
                   <span>{item.title}</span>
                 </Button>
               </SidebarMenuButton>
@@ -317,8 +325,6 @@ function ChatItem({ chat, isActive, onSelect, onRename, onDelete }) {
   const [newName] = useState(chat.name);
   const [isHovered, setIsHovered] = useState(false);
   const { showModal, hideModal } = useModal();
-
-
 
   return (
     <StyledChatItem

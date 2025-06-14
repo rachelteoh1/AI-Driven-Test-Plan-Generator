@@ -17,7 +17,13 @@ def train_intent_model():
 
     joblib.dump((vectorizer, clf), "app/utils/intent_model.joblib")
 
-def classify_intent_ml(text: str):
+def classify_intent_ml(text: str, threshold: float = 0.6) -> str:
     vectorizer, clf = joblib.load("app/utils/intent_model.joblib")
     X = vectorizer.transform([text])
-    return clf.predict(X)[0]
+    proba = clf.predict_proba(X)[0]
+    top_intent_index = proba.argmax()
+    confidence = proba[top_intent_index]
+
+    if confidence < threshold:
+        return "unknown"
+    return clf.classes_[top_intent_index]

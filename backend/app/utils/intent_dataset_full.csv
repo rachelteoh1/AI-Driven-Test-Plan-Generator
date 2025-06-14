@@ -105,3 +105,4 @@ What does :PAGE:MEAS:SAMP:SCON:EVENT do?,explain_scpi
 Make a voltage test with :PAGE:MEAS:SAMP:SCON:EVENT,generate_scpi
 Can you explain :TANG:POS?,explain_scpi
 Use :TANG:POS in a test sequence,generate_scpi
+
