@@ -1,11 +1,19 @@
 from sqlalchemy.orm import Session
 from ..entities.entities import Dashboard
 from .models import DashboardCreate
-from uuid import UUID
+from uuid import UUID, uuid4
 from app.entities.entities import OptimizedTestSequence, ChatLog, ChatSession, ScpiCommand
 from datetime import timedelta
 
 def create_dashboard(db: Session, data: DashboardCreate):
+    print("📌 Creating dashboard with data:", data.dict())
+
+    # Check if a dashboard already exists for this user
+    existing_dashboard = db.query(Dashboard).filter_by(user_id=data.user_id).first()
+    if existing_dashboard:
+        print("⚠️ Dashboard already exists for this user. Skipping creation.")
+        return existing_dashboard  # Or raise an exception if preferred
+
     dashboard_entry = Dashboard(
         dashboard_id=uuid4(),
         user_id=data.user_id,
