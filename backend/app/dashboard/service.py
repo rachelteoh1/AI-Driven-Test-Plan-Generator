@@ -19,7 +19,7 @@ def create_dashboard(db: Session, data: DashboardCreate):
         user_id=data.user_id,
         total_test_plans=data.total_test_plans,
         total_commands_generated=data.total_commands_generated,
-        total_minutes_saved=data.total_minutes_saved,
+        total_reduced_redundancy=data.total_reduced_redundancy,
         most_used_device=data.most_used_device,
         month=data.month
     )
@@ -46,7 +46,7 @@ def calculate_dashboard_metrics(db: Session, user_id: UUID):
                                  .count()
 
     # Estimate time saved (e.g. assume 0.5 minutes saved per command)
-    estimated_saved_minutes = int(total_commands_generated * 0.5)
+    estimated_reduced_redundancy = int(total_commands_generated * 0.5)
 
     # Get most used device — requires a device column in ScpiCommand or a Device table
     most_used_device = "Unknown"  # Placeholder if you haven’t stored device info yet
@@ -54,7 +54,7 @@ def calculate_dashboard_metrics(db: Session, user_id: UUID):
     return {
         "total_test_plans": total_test_plans,
         "total_commands_generated": total_commands_generated,
-        "total_minutes_saved": estimated_saved_minutes,
+        "total_reduced_redundancy": estimated_reduced_redundancy,
         "most_used_device": most_used_device,
     }
     
@@ -91,7 +91,7 @@ def get_weekly_stats(db: Session, user_id: UUID):
             "week_start": week_start,
             "test_plans_created": test_plan_count,
             "commands_generated": command_count,
-            "minutes_saved": int(command_count * 0.5)
+            "reduced_redundancy": int(command_count * 0.5)
         })
 
     return stats

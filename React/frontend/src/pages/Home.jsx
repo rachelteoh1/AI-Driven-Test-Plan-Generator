@@ -4,7 +4,7 @@ import { Header } from "../components/header";
 import ChatInterface from "./Conversation";
 import { useState, useEffect, useContext } from "react";
 import styled, { ThemeProvider } from "styled-components";
-import { FONTSIZE, FONTWEIGHT, SPACING, COLORS, lightTheme, darkTheme } from "../lib/styles";
+import { FONTSIZE, FONTWEIGHT, SPACING } from "../lib/styles";
 import {
   useAddChatLog,
   useChatLogs,

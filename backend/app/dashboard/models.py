@@ -8,14 +8,14 @@ class WeeklyTestPlanStat(BaseModel):
     week_start: date
     test_plans_created: int
     commands_generated: int
-    minutes_saved: int
+    reduced_redundancy: int
     
 class DashboardCreate(BaseModel):
     dashboard_id: UUID
     user_id: UUID
     total_test_plans: int
     total_commands_generated: int
-    total_minutes_saved: int
+    total_reduced_redundancy: int
     most_used_device: Optional[str]
     month: Optional[date]
     
@@ -24,7 +24,7 @@ class DashboardResponse(BaseModel):
     user_id: UUID
     total_test_plans: int
     total_commands_generated: int
-    total_minutes_saved: int
+    total_reduced_redundancy: int
     most_used_device: Optional[str]
     month: Optional[date]
     weekly_stats: List[WeeklyTestPlanStat]

@@ -90,7 +90,7 @@ class Dashboard(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     total_test_plans = Column(Integer, default=0)
     total_commands_generated = Column(Integer, default=0)
-    total_minutes_saved = Column(Integer, default=0)
+    total_reduced_redundancy = Column(Integer, default=0)
     most_used_device = Column(String)
     month = Column(Date)
 
