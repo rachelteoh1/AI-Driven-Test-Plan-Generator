@@ -30,7 +30,7 @@ def create_chat_log(db: Session, request):
         session_id=request.session_id,
         role=request.role,
         content=request.content,
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
         parent_id=parent_id
         )
         db.add(new_chat_log)
@@ -60,7 +60,7 @@ def modify_chat_log(db: Session, request):
             message_id=chat_log.message_id,
             session_id=chat_log.session_id,
             old_content=chat_log.content,
-            edited_at=datetime.utcnow()
+            edited_at=datetime.now(timezone.utc)
         )
         db.add(version)
         db.flush()
@@ -70,7 +70,7 @@ def modify_chat_log(db: Session, request):
         
         # Update current message
         chat_log.content = request.content
-        chat_log.updated_at = datetime.utcnow()
+        chat_log.updated_at =datetime.now(timezone.utc)
         chat_log.has_been_modified = True
         db.commit()
         db.refresh(chat_log)
@@ -139,9 +139,8 @@ def get_chat_log_by_user(db: Session, session_id):
 def detect_intent(db: Session, request: LogCreate) -> LogResponse:
     try:
         logger.info(f"Detecting intent for session: {request.session_id}")
-
-        processed_text, scpi_commands ,_, conditions,targets = preprocess_input(request.content)
-        intent = classify_intent_ml(processed_text)
+        lemmatised, scpi_cmds ,conditions,targets = preprocess_input(request.content)
+        intent = classify_intent_ml(lemmatised)
 
         if intent == "unknown":
             response_text = "Sorry, we could not identify your intent, please type in your request again."
@@ -149,7 +148,7 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
         elif intent =="generate_scpi":
          response_text = (
             f"Intent: {intent}\n"
-            f"SCPI Commands: {', '.join(scpi_commands) or 'None,please specify the SCPI command if available.'}\n"
+            f"SCPI Commands: {', '.join(scpi_cmds) or 'None,please specify the SCPI command if available.'}\n"
             f"Conditions: {', '.join(conditions) or 'None, please specify the confition if available.'}\n"
             f"Target: {', '.join(targets) or 'None, please specify your testing target.'}"
          )
@@ -157,7 +156,7 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
         else:
          response_text = (
             f"Intent: {intent}\n"
-            f"SCPI Commands: {', '.join(scpi_commands) or 'None,please specify the SCPI command.'}\n"
+            f"SCPI Commands: {', '.join(scpi_cmds) or 'None,please specify the SCPI command.'}\n"
          )
 
         new_log = LogCreate(

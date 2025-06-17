@@ -2,7 +2,7 @@ import { SidebarProvider } from "../components/ui/sidebar";
 import { AppSidebar } from "../components/app-sidebar";
 import { Header } from "../components/header";
 import ChatInterface from "./Conversation";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext,useRef } from "react";
 import styled, { ThemeProvider } from "styled-components";
 import { FONTSIZE, FONTWEIGHT, SPACING, COLORS, lightTheme, darkTheme } from "../lib/styles";
 import {
@@ -122,10 +122,12 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
   const deleteChatMutation = useDeleteChat();
   const addChatLogMutation = useAddChatLog();
   const detectIntentMutation  = useDetectIntent();
+  const hasCreatedChatRef = useRef(false); //prevent duplicate call
 
   useEffect(() => {
-    if (!isChatsLoading && !isLoading && user && chats.length === 0) {
+    if (!isChatsLoading && !isLoading && user && chats.length === 0 && !hasCreatedChatRef.current) {
       console.log(isChatsLoading);
+      hasCreatedChatRef.current = true;
       handleNewChat();
     }
   }, [isChatsLoading, isLoading, user, chats]);

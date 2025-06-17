@@ -4,6 +4,7 @@ import RenameModal from "../modal/RenameModal";
 import DeleteModal from "../modal/DeleteModal";
 import ClearModal from "../modal/ClearConversationModal";
 import SearchChatModal from "../modal/SearchChatModal";
+import LogoutModal from "../modal/LogoutModal";
 
 import {
   Plus,
@@ -245,8 +246,17 @@ export function AppSidebar({
       title: "Log out",
       icon: LogOut,
       action: () => {
-        logout();
-        navigate("/");
+        showModal({
+          modal: (
+            <LogoutModal
+              title="Logout?"
+              onLogout = {logout}
+              hideModal = {hideModal}
+            />
+          )
+        })
+        // logout();
+        // navigate("/");
       }
     },
   ];

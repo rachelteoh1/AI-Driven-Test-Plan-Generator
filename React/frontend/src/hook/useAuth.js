@@ -40,6 +40,7 @@ export const useLogout = () => {
   const logout = () => {
     localStorage.removeItem("access_token");
     queryClient.removeQueries(); // clear all cached data
+    return true;
   };
 
   return logout;

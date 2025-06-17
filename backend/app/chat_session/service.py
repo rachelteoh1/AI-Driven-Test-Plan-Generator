@@ -1,4 +1,4 @@
-from datetime import  datetime
+from datetime import  datetime,timezone
 from uuid import  uuid4
 from sqlalchemy.orm import Session
 from ..entities.entities import ChatSession, ChatLog
@@ -12,8 +12,8 @@ def create_chat(db: Session, request):
             session_id=uuid4(),
             id=request.id,
             title=request.title,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
         )
         db.add(new_chat)
         db.commit()
@@ -32,7 +32,7 @@ def rename_chat(db: Session, request):
         raise ChatNotFoundError(request.session_id)
     try:
         chat.title = request.new_title
-        chat.updated_at = datetime.utcnow()
+        chat.updated_at = datetime.now(timezone.utc)
         db.commit()
         logger.info(f"Renamed chat session {request.session_id} to '{request.new_title}'")
         return chat
