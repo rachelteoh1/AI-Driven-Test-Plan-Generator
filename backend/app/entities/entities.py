@@ -34,7 +34,8 @@ class ChatSession(Base):
     title = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow)
-
+    login_session_id = Column(UUID(as_uuid=True), nullable=True)  # track session
+    
     chat_logs = relationship("ChatLog", cascade="all, delete-orphan", backref="session")
     log_versions = relationship("ChatLogVersion", cascade="all, delete-orphan", backref="session")
 

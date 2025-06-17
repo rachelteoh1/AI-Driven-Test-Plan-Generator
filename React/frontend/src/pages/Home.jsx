@@ -132,9 +132,11 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
 
   const handleNewChat = async () => {
     try {
+      const loginSessionId = localStorage.getItem('login_session_id');
       const newSession = await newChatMutation.mutateAsync({
         id: user.id,
         title: `Chat ${chats.length + 1}`,
+        login_session_id: loginSessionId,
       });
       setActiveChatId(newSession.session_id);
     } catch (err) {

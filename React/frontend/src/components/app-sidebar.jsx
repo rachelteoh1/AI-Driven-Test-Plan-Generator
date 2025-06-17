@@ -37,6 +37,7 @@ import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { Check, ChevronRight, Circle } from "lucide-react";
 import * as React from "react"
 import { PanelLeft } from "lucide-react"
+import { useUserProfile } from "../hook/useProfile";
 
 // Button variants
 const variantStyles = {
@@ -201,6 +202,7 @@ export function AppSidebar({
   const navigate = useNavigate();
   const location = useLocation();
   const { showModal, hideModal } = useModal();
+  const { data: profile } = useUserProfile(true);
   const logout = useLogout();
   const bottomItems = [
     {
@@ -244,9 +246,9 @@ export function AppSidebar({
     {
       title: "Log out",
       icon: LogOut,
-      action: () => {
-        logout();
-        navigate("/");
+      action: async () => {
+      await logout(profile, profile?.pref_autosave ?? true);
+      navigate("/");
       }
     },
   ];
@@ -305,9 +307,8 @@ export function AppSidebar({
                   style={{ width: "100%", textAlign: "left" }}
                 >
                   <item.icon
-                    className={`h-4 w-4 ${
-                      item.disabled ? "text-gray-400" : ""
-                    }`}
+                    className={`h-4 w-4 ${item.disabled ? "text-gray-400" : ""
+                      }`}
                   />
                   <span>{item.title}</span>
                 </Button>
