@@ -3,7 +3,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 from ..database import Base 
-from datetime import datetime
+from datetime import datetime,timezone
 
 #define table's attribute
 class User(Base):
@@ -15,7 +15,7 @@ class User(Base):
     
     username = Column(String, nullable=True)
     role = Column(String, default="user")
-    date_joined = Column(DateTime, default=datetime.utcnow)
+    date_joined = Column(DateTime, default=datetime.now(timezone.utc))
     pref_darkmode = Column(Boolean, default=False)
     pref_autosave = Column(Boolean, default=True)
 
@@ -28,8 +28,8 @@ class ChatSession(Base):
     session_id= Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     id= Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False) 
     title= Column(Text)
-    created_at= Column(DateTime, default=datetime.utcnow)
-    updated_at= Column(DateTime, default=datetime.utcnow)
+    created_at= Column(DateTime, default=datetime.now(timezone.utc))
+    updated_at= Column(DateTime, default=datetime.now(timezone.utc))
     
    
 class ChatLog(Base):
@@ -41,10 +41,10 @@ class ChatLog(Base):
     version_of = Column(UUID, ForeignKey("chat_log_versions.version_id"), nullable=True)
     role = Column(String)
     content = Column(Text)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=datetime.now(timezone.utc))
     is_active = Column(Boolean, default=True)
     has_been_modified = Column(Boolean, default=False)
-    updated_at  = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at  = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
    
 
 class ChatLogVersion(Base):
@@ -53,7 +53,7 @@ class ChatLogVersion(Base):
     message_id = Column(UUID, ForeignKey("chat_logs.message_id"))
     session_id = Column(UUID, ForeignKey("chat_sessions.session_id"))
     old_content = Column(Text)
-    edited_at = Column(DateTime, default=datetime.utcnow)
+    edited_at = Column(DateTime, default=datetime.now(timezone.utc))
 
    
 
@@ -63,7 +63,7 @@ class OptimizedTestSequence(Base):
 
     sequence_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     message_id = Column(UUID(as_uuid=True), ForeignKey("chat_logs.message_id"), nullable=False)
-    created_date = Column(DateTime, default=datetime.utcnow)
+    created_date = Column(DateTime, default=datetime.now(timezone.utc))
 
 
 class ScpiCommand(Base):
@@ -80,7 +80,7 @@ class OptimizationExplanation(Base):
     explanation_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     sequence_id = Column(UUID(as_uuid=True), ForeignKey("optimized_test_sequence.sequence_id"), nullable=False)
     explanation_text = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
 
 
 class Dashboard(Base):

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import React, { useState, useEffect} from "react";
+import { Routes, Route } from "react-router-dom";
 import { Home } from "./pages/Home";
 import Interface from "./pages/Conversation";
 import { Profile } from "./pages/Profile";
@@ -10,12 +10,11 @@ import ResetPwPage from "./pages/ResetPw";
 import ConfirmPwPage from "./pages/ConfirmPw";
 import ModalView from "./modal/internal/ModalView";
 import ModalManager from "./modal/internal/ModalManager";
-import UserStatusContext from "./lib/UserStatusContext";
+import { useUser } from "./hook/useAuth";
 import { useChats } from "./hook/useChat";
 import { ThemeProvider, createGlobalStyle } from "styled-components";
 import { lightTheme, darkTheme } from "./lib/styles";
 import { useUserProfile } from "./hook/useProfile";
-
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -28,29 +27,34 @@ const GlobalStyle = createGlobalStyle`
 
 function App() {
   const [activeChatId, setActiveChatId] = useState(null);
-  const { user, isLoading } = useContext(UserStatusContext); // <-- assuming your `user` object comes from context
+  // const { user, isLoading } = useContext(UserStatusContext); // <-- assuming your `user` object comes from context
+  const { data: user, isLoading } = useUser();
   const isLoggedIn = !!user;
-
+  console.log('IS USER HERE',user);
   const safeUserId =
     typeof user?.id === "string" ? user.id : user?.id?.id || "";
 
   // Hooks
   // const { data: chats = [] ,  isLoading: isChatsLoading,} = useChats(safeUserId);
-const {
-  data: chats = [],
-  isLoading: isChatsLoading,
-} = useChats(safeUserId, {
-  enabled: !!safeUserId && !isLoading,   // <- important
-});
+ 
+  const { data: chats = [], isLoading: isChatsLoading } = useChats(safeUserId, {
+    enabled: !!safeUserId && !isLoading, // <- important
+  });
 
-
+  console.log("IS CHAT HERE!!",chats);
+  useEffect(() => {
+    if (chats && chats.length > 0 && chats[0]?.session_id) {
+      setActiveChatId(chats[0].session_id);
+    }
+  }, [chats, setActiveChatId]);
 
   const onSelectChat = (chatId) => {
     setActiveChatId(chatId);
   };
 
   // check user dark mode
-  const { data: userProfile, isLoading: isProfileLoading } = useUserProfile(isLoggedIn);
+  const { data: userProfile, isLoading: isProfileLoading } =
+    useUserProfile(isLoggedIn);
   const isDarkMode = isLoggedIn && userProfile?.pref_darkmode;
   console.log("Dark mode status:", isDarkMode);
 

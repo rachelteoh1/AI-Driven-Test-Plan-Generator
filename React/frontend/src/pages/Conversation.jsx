@@ -213,7 +213,18 @@ const RemoveButton = styled.button`
     color: ${({ theme }) => theme.status.delete};
   }
 `;
+const ActionButtons = styled.div`
+  display: flex;
+  gap: ${SPACING.xs};
+  margin-top: ${SPACING.sm};
+  justify-content: flex-end;
+  opacity: 0;
+  transition: opacity 200ms;
 
+  &:hover {
+    opacity: 1;
+  }
+`;
 const ActionButton = styled(Button)`
   min-width: auto;
   padding: ${SPACING.xs};
@@ -437,9 +448,11 @@ function PreviousVersionViewer({ versions, onBack }) {
           </div>
           {logVersion.responses.map((response) =>
             response.role === "user" ? (
+              <UserMessageContainer>
               <UserMessageBubble key={response.message_id}>
                 <UserMessageContent>{response.content}</UserMessageContent>
               </UserMessageBubble>
+                <CircleUserRound /></UserMessageContainer>
             ) : (
               <BotMessageContainer key={response.message_id}>
                 <BotMessageContent>{response.content}</BotMessageContent>

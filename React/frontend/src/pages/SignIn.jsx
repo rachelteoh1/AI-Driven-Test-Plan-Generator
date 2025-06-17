@@ -1,5 +1,5 @@
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { useContext,  useState } from 'react';
+import {  useState } from 'react';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
@@ -7,7 +7,6 @@ import styled from "styled-components"
 import { Link, useNavigate } from "react-router-dom"
 import {FONTSIZE,FONTWEIGHT, COLORS } from "../lib/styles"
 import FormValidation from "../lib/FormValidation"
-import UserStatusContext from '../lib/UserStatusContext';
 import TickedModal from '../modal/TickModal';
 import CrossedModal from '../modal/CrossedModal';
 import useModal from '../modal/useModal';
@@ -205,7 +204,7 @@ export default function SignInPage() {
                     />
 
                     <StyledLink to="/resetpw"><TextSmRegular>Forgot password?</TextSmRegular></StyledLink>
-                    <StyledButton type='submit' disabled={!isFormValid}>Submit</StyledButton></div>
+                    <StyledButton type='submit' disabled={isFormValid}>Submit</StyledButton></div>
                 </form>
 
                 <RowContainer>

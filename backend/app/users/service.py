@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,timezone
 import logging
 import os
 import httpx
@@ -31,7 +31,7 @@ def get_user_by_id(db: Session, user_id: UUID) -> models.UserResponse:
     return user
 
 def create_reset_token(user_id: UUID) -> str:
-    expire = datetime.utcnow() + timedelta(minutes=RESET_TOKEN_EXPIRY_MINUTES)
+    expire = datetime.now(timezone.utc)+ timedelta(minutes=RESET_TOKEN_EXPIRY_MINUTES)
     payload = {
         "sub": str(user_id),
         "exp": expire

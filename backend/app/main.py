@@ -19,9 +19,8 @@ app.add_middleware(
 
 
 register_routes(app)
-
-
 Base.metadata.create_all(bind=engine)
+
 
 @app.get("/")
 def read_root():
