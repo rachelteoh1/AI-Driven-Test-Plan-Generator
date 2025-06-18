@@ -15,9 +15,9 @@ export const useSignIn = () => {
 
   return useMutation({
     mutationFn: authService.loginUserforToken,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["currentUser"] ); // refetch user after login
-      
+    onSuccess: async () => {
+      // Wait for token to exist
+      await queryClient.invalidateQueries(["currentUser"]);
     },
   });
 };
