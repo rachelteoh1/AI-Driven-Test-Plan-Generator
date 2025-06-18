@@ -846,4 +846,5 @@ function MessageInput({
       </MessageForm>
     </>
   );
+  }
 }
