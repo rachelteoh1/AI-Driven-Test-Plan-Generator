@@ -13,7 +13,7 @@ def create_chat(db: Session, request):
             id=request.id,
             title=request.title,
             created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc)
+            updated_at=datetime.now(timezone.utc),
             login_session_id=request.login_session_id
         )
         db.add(new_chat)

@@ -140,7 +140,7 @@ export function DashboardContent() {
                   </StatIcon>
                 </FlexRow>
                 <div>
-                  <StatTitle>Total test plan generated</StatTitle>
+                  <StatTitle>Total Test Plan Generated</StatTitle>
                   <StatValue>{total_test_plans}</StatValue>
                 </div>
               </FlexColumn>
@@ -156,7 +156,7 @@ export function DashboardContent() {
                   </StatIcon>
                 </FlexRow>
                 <div>
-                  <StatTitle>Total SCPI generated</StatTitle>
+                  <StatTitle>Total SCPI Generated</StatTitle>
                   <StatValue>{total_commands_generated}</StatValue>
                 </div>
               </FlexColumn>
@@ -200,7 +200,7 @@ export function DashboardContent() {
                       : `${Math.round((total_reduced_redundancy / total_commands_generated) * 100)}%`}
                   </StatValue>
                   <p style={{ fontSize: FONTSIZE.sm, color: COLORS.medium }}>
-                    Total Reduced Redundancy
+                    SCPI Reduced
                   </p>
                 </div>
 
@@ -228,7 +228,7 @@ export function DashboardContent() {
                     {total_reduced_redundancy}
                   </StatValue>
                   <p style={{ fontSize: FONTSIZE.sm, color: COLORS.medium }}>
-                    Test Case Reduced
+                    Total SCPI Reduced
                   </p>
                 <ShadCircularProgress
                   value={total_reduced_redundancy}

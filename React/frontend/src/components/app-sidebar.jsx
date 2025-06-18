@@ -45,12 +45,10 @@ const variantStyles = {
   default: css`
     background-color: ${({ theme }) => theme.newChat};
     color: ${({ theme }) => theme.greys.dark};
-    &:hover { background-color:  ${({ theme }) => theme.hover}; }
   `,
   ghost: css`
     background: transparent;
     color: ${({ theme }) => theme.greys.dark};
-    &:hover { background-color: ${({ theme }) => theme.hover}; }
   `,
 };
 
