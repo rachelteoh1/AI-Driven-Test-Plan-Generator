@@ -27,12 +27,15 @@ const GlobalStyle = createGlobalStyle`
 
 function App() {
   const [activeChatId, setActiveChatId] = useState(null);
-  // const { user, isLoading } = useContext(UserStatusContext); // <-- assuming your `user` object comes from context
-  const { data: user, isLoading } = useUser();
+  const token = localStorage.getItem("access_token");
+  const { data: user, isLoading,refetch } = useUser();
+  const [initialized, setInitialized] = useState(false);
   const isLoggedIn = !!user;
   console.log('IS USER HERE',user);
   const safeUserId =
     typeof user?.id === "string" ? user.id : user?.id?.id || "";
+
+    
 
   // Hooks
   // const { data: chats = [] ,  isLoading: isChatsLoading,} = useChats(safeUserId);
@@ -40,6 +43,16 @@ function App() {
   const { data: chats = [], isLoading: isChatsLoading } = useChats(safeUserId, {
     enabled: !!safeUserId && !isLoading, // <- important
   });
+
+  useEffect(() => {
+  if (token && !user) {
+    refetch().finally(() => setInitialized(true));
+  } else {
+    setInitialized(true);
+  }
+}, [token]);
+
+// if (!initialized || isLoading) return null;
 
   console.log("IS CHAT HERE!!",chats);
   useEffect(() => {
