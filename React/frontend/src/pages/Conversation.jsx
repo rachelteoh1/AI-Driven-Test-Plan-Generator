@@ -30,7 +30,7 @@ import {
   useDetectIntent,
 } from "../hook/useChat";
 import { getVersionChatLogs } from "../services/chatServices";
-import pdfIcon from '../assets/pdf.png';
+import pdfIcon from "../assets/pdf.png";
 // Animation
 const spin = keyframes`
   from { transform: rotate(0deg); }
@@ -43,7 +43,7 @@ const Container = styled.div`
   flex-direction: column;
   height: 100%;
   background-color: ${({ theme }) => theme.background};
-`
+`;
 
 const MessagesContainer = styled.div`
   flex: 1;
@@ -57,7 +57,7 @@ const MessagesContainer = styled.div`
 const InputArea = styled.div`
   padding: ${SPACING.lg};
   background-color: ${({ theme }) => theme.background};
-`
+`;
 
 const UserMessageContainer = styled.div`
   display: flex;
@@ -95,7 +95,7 @@ const BotMessageContent = styled.div`
   max-width: 64rem;
   word-wrap: break-word;
   white-space: pre-wrap;
-`
+`;
 
 const LoadingContainer = styled.div`
   color: ${({ theme }) => theme.text};
@@ -108,13 +108,13 @@ const LoadingContent = styled.div`
   align-items: center;
   gap: ${SPACING.sm};
   color: ${({ theme }) => theme.text};
-`
+`;
 
 const LoadingIcon = styled(Loader2)`
   height: ${FONTSIZE.lg};
   width: ${FONTSIZE.lg};
   animation: ${spin} 1s linear infinite;
-`
+`;
 
 const MessageTextArea = styled.textarea`
   width: 100%;
@@ -134,15 +134,16 @@ const MessageTextArea = styled.textarea`
   font-size: ${FONTSIZE.base};
   overflow-y: auto;
   box-sizing: border-box;
-`
+`;
 const SubmitButton = styled(Button)`
   position: absolute;
   left: 600px;
   bottom: 43px;
   background-color: transparent;
   color: ${({ theme }) => theme.status.cancel};
-  opacity: ${({ $isLoading, $hasValue }) => ($isLoading || !$hasValue ? 0.5 : 1)};
-`
+  opacity: ${({ $isLoading, $hasValue }) =>
+    $isLoading || !$hasValue ? 0.5 : 1};
+`;
 
 const UploadButton = styled(Button)`
   position: relative;
@@ -154,10 +155,10 @@ const UploadButton = styled(Button)`
   &:hover {
     background-color: ${({ theme }) => theme.hover};
   }
-`
+`;
 const MessageForm = styled.form`
   width: 100%;
-`
+`;
 const TextAreaWrapper = styled.div`
   position: relative;
   width: 100%;
@@ -213,7 +214,14 @@ const RemoveButton = styled.button`
     color: ${({ theme }) => theme.status.delete};
   }
 `;
+
 const ActionButtons = styled.div`
+  display: flex;
+  gap: ${SPACING.xs};
+  margin-top: ${SPACING.sm};
+  justify-content: flex-end;
+`;
+const ActionButtonsHover = styled.div`
   display: flex;
   gap: ${SPACING.xs};
   margin-top: ${SPACING.sm};
@@ -264,7 +272,8 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   const [versionData, setVersionData] = useState({});
   const messagesEndRef = useRef(null);
   const modifyChatLogMutation = useModifyChatLog();
-  const [pdfFile, setPdfFile] = useState(null) // ✅ Add this
+  const [pdfFile, setPdfFile] = useState(null); // ✅ Add this
+  const [copiedMessageId, setCopiedMessageId] = useState(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -275,23 +284,25 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   }, [chat.messages, isLoading]);
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!isLoading) {
       if (inputValue.trim()) {
         // If there is text input, send it along with PDF file if any
-        onSendMessage(inputValue, pdfFile)
+        onSendMessage(inputValue, pdfFile);
       } else if (pdfFile) {
         // If no text but PDF uploaded, send the PDF file name only
-        onSendMessage(null, pdfFile)
+        onSendMessage(null, pdfFile);
       }
-      setInputValue("")
-      setPdfFile(null)
+      setInputValue("");
+      setPdfFile(null);
     }
   };
 
-  const copyToClipboard = async (text) => {
+  const copyToClipboard = async (text, messageId) => {
     try {
       await navigator.clipboard.writeText(text);
+      setCopiedMessageId(messageId);
+      setTimeout(() => setCopiedMessageId(null), 2000); // reset after 2s
     } catch (err) {
       console.error("Failed to copy text: ", err);
     }
@@ -368,65 +379,60 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     URL.revokeObjectURL(url);
   };
 
+return (
+  <Container>
+    <MessagesContainer>
+      {viewingHistory && versionData[viewingHistory] ? (
+        <>
+          {console.log("🧠 Version Viewer Debug Info:")}
+          {console.log("viewingHistory:", viewingHistory)}
+          {console.log("versionData:", versionData)}
+          {console.log("versionData[viewingHistory]:", versionData[viewingHistory])}
+          {console.log("Number of response:", versionData.responses)}
+          <PreviousVersionViewer
+            versions={versionData[viewingHistory]}
+            onBack={handleBackToCurrent}
+          />
+        </>
+      ) : (
+        chat.messages.map((message) => (
+          <Message
+            key={message.message_id}
+            message={message}
+            isEditing={editingMessageId === message.message_id}
+            editContent={editContent}
+            setEditContent={setEditContent}
+            onSaveEdit={handleSaveEdit}
+            onCancelEdit={handleCancelEdit}
+            onCopy={(text) => copyToClipboard(text, message.message_id)}
+            onEdit={handleEditMessage}
+            onUpload={handleUpload}
+            versions={messageVersions[message.message_id] || []}
+            currentVersionIndex={currentVersions[message.message_id]}
+            isViewingHistory={viewingHistory === message.message_id}
+            onViewVersion={handleViewVersion}
+            onBackToCurrent={handleBackToCurrent}
+            getMessageContent={getMessageContent}
+            copiedMessageId={copiedMessageId}
+          />
+        ))
+      )}
+      {isLoading && <LoadingIndicator />}
+      <div ref={messagesEndRef} />
+    </MessagesContainer>
 
-  return (
-    <Container>
-      <MessagesContainer>
-        {viewingHistory && versionData[viewingHistory]
-          ? (() => {
-            console.log("🧠 Version Viewer Debug Info:");
-            console.log("viewingHistory:", viewingHistory);
-            console.log("versionData:", versionData);
-            console.log(
-              "versionData[viewingHistory]:",
-              versionData[viewingHistory]
-            );
-            console.log("Number of response:", versionData.responses);
-
-            return (
-              <PreviousVersionViewer
-                versions={versionData[viewingHistory]}
-                onBack={handleBackToCurrent}
-              />
-            );
-          })()
-          : chat.messages.map((message) => (
-            <Message
-              key={message.message_id}
-              message={message}
-              isEditing={editingMessageId === message.message_id}
-              editContent={editContent}
-              setEditContent={setEditContent}
-              onSaveEdit={handleSaveEdit}
-              onCancelEdit={handleCancelEdit}
-              onCopy={copyToClipboard}
-              onEdit={handleEditMessage}
-              onUpload={handleUpload}
-              versions={messageVersions[message.message_id] || []}
-              currentVersionIndex={currentVersions[message.message_id]}
-              isViewingHistory={viewingHistory === message.message_id}
-              onViewVersion={handleViewVersion}
-              onBackToCurrent={handleBackToCurrent}
-              getMessageContent={getMessageContent}
-            />
-          ))}
-        {isLoading && <LoadingIndicator />}
-        <div ref={messagesEndRef} />
-      </MessagesContainer>
-
-      <InputArea>
-        <MessageInput
-          value={inputValue}
-          onChange={setInputValue}
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-          pdfFile={pdfFile}             // ✅ pass the file
-          setPdfFile={setPdfFile}       // ✅ pass the setter
-        />
-      </InputArea>
-    </Container>
-  );
-}
+    <InputArea>
+      <MessageInput
+        value={inputValue}
+        onChange={setInputValue}
+        onSubmit={handleSubmit}
+        isLoading={isLoading}
+        pdfFile={pdfFile}
+        setPdfFile={setPdfFile}
+      />
+    </InputArea>
+  </Container>
+);
 
 function PreviousVersionViewer({ versions, onBack }) {
   return (
@@ -444,18 +450,14 @@ function PreviousVersionViewer({ versions, onBack }) {
               </UserMessageBubble>
               <CircleUserRound />
             </UserMessageContainer>
-
           </div>
           {logVersion.responses.map((response) =>
             response.role === "user" ? (
               <UserMessageContainer>
-                <UserMessageBubble>
-                  <UserMessageContent>
-                    <UserMessageBubble key={response.message_id}>
-                      <UserMessageContent>{response.content}</UserMessageContent>
-                    </UserMessageBubble>
-                  </UserMessageContent>
+                <UserMessageBubble key={response.message_id}>
+                  <UserMessageContent>{response.content}</UserMessageContent>
                 </UserMessageBubble>
+                <CircleUserRound />
               </UserMessageContainer>
             ) : (
               <BotMessageContainer key={response.message_id}>
@@ -491,6 +493,7 @@ function Message({
   onViewVersion,
   onBackToCurrent,
   getMessageContent,
+  copiedMessageId
 }) {
   return message.role === "user" ? (
     <UserMessage
@@ -502,6 +505,7 @@ function Message({
       onCancelEdit={onCancelEdit}
       onCopy={onCopy}
       onEdit={onEdit}
+      copiedMessageId={copiedMessageId}
       versions={versions}
       currentVersionIndex={currentVersionIndex}
       isViewingHistory={isViewingHistory}
@@ -516,6 +520,7 @@ function Message({
       onUpload={onUpload}
       isStarred={isStarred}
       versions={versions}
+      copiedMessageId={copiedMessageId}
       currentVersionIndex={currentVersionIndex}
       isViewingHistory={isViewingHistory}
       onViewVersion={onViewVersion}
@@ -534,6 +539,7 @@ function UserMessage({
   onCancelEdit,
   onCopy,
   onEdit,
+  copiedMessageId,
   versions,
   currentVersionIndex,
   isViewingHistory,
@@ -605,7 +611,11 @@ function UserMessage({
           <Tooltip>
             <TooltipTrigger asChild>
               <ActionButton onClick={() => onCopy(messageContent)}>
-                <Copy size={16} />
+                {copiedMessageId === message.message_id ? (
+                  <Check size={16} />
+                ) : (
+                  <Copy size={16} />
+                )}
               </ActionButton>
             </TooltipTrigger>
             <TooltipContent>
@@ -657,6 +667,7 @@ function BotMessage({
   onUpload,
   isStarred,
   versions,
+  copiedMessageId = { copiedMessageId },
   currentVersionIndex,
   isViewingHistory,
   onViewVersion,
@@ -680,12 +691,16 @@ function BotMessage({
         </VersionHistoryIndicator>
       )}
 
-      <ActionButtons>
+      <ActionButtonsHover>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <ActionButton onClick={() => onCopy(messageContent)}>
-                <Copy size={16} />
+                {copiedMessageId === message.message_id ? (
+                  <Check size={16} />
+                ) : (
+                  <Copy size={16} />
+                )}
               </ActionButton>
             </TooltipTrigger>
             <TooltipContent>
@@ -722,7 +737,7 @@ function BotMessage({
             </Tooltip>
           )}
         </TooltipProvider>
-      </ActionButtons>
+      </ActionButtonsHover>
     </BotMessageContainer>
   );
 }
@@ -738,8 +753,15 @@ function LoadingIndicator() {
   );
 }
 
-function MessageInput({ value, onChange, onSubmit, isLoading, pdfFile, setPdfFile }) {
-  const textareaRef = useRef(null)
+function MessageInput({
+  value,
+  onChange,
+  onSubmit,
+  isLoading,
+  pdfFile,
+  setPdfFile,
+}) {
+  const textareaRef = useRef(null);
   const [pdfUrl, setPdfUrl] = useState(null);
 
   const handleKeyDown = (e) => {
@@ -762,7 +784,6 @@ function MessageInput({ value, onChange, onSubmit, isLoading, pdfFile, setPdfFil
     e.target.value = null;
   };
 
-
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -778,13 +799,17 @@ function MessageInput({ value, onChange, onSubmit, isLoading, pdfFile, setPdfFil
             <PdfIcon src={pdfIcon} alt="PDF icon" />
             {pdfFile.name}
           </PdfName>
-          <RemoveButton onClick={() => setPdfFile(null)} aria-label="Remove PDF" type="button">
+          <RemoveButton
+            onClick={() => setPdfFile(null)}
+            aria-label="Remove PDF"
+            type="button"
+          >
             <X size={16} />
           </RemoveButton>
         </PdfContainer>
       )}
       <MessageForm onSubmit={onSubmit}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <UploadButton component="label">
             <Upload size={16} style={{ marginRight: 4 }} />
             <input
@@ -796,7 +821,7 @@ function MessageInput({ value, onChange, onSubmit, isLoading, pdfFile, setPdfFil
             />
           </UploadButton>
 
-          <TextAreaWrapper style={{ flex: 1, position: 'relative' }}>
+          <TextAreaWrapper style={{ flex: 1, position: "relative" }}>
             <MessageTextArea
               ref={textareaRef}
               value={value}
@@ -816,7 +841,6 @@ function MessageInput({ value, onChange, onSubmit, isLoading, pdfFile, setPdfFil
             >
               {isLoading ? <LoadingIcon /> : <Send size={16} />}
             </SubmitButton>
-
           </TextAreaWrapper>
         </div>
       </MessageForm>
