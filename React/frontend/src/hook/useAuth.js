@@ -19,6 +19,7 @@ export const useSignIn = () => {
     onSuccess: async () => {
       // Wait for token to exist
       await queryClient.invalidateQueries(["currentUser"]);
+      await queryClient.invalidateQueries(["chats"]);
     },
   });
 };
@@ -50,7 +51,7 @@ export const useLogout = () => {
     }
     localStorage.removeItem("access_token");
     localStorage.removeItem("login_session_id");
-    queryClient.removeQueries(); // clear all cached data
+    queryClient.invalidateQueries(["chats"]); // clear all cached data
     return true;
   };
 
