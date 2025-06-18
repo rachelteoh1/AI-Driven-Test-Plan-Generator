@@ -236,7 +236,7 @@ const ActionButtonsHover = styled.div`
 const ActionButton = styled(Button)`
   min-width: auto;
   padding: ${SPACING.xs};
-    background-color: ${({ theme }) => theme.background};
+  background-color: ${COLORS.background.light};
   border: 1px solid ${COLORS.border};
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 `;
@@ -379,60 +379,65 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     URL.revokeObjectURL(url);
   };
 
-return (
-  <Container>
-    <MessagesContainer>
-      {viewingHistory && versionData[viewingHistory] ? (
-        <>
-          {console.log("🧠 Version Viewer Debug Info:")}
-          {console.log("viewingHistory:", viewingHistory)}
-          {console.log("versionData:", versionData)}
-          {console.log("versionData[viewingHistory]:", versionData[viewingHistory])}
-          {console.log("Number of response:", versionData.responses)}
-          <PreviousVersionViewer
-            versions={versionData[viewingHistory]}
-            onBack={handleBackToCurrent}
-          />
-        </>
-      ) : (
-        chat.messages.map((message) => (
-          <Message
-            key={message.message_id}
-            message={message}
-            isEditing={editingMessageId === message.message_id}
-            editContent={editContent}
-            setEditContent={setEditContent}
-            onSaveEdit={handleSaveEdit}
-            onCancelEdit={handleCancelEdit}
-            onCopy={(text) => copyToClipboard(text, message.message_id)}
-            onEdit={handleEditMessage}
-            onUpload={handleUpload}
-            versions={messageVersions[message.message_id] || []}
-            currentVersionIndex={currentVersions[message.message_id]}
-            isViewingHistory={viewingHistory === message.message_id}
-            onViewVersion={handleViewVersion}
-            onBackToCurrent={handleBackToCurrent}
-            getMessageContent={getMessageContent}
-            copiedMessageId={copiedMessageId}
-          />
-        ))
-      )}
-      {isLoading && <LoadingIndicator />}
-      <div ref={messagesEndRef} />
-    </MessagesContainer>
+  return (
+    <Container>
+      <MessagesContainer>
+        {viewingHistory && versionData[viewingHistory]
+          ? (() => {
+              console.log("🧠 Version Viewer Debug Info:");
+              console.log("viewingHistory:", viewingHistory);
+              console.log("versionData:", versionData);
+              console.log(
+                "versionData[viewingHistory]:",
+                versionData[viewingHistory]
+              );
+              console.log("Number of response:", versionData.responses);
 
-    <InputArea>
-      <MessageInput
-        value={inputValue}
-        onChange={setInputValue}
-        onSubmit={handleSubmit}
-        isLoading={isLoading}
-        pdfFile={pdfFile}
-        setPdfFile={setPdfFile}
-      />
-    </InputArea>
-  </Container>
-);
+              return (
+                <PreviousVersionViewer
+                  versions={versionData[viewingHistory]}
+                  onBack={handleBackToCurrent}
+                />
+              );
+            })()
+          : chat.messages.map((message) => (
+              <Message
+                key={message.message_id}
+                message={message}
+                isEditing={editingMessageId === message.message_id}
+                editContent={editContent}
+                setEditContent={setEditContent}
+                onSaveEdit={handleSaveEdit}
+                onCancelEdit={handleCancelEdit}
+                onCopy={(text) => copyToClipboard(text, message.message_id)}
+                onEdit={handleEditMessage}
+                onUpload={handleUpload}
+                versions={messageVersions[message.message_id] || []}
+                currentVersionIndex={currentVersions[message.message_id]}
+                isViewingHistory={viewingHistory === message.message_id}
+                onViewVersion={handleViewVersion}
+                onBackToCurrent={handleBackToCurrent}
+                getMessageContent={getMessageContent}
+                copiedMessageId={copiedMessageId}
+              />
+            ))}
+        {isLoading && <LoadingIndicator />}
+        <div ref={messagesEndRef} />
+      </MessagesContainer>
+
+      <InputArea>
+        <MessageInput
+          value={inputValue}
+          onChange={setInputValue}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+          pdfFile={pdfFile} //  pass the file
+          setPdfFile={setPdfFile} //  pass the setter
+        />
+      </InputArea>
+    </Container>
+  );
+}
 
 function PreviousVersionViewer({ versions, onBack }) {
   return (
@@ -846,5 +851,4 @@ function MessageInput({
       </MessageForm>
     </>
   );
-  }
 }

@@ -253,7 +253,7 @@ export function AppSidebar({
               onLogout={async () => {
                 await logout(profile, profile?.pref_autosave ?? true);
                 hideModal();
-                navigate("/");
+                navigate("/signin");
               }}
               hideModal={hideModal}
             />
