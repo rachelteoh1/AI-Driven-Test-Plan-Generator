@@ -37,3 +37,7 @@ async def delete_chat(session_id: UUID, db: DbSession):
 async def get_user_chats(user_id: UUID, db: DbSession):
    return service.get_chat_by_user(db, user_id)
         
+@router.delete("/user/{user_id}/session/{login_session_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_chats_for_login_session(user_id: UUID, login_session_id: UUID, db: DbSession):
+    service.delete_chats_by_login_session(db, user_id, login_session_id)
+    return

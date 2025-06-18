@@ -7,9 +7,10 @@ import { COLORS, SPACING, FONTSIZE, FONTWEIGHT, lightTheme, darkTheme } from "..
 // Styled Components
 const HeaderContainer = styled.header`
   display: flex;
+  width: 100%
   align-items: center;
   justify-content: center;
-  padding: ${SPACING.lg};
+  padding: ${SPACING.sm};
   background-color: ${({ theme }) => theme.card};  // was COLORS.background.light
 `;
 

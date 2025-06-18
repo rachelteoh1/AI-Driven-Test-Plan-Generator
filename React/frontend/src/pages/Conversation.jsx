@@ -228,7 +228,7 @@ const ActionButtons = styled.div`
 const ActionButton = styled(Button)`
   min-width: auto;
   padding: ${SPACING.xs};
-  background-color: ${COLORS.background.light};
+    background-color: ${({ theme }) => theme.background};
   border: 1px solid ${COLORS.border};
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 `;
@@ -374,42 +374,42 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
       <MessagesContainer>
         {viewingHistory && versionData[viewingHistory]
           ? (() => {
-              console.log("🧠 Version Viewer Debug Info:");
-              console.log("viewingHistory:", viewingHistory);
-              console.log("versionData:", versionData);
-              console.log(
-                "versionData[viewingHistory]:",
-                versionData[viewingHistory]
-              );
-              console.log("Number of response:", versionData.responses);
+            console.log("🧠 Version Viewer Debug Info:");
+            console.log("viewingHistory:", viewingHistory);
+            console.log("versionData:", versionData);
+            console.log(
+              "versionData[viewingHistory]:",
+              versionData[viewingHistory]
+            );
+            console.log("Number of response:", versionData.responses);
 
-              return (
-                <PreviousVersionViewer
-                  versions={versionData[viewingHistory]}
-                  onBack={handleBackToCurrent}
-                />
-              );
-            })()
-          : chat.messages.map((message) => (
-              <Message
-                key={message.message_id}
-                message={message}
-                isEditing={editingMessageId === message.message_id}
-                editContent={editContent}
-                setEditContent={setEditContent}
-                onSaveEdit={handleSaveEdit}
-                onCancelEdit={handleCancelEdit}
-                onCopy={copyToClipboard}
-                onEdit={handleEditMessage}
-                onUpload={handleUpload}
-                versions={messageVersions[message.message_id] || []}
-                currentVersionIndex={currentVersions[message.message_id]}
-                isViewingHistory={viewingHistory === message.message_id}
-                onViewVersion={handleViewVersion}
-                onBackToCurrent={handleBackToCurrent}
-                getMessageContent={getMessageContent}
+            return (
+              <PreviousVersionViewer
+                versions={versionData[viewingHistory]}
+                onBack={handleBackToCurrent}
               />
-            ))}
+            );
+          })()
+          : chat.messages.map((message) => (
+            <Message
+              key={message.message_id}
+              message={message}
+              isEditing={editingMessageId === message.message_id}
+              editContent={editContent}
+              setEditContent={setEditContent}
+              onSaveEdit={handleSaveEdit}
+              onCancelEdit={handleCancelEdit}
+              onCopy={copyToClipboard}
+              onEdit={handleEditMessage}
+              onUpload={handleUpload}
+              versions={messageVersions[message.message_id] || []}
+              currentVersionIndex={currentVersions[message.message_id]}
+              isViewingHistory={viewingHistory === message.message_id}
+              onViewVersion={handleViewVersion}
+              onBackToCurrent={handleBackToCurrent}
+              getMessageContent={getMessageContent}
+            />
+          ))}
         {isLoading && <LoadingIndicator />}
         <div ref={messagesEndRef} />
       </MessagesContainer>
@@ -435,7 +435,7 @@ function PreviousVersionViewer({ versions, onBack }) {
         <div key={logVersion.version_id}>
           <div style={{ marginBottom: "1rem" }}>
             <strong>Edited at:</strong>{" "}
-             {new Date(logVersion.edited_at).toLocaleString()}
+            {new Date(logVersion.edited_at).toLocaleString()}
             <UserMessageContainer>
               <UserMessageBubble>
                 <UserMessageContent>
@@ -444,15 +444,19 @@ function PreviousVersionViewer({ versions, onBack }) {
               </UserMessageBubble>
               <CircleUserRound />
             </UserMessageContainer>
-            
+
           </div>
           {logVersion.responses.map((response) =>
             response.role === "user" ? (
               <UserMessageContainer>
-              <UserMessageBubble key={response.message_id}>
-                <UserMessageContent>{response.content}</UserMessageContent>
-              </UserMessageBubble>
-                <CircleUserRound /></UserMessageContainer>
+                <UserMessageBubble>
+                  <UserMessageContent>
+                    <UserMessageBubble key={response.message_id}>
+                      <UserMessageContent>{response.content}</UserMessageContent>
+                    </UserMessageBubble>
+                  </UserMessageContent>
+                </UserMessageBubble>
+              </UserMessageContainer>
             ) : (
               <BotMessageContainer key={response.message_id}>
                 <BotMessageContent>{response.content}</BotMessageContent>

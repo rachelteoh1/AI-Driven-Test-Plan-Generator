@@ -1,6 +1,7 @@
 // hook/useUser.js
 import { useQuery, useMutation } from "@tanstack/react-query";
 import * as userService from "../services/userServices";
+import { useNavigate } from "react-router-dom";
 
 export const useUser = () => {
   const token = localStorage.getItem("access_token");
@@ -24,5 +25,17 @@ export const useRequestResetPassword = () => {
 export const useConfirmResetPassword = () => {
   return useMutation({
     mutationFn: userService.confirmResetPw,
+  });
+};
+
+export const useDeleteAccount = () => {
+  const navigate = useNavigate();
+
+  return useMutation({
+    mutationFn: userService.deleteMyAccount,
+    onSuccess: () => {
+      localStorage.removeItem("access_token");
+      navigate("/signin");
+    },
   });
 };

@@ -7,6 +7,8 @@ import { User } from "lucide-react";
 import useModal from "../../modal/useModal";
 import TickedModal from "../../modal/TickModal";
 import { COLORS, FONTSIZE, FONTWEIGHT, SPACING, lightTheme, darkTheme } from "../../lib/styles";
+import DeleteAccountModal from "../../modal/DeleteAccountModal";
+import { useDeleteAccount } from "../../hook/useUser";
 
 // Styled Components
 const Wrapper = styled.div`
@@ -168,6 +170,56 @@ const StyledButton = styled.button`
   }
 `;
 
+const Separator = styled.hr`
+  width: 100%;
+  align-self: center;
+  margin-top: ${SPACING.lg};
+  margin-bottom: ${SPACING.md};
+  border: none;
+  border-top: 1px solid ${({ theme }) => theme.greys.light};
+`;
+// delete button
+const DangerBox = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid ${COLORS.red};
+  background-color: rgba(239, 68, 68, 0.1);
+  border-radius: 0.5rem;
+  padding: ${SPACING.lg};
+  width: 100%;
+`;
+
+const DangerTextGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const DangerTitle = styled.div`
+  font-size: ${FONTSIZE.base};
+  font-weight: ${FONTWEIGHT.bold};
+  color: ${COLORS.red};
+`;
+
+const DangerDescription = styled.div`
+  font-size: ${FONTSIZE.sm};
+  color: ${COLORS.red};
+`;
+
+const DangerButton = styled.button`
+  background-color: ${COLORS.red};
+  color: white;
+  padding: 1rem 1rem;
+  border-radius: 0.5rem;
+  font-size: ${FONTSIZE.sm};
+  font-weight: ${FONTWEIGHT.bold};
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #dc2626; // darker red
+  }
+`;
 
 export function Profile() {
   const { data: profile, isLoading } = useUserProfile();
@@ -180,6 +232,16 @@ export function Profile() {
   const [email, setEmail] = useState("");
   const [dateJoined, setDateJoined] = useState("");
   const [role, setRole] = useState("");
+  const deleteAccount = useDeleteAccount();
+
+  const onDelete = async () => {
+    try {
+      await deleteAccount.mutateAsync();
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
 
   useEffect(() => {
     if (profile) {
@@ -298,7 +360,6 @@ export function Profile() {
             </SwitchWrapper>
           </ToggleRow>
         </ToggleWrapper>
-
         <SaveButtonWrapper>
           <StyledButton
             onClick={handleSave}
@@ -306,6 +367,32 @@ export function Profile() {
             Save
           </StyledButton>
         </SaveButtonWrapper>
+        <Separator />
+        <div style={{ marginTop: SPACING.lg }}>
+          <DangerBox>
+            <DangerTextGroup>
+              <DangerTitle>Delete Account</DangerTitle>
+              <DangerDescription>
+                Permanently delete your account and all associated data. This action cannot be undone.
+              </DangerDescription>
+            </DangerTextGroup>
+            <DangerButton
+              onClick={(e) => {
+                e.stopPropagation();
+                showModal({
+                  modal: (
+                    <DeleteAccountModal
+                      onDelete={onDelete}
+                      hideModal={hideModal}
+                    />
+                  ),
+                });
+              }}
+            >
+              Delete Account
+            </DangerButton>
+          </DangerBox>
+        </div>
       </FormContainer>
     </Wrapper>
   );

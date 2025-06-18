@@ -128,12 +128,16 @@ export const useModifyChatLog = () => {
   });
 };
 
-// export const useVersionChatLogs = (messageId) => {
-//   return useQuery({
-//     queryKey: ['versionChatLogs', messageId],
-//     queryFn: () => service.getVersionChatLog(messageId), 
-//     enabled: !!messageId,
-//   });
-// };
+export const useDeleteChatsForLoginSession = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, loginSessionId }) =>
+      service.deleteChatsForLoginSession(userId, loginSessionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['chats']);
+      queryClient.invalidateQueries(['chatLogs']);
+    },
+  });
+};
 
 

@@ -14,6 +14,7 @@ def create_chat(db: Session, request):
             title=request.title,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc)
+            login_session_id=request.login_session_id
         )
         db.add(new_chat)
         db.commit()
@@ -59,4 +60,17 @@ def get_chat_by_user(db: Session, id):
         return chats
     except Exception as e:
         logger.error(f"Failed to get chat sessions for user ID {id}: {str(e)}")
+        raise InternalServerError(str(e))
+
+def delete_chats_by_login_session(db: Session, user_id, login_session_id):
+    try:
+        sessions = db.query(ChatSession).filter_by(id=user_id, login_session_id=login_session_id).all()
+        for session in sessions:
+            db.query(ChatLog).filter_by(session_id=session.session_id).delete()
+            db.delete(session)
+        db.commit()
+        logger.info(f"Deleted all chat sessions/logs for user {user_id} and login session {login_session_id}")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to delete chat sessions/logs for user {user_id} and login session {login_session_id}: {str(e)}")
         raise InternalServerError(str(e))
