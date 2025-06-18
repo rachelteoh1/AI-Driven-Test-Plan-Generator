@@ -13,7 +13,7 @@ import useModal from '../modal/useModal';
 import Logo from "../assets/keysight.png"
 import AuthLayout from "../components/reusable/AuthLayout"
 import { useSignIn } from '../hook/useAuth';
-
+import { v4 as uuidv4 } from 'uuid';
 
 
 
@@ -111,6 +111,7 @@ export default function SignInPage() {
     { username: values.emailTel , password: values.password},
     {
       onSuccess: () => {
+        localStorage.setItem('login_session_id', uuidv4());
         showModal({
           modal: (
             <TickedModal
@@ -150,10 +151,6 @@ export default function SignInPage() {
 
 
     return (
-     
-           
-           
-        
             <AuthLayout>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                  <img src={Logo} alt="Logo" style={{ width: '50px' }} />
@@ -204,7 +201,7 @@ export default function SignInPage() {
                     />
 
                     <StyledLink to="/resetpw"><TextSmRegular>Forgot password?</TextSmRegular></StyledLink>
-                    <StyledButton type='submit' disabled={isFormValid}>Submit</StyledButton></div>
+                    <StyledButton type='submit' disabled={!isFormValid}>Submit</StyledButton></div>
                 </form>
 
                 <RowContainer>

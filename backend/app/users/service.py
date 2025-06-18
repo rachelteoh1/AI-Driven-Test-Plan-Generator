@@ -11,7 +11,9 @@ from ..exceptions import UserNotFoundError, InvalidPasswordError, PasswordMismat
 from ..auth.service import verify_password, get_password_hash
 from . import models
 from dotenv import load_dotenv
-import json
+import logging
+import traceback
+
 load_dotenv()
 
 EMAILJS_SERVICE_ID = os.getenv("EMAILJS_SERVICE_ID")
@@ -69,3 +71,23 @@ def reset_password_confirm(db: Session, reset_data: models.PasswordResetConfirm)
     user.password_hash = get_password_hash(reset_data.new_password)
     db.commit()
     logging.info(f"Password reset successful for user ID: {user_id}")
+
+def delete_user_account(db: Session, user_id):
+    try:
+        if not user_id:
+            raise HTTPException(status_code=400, detail="Invalid user ID")
+
+        user = db.query(User).filter_by(id=user_id).first()
+
+        if not user:
+            logging.warning(f">>> User not found for ID: {user_id}")
+            raise HTTPException(status_code=404, detail="User not found.")
+
+        logging.info(f">>> Deleting user: {user.email}")
+        db.delete(user)
+        db.commit()
+        logging.info(">>> User deleted successfully.")
+
+    except Exception as e:
+        logging.error(">>> Error during deletion:\n" + traceback.format_exc())
+        raise HTTPException(status_code=500, detail="Failed to delete user.")

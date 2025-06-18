@@ -4,7 +4,7 @@ import { Header } from "../components/header";
 import ChatInterface from "./Conversation";
 import { useState, useEffect, useContext,useRef } from "react";
 import styled, { ThemeProvider } from "styled-components";
-import { FONTSIZE, FONTWEIGHT, SPACING, COLORS, lightTheme, darkTheme } from "../lib/styles";
+import { FONTSIZE, FONTWEIGHT, SPACING } from "../lib/styles";
 import {
   useAddChatLog,
   useChatLogs,
@@ -134,9 +134,11 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
 
   const handleNewChat = async () => {
     try {
+      const loginSessionId = localStorage.getItem('login_session_id');
       const newSession = await newChatMutation.mutateAsync({
         id: user.id,
         title: `Chat ${chats.length + 1}`,
+        login_session_id: loginSessionId,
       });
       setActiveChatId(newSession.session_id);
     } catch (err) {
@@ -148,64 +150,6 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
     setActiveChatId(id);
   };
 
-  // const handleSendMessage = async (message, pdfFile) => {
-//   const safeMessage = message && message.trim() ? message.trim() : "";
-//   let userContent = "";
-//   let botContent = "";
-
-//   if (safeMessage && pdfFile) {
-//     userContent = `${safeMessage}\n(Attached file: ${pdfFile.name})`;
-//     botContent = `You said:"${safeMessage}"\n(Attached file: ${pdfFile.name})`;
-//   } else if (safeMessage) {
-//     userContent = safeMessage;
-//     botContent = `You said: "${safeMessage}"`;
-//   } else if (pdfFile) {
-//     userContent = `(Attached file: ${pdfFile.name})`;
-//     botContent = `(Attached file: ${pdfFile.name})`;
-//   }
-
-
-//   const userMessage = {
-//     id: Date.now(),
-//     role: "user",
-//     content: userContent,
-//   };
-
-//   const botMessage = {
-//     id: Date.now() + 1,
-//     role: "assistant",
-//     content: botContent,
-//   };
-
-//   // Add user message
-//   setChats((prevChats) =>
-//     prevChats.map((chat) =>
-//       chat.id === activeChatId
-//         ? {
-//             ...chat,
-//             messages: [...chat.messages, userMessage],
-//           }
-//         : chat
-//     )
-//   );
-
-//   setIsLoading(true);
-
-//   // Add bot message after delay
-//   setTimeout(() => {
-//     setChats((prevChats) =>
-//       prevChats.map((chat) =>
-//         chat.id === activeChatId
-//           ? {
-//               ...chat,
-//               messages: [...chat.messages, botMessage],
-//             }
-//           : chat
-//       )
-//     );
-//     setIsLoading(false);
-//   }, 1000);
-// };
 
   const handleRenameChat = async (session_id, newName) => {
     try {

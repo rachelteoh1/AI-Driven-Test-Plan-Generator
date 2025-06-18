@@ -7,3 +7,6 @@ export const sendResetPassword = async (data) =>
 
 export const confirmResetPw = async (data) => 
   (await api.confirmResetPassword(data)).data;
+
+export const deleteMyAccount = async () => 
+  (await api.deleteAccount()).data;

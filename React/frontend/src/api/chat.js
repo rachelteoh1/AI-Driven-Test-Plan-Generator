@@ -11,7 +11,7 @@ export const fetchChats = (userId) => {
 export const createChat = (data) => api.post(`/chatSession/`, data);
 export const renameChat = (data) => api.put(`/chatSession/rename`,data);
 export const deleteChat = (sessionId) => api.delete(`/chatSession/${sessionId}`)
-
+export const deleteChatsForLoginSession = (userId, loginSessionId) => api.delete(`/chatSession/user/${encodeURIComponent(userId)}/session/${encodeURIComponent(loginSessionId)}`);
 //chat log
 export const fetchChatLogs = (sessionId) => api.get(`/chatLog/${sessionId}`);
 export const createChatLog = (data) => api.post(`/chatLog/`, data);

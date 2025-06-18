@@ -7,6 +7,7 @@ from uuid import UUID
 class ChatCreateRequest(BaseModel):
     id: UUID   #userID
     title: str
+    login_session_id: UUID
 
 class ChatRenameRequest(BaseModel):
     session_id: UUID

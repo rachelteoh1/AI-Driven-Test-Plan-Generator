@@ -117,14 +117,14 @@ export function DashboardContent() {
   const {
     total_test_plans,
     total_commands_generated,
-    total_minutes_saved,
+    total_reduced_redundancy,
     most_used_device,
     month,
   } = data
 
   const metricsData = [...data.weekly_stats].reverse().map((item, index) => ({
     week: `Week ${index + 1}`,
-    value: item.minutes_saved,
+    value: item.reduced_redundancy,
   }))
 
   return (
@@ -140,7 +140,7 @@ export function DashboardContent() {
                   </StatIcon>
                 </FlexRow>
                 <div>
-                  <StatTitle>Total test plan generated</StatTitle>
+                  <StatTitle>Total Test Plan Generated</StatTitle>
                   <StatValue>{total_test_plans}</StatValue>
                 </div>
               </FlexColumn>
@@ -156,7 +156,7 @@ export function DashboardContent() {
                   </StatIcon>
                 </FlexRow>
                 <div>
-                  <StatTitle>Total SCPI generated</StatTitle>
+                  <StatTitle>Total SCPI Generated</StatTitle>
                   <StatValue>{total_commands_generated}</StatValue>
                 </div>
               </FlexColumn>
@@ -195,10 +195,12 @@ export function DashboardContent() {
 
                 <div>
                   <StatValue>
-                    {Math.min(Math.round((total_minutes_saved / 60) * 100), 100)}%
+                    {total_commands_generated === 0
+                      ? "0%"
+                      : `${Math.round((total_reduced_redundancy / total_commands_generated) * 100)}%`}
                   </StatValue>
                   <p style={{ fontSize: FONTSIZE.sm, color: COLORS.medium }}>
-                    Reduced execution time
+                    SCPI Reduced
                   </p>
                 </div>
 
@@ -211,31 +213,31 @@ export function DashboardContent() {
 
           <StyledCard>
             <CardContent>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: "100%",
-                  gap: SPACING.lg,
-                }}
-              >
+              <FlexColumn>
+                <MetricHeader>
+                  <SmallerIconWrapper>
+                    <BarChart3 />
+                  </SmallerIconWrapper>
+                  <span>
+                    {new Date(month).toLocaleString("default", { month: "long" })}
+                  </span>
+                </MetricHeader>
                 <TextCenter>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: SPACING.sm }}>
                   <StatValue>
-                    {total_minutes_saved} Mins
+                    {total_reduced_redundancy}
                   </StatValue>
                   <p style={{ fontSize: FONTSIZE.sm, color: COLORS.medium }}>
-                    Minutes Saved
+                    Total SCPI Reduced
                   </p>
-                </TextCenter>
-
                 <ShadCircularProgress
-                  value={total_minutes_saved}
-                  max={60}
+                  value={total_reduced_redundancy}
+                  max={Math.max(total_reduced_redundancy, 100)}
                   size={125}
                 />
               </div>
+              </TextCenter>
+              </FlexColumn>
             </CardContent>
           </StyledCard>
         </TwoColGrid>
