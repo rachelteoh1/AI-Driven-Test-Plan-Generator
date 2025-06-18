@@ -255,8 +255,6 @@ export function AppSidebar({
             />
           )
         })
-        // logout();
-        // navigate("/");
       }
     },
   ];
