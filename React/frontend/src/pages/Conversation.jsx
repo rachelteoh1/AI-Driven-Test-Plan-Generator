@@ -91,6 +91,7 @@ const BotMessageContainer = styled.div`
 const BotMessageContent = styled.div`
   color: ${({ theme }) => theme.text};
   font-weight: ${FONTWEIGHT.normal};
+  font-size: ${FONTSIZE.sm};
   line-height: 1.625;
   max-width: 64rem;
   word-wrap: break-word;

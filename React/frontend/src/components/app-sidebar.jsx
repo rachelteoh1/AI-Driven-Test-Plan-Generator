@@ -252,15 +252,14 @@ export function AppSidebar({
               title="Logout?"
               onLogout={async () => {
                 await logout(profile, profile?.pref_autosave ?? true);
-                hideModal();
-                navigate("/signin");
               }}
               hideModal={hideModal}
+              navigateTo="/signin"
             />
-        ),
-  });
-}
+          ),
+        });
       }
+    }
   ];
 
   return (

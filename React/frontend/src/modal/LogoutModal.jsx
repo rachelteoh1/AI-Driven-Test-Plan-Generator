@@ -1,15 +1,11 @@
-import { useState,useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-
+import { useState } from "react";
 import styled from "styled-components";
 import { COLORS, FONTSIZE, FONTWEIGHT } from "../lib/styles";
-
 import { Button } from "@mui/material";
 import TickedModal from "./TickModal";
 import CrossedModal from "./CrossedModal";
+import { useNavigate } from "react-router-dom";
 
-
-// Styled components
 const CenteredDiv = styled.div`
   display: flex;
   flex-direction: column;
@@ -40,25 +36,23 @@ export default function LogoutModal({
   title,
   onLogout,
   hideModal,
+  navigateTo = "/signin",
 }) {
   const [status, setStatus] = useState(null);
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // <-- Use the hook
 
-
-  const handleLogout = () => {
-    const result = onLogout?.(); // returns true if successful
-    if (result) {
+  const handleLogout = async () => {
+    try {
+      await onLogout?.();
       setStatus("success");
-    } else {
+      setTimeout(() => {
+        hideModal();
+        navigate(navigateTo);
+      }, 6000);
+    } catch {
       setStatus("fail");
     }
   };
-   
-  useEffect(() => {
-    if (status === "success") {
-        navigate("/");
-    }
-  }, [status, navigate]);
 
   if (status === "success") {
     return (
@@ -75,7 +69,6 @@ export default function LogoutModal({
       />
     );
   }
-
 
   return (
     <CenteredDiv>

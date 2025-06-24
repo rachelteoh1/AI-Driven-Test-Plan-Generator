@@ -41,13 +41,13 @@ const ContentContainer = styled.div`
   overflow-y: auto;
   background-color: ${({ theme }) => theme.background};
   height: calc(100vh - ${SPACING.xl} - 64px); /* still needed */
-  margin-top: ${SPACING.xl};
-  margin-bottom: 64px;
+  margin-top: 80px;
+  margin-bottom: 0px;
   margin-left: 0rem;
 `;
 
 const CenterContainer = styled.div`
-  margin-top: 10rem;
+  margin-top: 1rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -212,8 +212,8 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
 
   const examples = [
     "Generate test case to measure the voltage on channel 1.",
-    "Test case to perform a diode forward voltage check.",
-    "Explain ROUT:SCAN (@101:110).",
+    "Enable output :OUTP ON, set voltage to 12 V on channel 6 for fan test.",
+    "Explain ROUT:SCAN (@101:110)",
   ];
 
   return (
