@@ -15,6 +15,10 @@ export const modifyChatLog = async (data)=> (await api.modifyChatLog(data)).data
 export const getVersionChatLogs = async (messageId) => {
   return (await api.getVersionChatLog(messageId)).data;
 };
-
-
+export const uploadPdf = async (sessionId, file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("session_id", sessionId);
+  return (await api.uploadPdf(formData)).data;
+};
 

@@ -285,19 +285,19 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   }, [chat.messages, isLoading]);
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!isLoading) {
-      if (inputValue.trim()) {
-        // If there is text input, send it along with PDF file if any
-        onSendMessage(inputValue, pdfFile);
-      } else if (pdfFile) {
-        // If no text but PDF uploaded, send the PDF file name only
-        onSendMessage(null, pdfFile);
-      }
-      setInputValue("");
-      setPdfFile(null);
+  e.preventDefault();
+  if (!isLoading) {
+    if (inputValue.trim()) {
+      // If there is text input, send it along with PDF file if any
+      onSendMessage(inputValue, pdfFile);
+    } else if (pdfFile) {
+      // If no text but PDF uploaded, send the PDF file name only
+      onSendMessage(null, pdfFile);
     }
-  };
+    setInputValue("");
+    setPdfFile(null);
+  }
+};
 
   const copyToClipboard = async (text, messageId) => {
     try {

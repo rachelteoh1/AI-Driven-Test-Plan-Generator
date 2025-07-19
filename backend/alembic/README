@@ -1,1 +1,8 @@
 Generic single-database configuration.
+
+pgAdmin
+DROP OWNED BY lichee CASCADE;
+
+backend terminal
+alembic revision --autogenerate -m "initial"
+alembic upgrade head

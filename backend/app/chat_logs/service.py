@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime, timezone
 from typing import Annotated
 from uuid import UUID, uuid4
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from ..entities.entities import ChatLog, ChatLogVersion
 import logging
@@ -173,3 +173,21 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
     except Exception as e:
         logger.exception("Intent detection failed")
         raise HTTPException(status_code=500, detail="Failed to detect intent, please enter your request again")
+
+def process_pdf_upload(db: Session, session_id: UUID, file: UploadFile):
+    try:
+        # Save the file name as the chat log content
+        file_name = file.filename
+
+        new_log = LogCreate(
+            session_id=session_id,
+            role="user",
+            content=file_name  # Save the file name
+        )
+        saved_log = create_chat_log(db, new_log)
+        logger.info(f"PDF '{file_name}' uploaded and saved as chat log for session {session_id}")
+        return saved_log
+
+    except Exception as e:
+        logger.exception("Failed to process PDF upload")
+        raise HTTPException(status_code=500, detail="Failed to process PDF upload")

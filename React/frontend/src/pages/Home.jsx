@@ -12,6 +12,7 @@ import {
   useNewChat,
   useRenameChat,
   useDetectIntent,
+  useUploadPdf,
 } from "../hook/useChat";
 import UserStatusContext from "../lib/UserStatusContext";
 
@@ -122,6 +123,7 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
   const deleteChatMutation = useDeleteChat();
   const addChatLogMutation = useAddChatLog();
   const detectIntentMutation  = useDetectIntent();
+  const uploadPdfMutation = useUploadPdf();
   const hasCreatedChatRef = useRef(false); //prevent duplicate call
 
   useEffect(() => {
@@ -180,9 +182,18 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
     }
   };
   const [isReplyLoading, setIsReplyLoading] = useState(false);
-  const handleSendMessage = async (message) => {
-    setIsReplyLoading(true);
-    try {
+
+const handleSendMessage = async (message, pdfFile) => {
+  console.log("handleSendMessage called with:", { message, pdfFile });
+  setIsReplyLoading(true);
+  try {
+    if (pdfFile) {
+      // Handle PDF upload
+      await uploadPdfMutation.mutateAsync({ sessionId: activeChatId, file: pdfFile });
+
+      console.log("PDF uploaded successfully:", pdfFile.name);
+    } else if (message) {
+      // Handle text message
       await addChatLogMutation.mutateAsync({
         session_id: activeChatId,
         role: "user",
@@ -195,17 +206,14 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
         session_id: activeChatId,
         role: "user",
         content: message,
-      },{onError:(error)=>{
-        const content = error.response?.data?.detail;
-        return content;
-      } });
-      setIsReplyLoading(false);
-    } catch (err) {
-      console.error("Message send failed:", err);
-    } finally {
-      setIsReplyLoading(false);
+      });
     }
-  };
+  } catch (err) {
+    console.error("Message or PDF submission failed:", err);
+  } finally {
+    setIsReplyLoading(false);
+  }
+};
 
   const activeChat = chats.find((chat) => chat.session_id === activeChatId);
   const hasConversation = activeChatLogs.length > 0;
