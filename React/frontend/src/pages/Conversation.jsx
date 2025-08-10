@@ -31,6 +31,8 @@ import {
 } from "../hook/useChat";
 import { getVersionChatLogs } from "../services/chatServices";
 import pdfIcon from "../assets/pdf.png";
+import Fuse from "fuse.js";
+
 // Animation
 const spin = keyframes`
   from { transform: rotate(0deg); }
@@ -121,7 +123,7 @@ const MessageTextArea = styled.textarea`
   width: 100%;
   min-height: 2.5rem;
   max-height: 12rem;
-  padding: 12px 40px 12px 16px;
+  padding: 12px 16px;
   background-color: ${({ $isLoading, theme }) =>
     $isLoading ? theme.background : theme.backgroundMedium};
   border: 1px solid ${({ theme }) => theme.status.tick};
@@ -133,8 +135,26 @@ const MessageTextArea = styled.textarea`
   line-height: 1.5;
   font-family: inherit;
   font-size: ${FONTSIZE.base};
+  font-weight: ${FONTWEIGHT.normal};
   overflow-y: auto;
   box-sizing: border-box;
+  z-index: 1;
+`;
+
+const GhostText = styled.span`
+  position: absolute;
+  top: 30%;
+  left: 16.55px;
+  transform: translateY(-50%);
+  color: ${({ theme }) => theme.greys.medium};
+  pointer-events: none;
+  font-size: ${FONTSIZE.base};
+  font-weight: ${FONTWEIGHT.normal};
+  line-height: 1.5;
+  font-family: inherit;
+  white-space: nowrap; 
+  opacity: 0.5;
+  z-index: 0;
 `;
 const SubmitButton = styled(Button)`
   position: absolute;
@@ -275,29 +295,48 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   const modifyChatLogMutation = useModifyChatLog();
   const [pdfFile, setPdfFile] = useState(null); // ✅ Add this
   const [copiedMessageId, setCopiedMessageId] = useState(null);
+  const [scpiSuggestions, setScpiSuggestions] = useState([]);
+  const [ghostText, setGhostText] = useState("");
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+
   useEffect(() => {
     scrollToBottom();
   }, [chat.messages, isLoading]);
 
+  useEffect(() => {
+  console.log("Fetching SCPI data..."); // Log when fetching starts
+  fetch("/scpi_response.json") // Fetch from the public directory
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Fetched SCPI data:", data); // Log raw SCPI data
+      setScpiSuggestions(data); // Directly set scpiSuggestions
+    })
+    .catch((error) => console.error("Failed to fetch SCPI data:", error));
+}, []);
+
   const handleSubmit = (e) => {
-  e.preventDefault();
-  if (!isLoading) {
-    if (inputValue.trim()) {
-      // If there is text input, send it along with PDF file if any
-      onSendMessage(inputValue, pdfFile);
-    } else if (pdfFile) {
-      // If no text but PDF uploaded, send the PDF file name only
-      onSendMessage(null, pdfFile);
+    e.preventDefault();
+    if (!isLoading) {
+      if (inputValue.trim()) {
+        // If there is text input, send it along with PDF file if any
+        onSendMessage(inputValue, pdfFile);
+      } else if (pdfFile) {
+        // If no text but PDF uploaded, send the PDF file name only
+        onSendMessage(null, pdfFile);
+      }
+      setInputValue("");
+      setPdfFile(null);
     }
-    setInputValue("");
-    setPdfFile(null);
-  }
-};
+  };
 
   const copyToClipboard = async (text, messageId) => {
     try {
@@ -380,6 +419,85 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     URL.revokeObjectURL(url);
   };
 
+
+const handleInputChange = (value) => {
+  console.log("Input value:", value);
+  setInputValue(value);
+
+  // If input is empty, clear ghost text and stop
+  if (!value.trim()) {
+    setGhostText("");
+    return;
+  }
+
+  // Preserve empty token if user has just typed space
+  const parts = value.endsWith(" ")
+    ? [...value.trim().split(" "), ""]
+    : value.trim().split(" ");
+
+  const currentLevel = parts.length;
+  console.log("Parts:", parts);
+  console.log("Current level:", currentLevel);
+
+  if (currentLevel === 1) {
+    const matchingIntents = Object.keys(scpiSuggestions[0] || {}).filter((intent) =>
+      intent.toLowerCase().startsWith(parts[0].toLowerCase())
+    );
+    setGhostText(matchingIntents[0]?.slice(parts[0].length) || "");
+  } 
+  else if (currentLevel === 2) {
+    const intent = parts[0];
+    const matchingSubsystems =
+      scpiSuggestions[0]?.[intent] &&
+      Object.keys(scpiSuggestions[0][intent]).filter((subsystem) =>
+        subsystem.toLowerCase().startsWith(parts[1].toLowerCase())
+      );
+    setGhostText(matchingSubsystems[0]?.slice(parts[1].length) || "");
+  } 
+  else if (currentLevel === 3) {
+    const [intent, subsystem] = parts;
+    const matchingParameters =
+      scpiSuggestions[0]?.[intent]?.[subsystem]?.parameters
+        ?.map((param) => param.toLowerCase()) // lowercase params
+        ?.filter((param) =>
+          param.startsWith(parts[2].toLowerCase())
+        );
+    setGhostText(matchingParameters?.[0]?.slice(parts[2].length) || "");
+  } 
+  else if (currentLevel === 4) {
+    const [intent, subsystem, parameter] = parts;
+    const matchingValues =
+      scpiSuggestions[0]?.[intent]?.[subsystem]?.values?.[parameter?.toLowerCase()] // lowercase key lookup
+        ?.map((val) => val.toLowerCase()) // lowercase values
+        ?.filter((val) =>
+          val.startsWith(parts[3].toLowerCase())
+        );
+    setGhostText(matchingValues?.[0]?.slice(parts[3].length) || "");
+  } 
+  else {
+    setGhostText("");
+  }
+};
+
+const handleKeyDown = (e) => {
+  console.log("Key pressed:", e.key);
+
+  if (e.key === " ") {
+    e.preventDefault();
+    handleInputChange(inputValue + " ");
+  } 
+  else if ((e.key === "Tab" || e.key === "ArrowRight") && ghostText) {
+    e.preventDefault();
+    setInputValue((prev) => prev + ghostText);
+    setGhostText("");
+  }
+  else if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    handleSubmit(e);
+  }
+};
+
+
   return (
     <Container>
       <MessagesContainer>
@@ -429,11 +547,13 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
       <InputArea>
         <MessageInput
           value={inputValue}
-          onChange={setInputValue}
+          onChange={handleInputChange}
           onSubmit={handleSubmit}
           isLoading={isLoading}
           pdfFile={pdfFile} //  pass the file
           setPdfFile={setPdfFile} //  pass the setter
+          ghostText={ghostText}
+          onKeyDown={handleKeyDown}
         />
       </InputArea>
     </Container>
@@ -766,16 +886,11 @@ function MessageInput({
   isLoading,
   pdfFile,
   setPdfFile,
+  ghostText,
+  onKeyDown,
 }) {
   const textareaRef = useRef(null);
   const [pdfUrl, setPdfUrl] = useState(null);
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      onSubmit(e);
-    }
-  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -832,12 +947,18 @@ function MessageInput({
               ref={textareaRef}
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type message (Shift+Enter for newline)"
+              onKeyDown={onKeyDown}
+              placeholder="Type your intent (e.g., measure)"
               rows={1}
               $isLoading={isLoading}
               disabled={isLoading}
             />
+            {ghostText && (
+              <GhostText>
+                {value}
+                <span>{ghostText}</span>
+              </GhostText>
+            )}
             <SubmitButton
               type="submit"
               size="icon"

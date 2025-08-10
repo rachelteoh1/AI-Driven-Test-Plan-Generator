@@ -1,0 +1,62 @@
+[
+    {
+        "sense": {
+            "current": {
+                "aperture": {
+                    "command": ":SENSe:CURRent:APERture",
+                    "parameters": [],
+                    "values": {},
+                    "description": ""
+                },
+                "nplcyles": {
+                    "command": ":SENSe:CURRent:NPLCyles",
+                    "parameters": [],
+                    "values": {},
+                    "description": ""
+                },
+                "protection": {
+                    "range": {
+                        "command": ":SENSe:CURRent:PROTection:RANGe",
+                        "parameters": [],
+                        "values": {},
+                        "description": ""
+                    },
+                    "tripped": {
+                        "command": ":SENSe:CURRent:PROTection:TRIPped?",
+                        "parameters": [],
+                        "values": {},
+                        "description": ""
+                    }
+                }
+            },
+            "function": {
+                "mode": {
+                    "command": ":SENSe:FUNCtion:MODE",
+                    "parameters": [],
+                    "values": {},
+                    "description": ""
+                },
+                "off": {
+                    "command": ":SENSe:FUNCtion:OFF",
+                    "parameters": [],
+                    "values": {},
+                    "description": ""
+                }
+            },
+            "sampling": {
+                "points": {
+                    "command": ":SENSe:SAMPling:POINts",
+                    "parameters": [],
+                    "values": {},
+                    "description": ""
+                },
+                "time": {
+                    "command": ":SENSe:SAMPling:TIME",
+                    "parameters": [],
+                    "values": {},
+                    "description": ""
+                }
+            }
+        }
+    }
+]

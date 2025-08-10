@@ -1,0 +1,220 @@
+import fitz  # PyMuPDF
+import json
+from concurrent.futures import ThreadPoolExecutor
+from .models.query_intent import query_ollama
+from .models.llama_intent import query_llama
+from .models.gemini_intent import query_gemini
+import re
+import os
+
+SUBSYSTEM_HEADER_REGEX = re.compile(
+    r"\b[A-Z][A-Za-z]*\s+Subsystem(?:\s*\(.*?\))?", 
+    re.IGNORECASE
+)
+
+EXCLUDE_KEYWORDS = [
+    "table of contents",
+    "contents",
+    "content"
+]
+
+SCPI_REGEX = re.compile(
+    r"""
+    (?<!\S)                                      # token boundary
+    (?:                                          # ── 3 forms ───────────────────
+        \*[A-Z]+                                 #  *IDN, *RST  …
+      |                                          #  OR
+        :[A-Z]+(?:\s*:\s*[A-Z]+)*(?:\?)?         #  :SYST:COMM:LAN:GAT or :SYST:COMM:LAN:GAT?
+      |                                          #  OR
+        [A-Z]+(?:\s*:\s*[A-Z]+)*(?:\?)?          #  ROUT:SCAN or ROUT:SCAN?
+    )
+    (?:                                          # optional argument section
+        \s+[^\[\]()\s]+                          #   space + simple argument (e.g., address)
+      | \s*\([^)]*\)                             #   ( 1,2,3 )
+      | \s*\[\s*[^\[\]]+\s*\]                    #   [CURR|STAT]
+      | \s*@\([^)]*\)                            #   @ (101:110)
+    )?
+    (?=\s|$)                                     # token boundary
+    """,
+    re.VERBOSE | re.IGNORECASE,
+)
+
+def is_unwanted_page(text):
+    """Check if page is likely a TOC or unrelated."""
+    lower_text = text.lower()
+    return any(kw in lower_text for kw in EXCLUDE_KEYWORDS)
+
+def normalize_text(text):
+    """
+    Cleans up and normalizes extracted text by removing excessive line breaks
+    and joining broken lines.
+    """
+    # Replace multiple newlines with a single space
+    text = re.sub(r"\n+", " ", text)
+    # Remove extra spaces
+    text = re.sub(r"\s{2,}", " ", text)
+    # Join lines that are broken mid-sentence or mid-command
+    text = re.sub(r"(\S)\s*\n\s*(\S)", r"\1 \2", text)  # Join lines without punctuation
+    return text.strip()
+
+def extract_instrument_name(text):
+    """
+    Extracts the instrument model(s) from the text.
+    Handles formats like "PZ2100A", "PZ2120A/PZ2121A", and "E8257D/67D & E8663D".
+    """
+    # Regex to match instrument models
+    instrument_regex = re.compile(
+        r"((?:[A-Z]{2}\d{4}[A-Z](?:/\d{4}[A-Z])?)(?:\s*&\s*[A-Z]{2}\d{4}[A-Z])*)",
+        re.IGNORECASE
+    )
+    matches = instrument_regex.findall(text)
+    if matches:
+        unique_instruments = set()
+        for match in matches:
+            # Normalize the instrument name by replacing slashes and ampersands with spaces
+            normalized_name = match.replace("/", " ").replace("&", "").strip()
+            unique_instruments.update(normalized_name.split())
+            
+        instrument_name = " ".join(sorted(unique_instruments))
+        return instrument_name
+    else:
+        # Fallback: Use a default name if no instrument name is found
+        return "unknown_instrument"
+    
+def extract_scpi_pages(file):
+    """
+    Extracts text from pages that likely contain SCPI subsystem commands.
+    Only extracts pages where the first 10 words contain the word "subsystem".
+    """
+    try:
+        doc = fitz.open(stream=file.file.read(), filetype="pdf")
+        scpi_pages = []
+        
+        # Extract instrument name
+        first_page_text = normalize_text(doc[0].get_text()) if len(doc) > 0 else ""
+        instrument_name = extract_instrument_name(first_page_text)
+        print(f"Extracted instrument name: {instrument_name}")
+
+        for page_number, page in enumerate(doc, start=1):
+            text = normalize_text(page.get_text())
+            if is_unwanted_page(text):
+                continue
+
+            # Check if the first 10 words contain "subsystem"
+            first_10_words = " ".join(text.split()[:20]).lower()
+            if SUBSYSTEM_HEADER_REGEX.search(first_10_words) and SCPI_REGEX.search(text):
+                scpi_pages.append(text)
+                # Uncomment for debugging
+                print(f"Page {page_number} contains 'subsystem'")
+
+        return instrument_name, scpi_pages
+    except Exception as e:
+        raise ValueError(f"Failed to extract SCPI pages from PDF: {str(e)}")
+
+def process_scpi_text(text):
+    """
+    Extracts SCPI commands, parameters, and metadata from a PDF file using Llama.
+
+    Args:
+        file (UploadFile or file-like object): The uploaded PDF file.
+
+    Returns:
+        list: A list of parsed model responses (JSON) from each page.
+    """
+    prompt = (
+        "You are a SCPI command parser.\n\n"
+        "Extract SCPI command documentation into the following *structured JSON* format:\n\n"
+        "{\n"
+        "  \"<intent>\": {\n"
+        "    \"<subsystem>\": {\n"
+        "      \"command\": \"<full SCPI command>\",\n"
+        "      \"parameters\": [\"<parameter1>\", \"<parameter2>\", ...],\n"
+        "      \"values\": {\n"
+        "        \"<parameter1>\": [\"<value1>\", \"<value2>\", ...],\n"
+        "        ...\n"
+        "      },\n"
+        "      \"description\": \"<one-line explanation>\"\n"
+        "    }\n"
+        "  }\n"
+        "}\n\n"
+        "SCPI command format:\n"
+        "- SCPI commands use colons : for hierarchy, e.g., :MEASure:CURRent:DC?\n"
+        "- The first keyword indicates the *intent* (e.g., MEASure, SOURce, CONFigure)\n"
+        "- The second part(s) are the *subsystem*\n"
+        "- Parameters are usually inside syntax blocks like <channel>, <range>, <nplc> or described in nearby lines or tables\n"
+        "- Parameter values are examples listed below or near each parameter\n"
+        "- Description is usually in the sentence above or below the command\n"
+        "- if the SCPI command doesn't have parameters, values and description, skip that page\n"
+        "---\n\n"
+        "Example input block:\n"
+        ":SOURce:VOLTage:LEVel:IMMediate:AMPLitude\n"
+        "Sets the output voltage level of the specified channel.\n"
+        "Syntax:\n"
+        ":SOURce:VOLTage:LEVel:IMMediate:AMPLitude <channel>,<level>,<unit>\n"
+        "<channel>: CH1 or CH2\n"
+        "<level>: voltage value in volts\n"
+        "<unit>: V or mV\n"
+        "---\n\n"
+        "Return:\n"
+        "{\n"
+        "  \"source\": {\n"
+        "    \"voltage\": {\n"
+        "      \"command\": \":SOURce:VOLTage:LEVel:IMMediate:AMPLitude\",\n"
+        "      \"parameters\": [\"channel\", \"level\", \"unit\"],\n"
+        "      \"values\": {\n"
+        "        \"channel\": [\"CH1\", \"CH2\"],\n"
+        "        \"unit\": [\"V\", \"mV\"]\n"
+        "      },\n"
+        "      \"description\": \"Sets the output voltage level of the specified channel.\"\n"
+        "    }\n"
+        "  }\n"
+        "}\n\n"
+        f"Now extract from this text:\n{text}\n"
+        "Return only valid JSON without code block markers."
+    )
+    response = query_gemini(prompt)
+    print(f"Model Response:\n{response}\n{'-' * 40}")
+    try:
+        response_json = json.loads(response)
+        return response_json
+    except json.JSONDecodeError as e:
+        print(f"JSON Parsing Error: {e}")
+        return None
+
+
+def extract_scpi_from_pdf(file, output_dir="output"):
+    """
+    Extracts SCPI commands, parameters, and metadata from a PDF file using Llama.
+
+    Args:
+        file (UploadFile or file-like object): The uploaded PDF file.
+
+    Returns:
+        list: A list of parsed model responses (JSON) from each page.
+    """
+    try:
+        # Step 1: Extract instrument name and SCPI pages
+        instrument_name, scpi_pages = extract_scpi_pages(file)
+
+        # Step 2: Ensure the output directory exists
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        # Step 3: Check if the JSON file already exists
+        output_file = os.path.join(output_dir, f"{instrument_name}.json")
+        if os.path.exists(output_file):
+            print(f"File: '{output_file}' already exists.")
+            return None  # Or return a message indicating the file already exists
+
+        # Step 4: Process each SCPI page
+        with ThreadPoolExecutor() as executor:
+            results = list(executor.map(process_scpi_text, scpi_pages))
+
+        # Step 5: Save the JSON response to a file named after the instrument
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(results, f, indent=4)
+        print(f"JSON response saved to {output_file}")
+
+        return results
+    except Exception as e:
+        raise ValueError(f"Failed to extract SCPI commands from PDF: {str(e)}")
