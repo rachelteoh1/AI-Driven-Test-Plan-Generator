@@ -39,7 +39,3 @@ async def modify_chat_log(request:  models.ModifyLog, db: DbSession):
 @router.post("/detect-intent", response_model = models.LogResponse)
 async def detect_intent(request: models.LogCreate , db: DbSession):
     return service.detect_intent(db, request)
-
-@router.post("/upload-pdf", response_model=models.LogResponse, status_code=status.HTTP_201_CREATED)
-async def upload_pdf(db: DbSession, session_id: UUID = Form(...), file: UploadFile = File(...)):
-    return service.process_pdf_upload(db, session_id, file)

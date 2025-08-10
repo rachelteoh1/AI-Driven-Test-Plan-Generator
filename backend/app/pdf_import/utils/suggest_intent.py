@@ -1,9 +1,9 @@
 import fitz  # PyMuPDF
 import json
 from concurrent.futures import ThreadPoolExecutor
-from .models.query_intent import query_ollama
-from .models.llama_intent import query_llama
-from .models.gemini_intent import query_gemini
+from ..utils.models.query_intent import query_ollama
+from ..utils.models.llama_intent import query_llama
+from ..utils.models.gemini_intent import query_gemini
 import re
 import os
 
@@ -181,40 +181,22 @@ def process_scpi_text(text):
         print(f"JSON Parsing Error: {e}")
         return None
 
-
-def extract_scpi_from_pdf(file, output_dir="output"):
+def extract_scpi_from_pdf(file):
     """
-    Extracts SCPI commands, parameters, and metadata from a PDF file using Llama.
-
-    Args:
-        file (UploadFile or file-like object): The uploaded PDF file.
-
-    Returns:
-        list: A list of parsed model responses (JSON) from each page.
+    Extracts SCPI commands and metadata from a PDF file.
     """
     try:
         # Step 1: Extract instrument name and SCPI pages
         instrument_name, scpi_pages = extract_scpi_pages(file)
 
-        # Step 2: Ensure the output directory exists
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-
-        # Step 3: Check if the JSON file already exists
-        output_file = os.path.join(output_dir, f"{instrument_name}.json")
-        if os.path.exists(output_file):
-            print(f"File: '{output_file}' already exists.")
-            return None  # Or return a message indicating the file already exists
-
-        # Step 4: Process each SCPI page
+        # Step 2: Process SCPI pages
         with ThreadPoolExecutor() as executor:
             results = list(executor.map(process_scpi_text, scpi_pages))
 
-        # Step 5: Save the JSON response to a file named after the instrument
-        with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(results, f, indent=4)
-        print(f"JSON response saved to {output_file}")
-
-        return results
+        # Step 3: Return extracted data
+        return {
+            "instrument_name": instrument_name,
+            "scpi_commands": results,
+        }
     except Exception as e:
         raise ValueError(f"Failed to extract SCPI commands from PDF: {str(e)}")

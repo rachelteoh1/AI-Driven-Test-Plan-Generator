@@ -11,7 +11,7 @@ from .models import LogCreate, LogResponse
 from ..utils.intent_classifier import classify_intent_ml
 from ..utils.nlp_utils import preprocess_input
 from ..exceptions import ChatCreationError, ChatNotFoundError,ChatRenameError
-from ..utils.suggest_intent import extract_scpi_from_pdf
+from ..pdf_import.utils.suggest_intent import extract_scpi_from_pdf
 
 logger = logging.getLogger(__name__)
 
@@ -174,43 +174,4 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
     except Exception as e:
         logger.exception("Intent detection failed")
         raise HTTPException(status_code=500, detail="Failed to detect intent, please enter your request again")
-
-def process_pdf_upload(db: Session, session_id: UUID, file: UploadFile):
-    try:
-        # Save the file name as the chat log content
-        file_name = file.filename
-
-        new_log = LogCreate(
-            session_id=session_id,
-            role="user",
-            content=file_name
-        )
-        saved_log = create_chat_log(db, new_log)
-        logger.info(f"PDF '{file_name}' uploaded and saved as chat log for session {session_id}")
-
-        # Extract text from the PDF
-        output_dir = "output"
-        scpi_commands = extract_scpi_from_pdf(file, output_dir=output_dir)
-
-        if not scpi_commands:
-            logger.warning(f"No SCPI commands found in PDF '{file.filename}'.")
-        else:
-            logger.info(f"Extracted SCPI commands from PDF '{file.filename}'")
-
-        # Send a bot message asking for the user's intent
-        bot_message = LogCreate(
-            session_id=session_id,
-            role="bot",
-            content="What is your intent?"
-        )
-        create_chat_log(db, bot_message)
-
-        return saved_log
-
-    except ValueError as e:
-        logger.error(f"Error extracting text from PDF: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.exception("Failed to process PDF upload")
-        raise HTTPException(status_code=500, detail="Failed to process PDF upload")
 
