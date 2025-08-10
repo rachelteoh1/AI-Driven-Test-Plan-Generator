@@ -12,7 +12,6 @@ import {
   useNewChat,
   useRenameChat,
   useDetectIntent,
-  useUploadPdf,
 } from "../hook/useChat";
 import UserStatusContext from "../lib/UserStatusContext";
 
@@ -123,7 +122,6 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
   const deleteChatMutation = useDeleteChat();
   const addChatLogMutation = useAddChatLog();
   const detectIntentMutation  = useDetectIntent();
-  const uploadPdfMutation = useUploadPdf();
   const hasCreatedChatRef = useRef(false); //prevent duplicate call
 
   useEffect(() => {
@@ -183,16 +181,11 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
   };
   const [isReplyLoading, setIsReplyLoading] = useState(false);
 
-const handleSendMessage = async (message, pdfFile) => {
-  console.log("handleSendMessage called with:", { message, pdfFile });
+const handleSendMessage = async (message) => {
+  console.log("handleSendMessage called with:", { message });
   setIsReplyLoading(true);
   try {
-    if (pdfFile) {
-      // Handle PDF upload
-      await uploadPdfMutation.mutateAsync({ sessionId: activeChatId, file: pdfFile });
-
-      console.log("PDF uploaded successfully:", pdfFile.name);
-    } else if (message) {
+    if (message) {
       // Handle text message
       await addChatLogMutation.mutateAsync({
         session_id: activeChatId,
@@ -201,7 +194,6 @@ const handleSendMessage = async (message, pdfFile) => {
       });
 
       console.log("Sending LLM response via detectIntent...");
-      console.log("detect intent tetsing" ,activeChatId, message);
       await detectIntentMutation.mutateAsync({
         session_id: activeChatId,
         role: "user",
@@ -209,7 +201,7 @@ const handleSendMessage = async (message, pdfFile) => {
       });
     }
   } catch (err) {
-    console.error("Message or PDF submission failed:", err);
+    console.error("Message submission failed:", err);
   } finally {
     setIsReplyLoading(false);
   }

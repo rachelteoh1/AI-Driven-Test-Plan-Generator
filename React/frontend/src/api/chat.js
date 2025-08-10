@@ -19,13 +19,7 @@ export const deleteChatLog = ( sessionId ) => api.delete(`/chatLog/${sessionId}`
 export const detectIntent = (data)=> api.post(`/chatLog/detect-intent`,data);
 export const modifyChatLog = (data)=> api.put(`/chatLog/modify`,data);
 export const getVersionChatLog = (messageId)=> api.get(`/chatLog/versions/${messageId}`);
-export const uploadPdf = (formData) => {
-  return api.post(`/chatLog/upload-pdf`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-};
+
 
 
 

@@ -5,6 +5,7 @@ import DeleteModal from "../modal/DeleteModal";
 import ClearModal from "../modal/ClearConversationModal";
 import SearchChatModal from "../modal/SearchChatModal";
 import LogoutModal from "../modal/LogoutModal";
+import PdfModal from "../modal/PdfModal";
 
 import {
   Plus,
@@ -204,6 +205,19 @@ export function AppSidebar({
   const { data: profile } = useUserProfile(true);
   const logout = useLogout();
   const bottomItems = [
+    {
+      title: "Import Manual",
+      icon: Download,
+      action: () => {
+        showModal({
+          modal: (
+            <PdfModal
+              hideModal={hideModal}
+            />
+          ),
+        });
+      },
+    },
     {
       title: "Search Chat",
       icon: Search,

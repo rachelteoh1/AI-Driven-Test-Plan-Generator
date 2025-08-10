@@ -139,13 +139,3 @@ export const useDeleteChatsForLoginSession = () => {
     },
   });
 };
-
-export const useUploadPdf = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ sessionId, file }) => service.uploadPdf(sessionId, file),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['chatLogs', variables.sessionId]);
-    },
-  });
-};
