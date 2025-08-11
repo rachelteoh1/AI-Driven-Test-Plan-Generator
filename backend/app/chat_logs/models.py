@@ -9,7 +9,6 @@ class LogCreate(BaseModel):  #save message
     session_id: UUID
     role: str
     content: str
-    
 
 class LogResponse(BaseModel):
     message_id: UUID

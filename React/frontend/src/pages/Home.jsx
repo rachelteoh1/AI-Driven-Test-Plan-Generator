@@ -41,13 +41,13 @@ const ContentContainer = styled.div`
   overflow-y: auto;
   background-color: ${({ theme }) => theme.background};
   height: calc(100vh - ${SPACING.xl} - 64px); /* still needed */
-  margin-top: ${SPACING.xl};
-  margin-bottom: 64px;
+  margin-top: 80px;
+  margin-bottom: 0px;
   margin-left: 0rem;
 `;
 
 const CenterContainer = styled.div`
-  margin-top: 10rem;
+  margin-top: 1rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -180,9 +180,13 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
     }
   };
   const [isReplyLoading, setIsReplyLoading] = useState(false);
-  const handleSendMessage = async (message) => {
-    setIsReplyLoading(true);
-    try {
+
+const handleSendMessage = async (message) => {
+  console.log("handleSendMessage called with:", { message });
+  setIsReplyLoading(true);
+  try {
+    if (message) {
+      // Handle text message
       await addChatLogMutation.mutateAsync({
         session_id: activeChatId,
         role: "user",
@@ -190,30 +194,26 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
       });
 
       console.log("Sending LLM response via detectIntent...");
-      console.log("detect intent tetsing" ,activeChatId, message);
       await detectIntentMutation.mutateAsync({
         session_id: activeChatId,
         role: "user",
         content: message,
-      },{onError:(error)=>{
-        const content = error.response?.data?.detail;
-        return content;
-      } });
-      setIsReplyLoading(false);
-    } catch (err) {
-      console.error("Message send failed:", err);
-    } finally {
-      setIsReplyLoading(false);
+      });
     }
-  };
+  } catch (err) {
+    console.error("Message submission failed:", err);
+  } finally {
+    setIsReplyLoading(false);
+  }
+};
 
   const activeChat = chats.find((chat) => chat.session_id === activeChatId);
   const hasConversation = activeChatLogs.length > 0;
 
   const examples = [
     "Generate test case to measure the voltage on channel 1.",
-    "Test case to perform a diode forward voltage check.",
-    "Explain ROUT:SCAN (@101:110).",
+    "Enable output :OUTP ON, set voltage to 12 V on channel 6 for fan test.",
+    "Explain ROUT:SCAN (@101:110)",
   ];
 
   return (

@@ -33,6 +33,7 @@ export const FONTSIZE = {
 }
 
 export const FONTWEIGHT = {
+    light: 300,
     normal: 400,
     medium: 500,
     bold: 700

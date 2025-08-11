@@ -1,0 +1,40 @@
+[
+    {
+        "sense": {
+            "current": {
+                "command": ":SENSe:CURRent:APERture",
+                "parameters": ["Channel", "Value"],
+                "values": {"channel": ["CH1", "CH2", "CH3", "CH4"], "value": ["m1", "m2", "m3", "4"]},
+                "description": "SCPI subsystem commands Hierachical structure (command tree)"
+            },
+            "function": {
+                "mode": {
+                    "command": ":SENSe:FUNCtion:MODE",
+                    "parameters": [],
+                    "values": {},
+                    "description": "SCPI subsystem commands Hierachical structure (command tree)"
+                },
+                "off": {
+                    "command": ":SENSe:FUNCtion:OFF",
+                    "parameters": [],
+                    "values": {},
+                    "description": "SCPI subsystem commands Hierachical structure (command tree)"
+                }
+            },
+            "sampling": {
+                "points": {
+                    "command": ":SENSe:SAMPling:POINts",
+                    "parameters": [],
+                    "values": {},
+                    "description": "SCPI subsystem commands Hierachical structure (command tree)"
+                },
+                "time": {
+                    "command": ":SENSe:SAMPling:TIME",
+                    "parameters": [],
+                    "values": {},
+                    "description": "SCPI subsystem commands Hierachical structure (command tree)"
+                }
+            }
+        }
+    }
+]
