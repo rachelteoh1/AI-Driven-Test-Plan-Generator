@@ -23,13 +23,6 @@ def upload_to_supabase(bucket_name: str, json_data: list, file_name: str) -> str
         str: The public URL of the uploaded file.
     """
     try:
-        # Check if the file already exists in the bucket
-        existing_files = supabase.storage.from_(bucket_name).list()
-        if any(file["name"] == file_name for file in existing_files):
-            # If the file exists, construct and return the public URL
-            public_url = f"{SUPABASE_URL}/storage/v1/object/public/{bucket_name}/{file_name}"
-            return public_url
-
         # Convert JSON data to a string
         json_string = json.dumps(json_data, indent=4)
 
@@ -40,7 +33,7 @@ def upload_to_supabase(bucket_name: str, json_data: list, file_name: str) -> str
         {"content-type": "application/json"}
         )
 
-        # If upload is successful, construct the public URL
+        # Construct the public URL
         public_url = f"{SUPABASE_URL}/storage/v1/object/public/{bucket_name}/{file_name}"
         return public_url
     except Exception as e:

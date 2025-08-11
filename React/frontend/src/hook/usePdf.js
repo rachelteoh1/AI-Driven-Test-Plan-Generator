@@ -7,3 +7,11 @@ export const useUploadPdf = () => {
     mutationFn: (file) => service.uploadPdf(file),
   });
 };
+
+export const useGetAllInstruments = () => {
+  return useQuery({
+    queryKey: ['instruments'],
+    queryFn: () => service.getAllInstruments(),
+    refetchOnWindowFocus: false,
+  });
+}

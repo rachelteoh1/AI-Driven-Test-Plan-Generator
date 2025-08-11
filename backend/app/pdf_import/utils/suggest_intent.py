@@ -75,7 +75,7 @@ def extract_instrument_name(text):
             normalized_name = match.replace("/", " ").replace("&", "").strip()
             unique_instruments.update(normalized_name.split())
             
-        instrument_name = " ".join(sorted(unique_instruments))
+        instrument_name = "_".join(sorted(unique_instruments))
         return instrument_name
     else:
         # Fallback: Use a default name if no instrument name is found

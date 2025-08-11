@@ -7,3 +7,7 @@ export const uploadPdf = (formData) => {
     },
   });
 }
+
+export const getAllInstruments = () => {
+  return api.get(`/pdf/instruments`);
+}

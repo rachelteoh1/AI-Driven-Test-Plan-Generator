@@ -43,3 +43,4 @@ def process_pdf_upload(db: Session, file: UploadFile):
         db.rollback()
         logger.exception("Failed to process PDF upload")
         raise HTTPException(status_code=500, detail=f"Failed to process PDF upload: {str(e)}")
+    

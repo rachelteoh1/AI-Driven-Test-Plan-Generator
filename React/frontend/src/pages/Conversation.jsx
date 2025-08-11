@@ -13,7 +13,6 @@ import {
   ArrowLeft,
   Check,
   X,
-  FileText,
 } from "lucide-react";
 import {
   Tooltip,
@@ -30,8 +29,7 @@ import {
   useDetectIntent,
 } from "../hook/useChat";
 import { getVersionChatLogs } from "../services/chatServices";
-import pdfIcon from "../assets/pdf.png";
-import Fuse from "fuse.js";
+import { useGetAllInstruments } from "../hook/usePdf";
 
 // Animation
 const spin = keyframes`
@@ -158,7 +156,7 @@ const GhostText = styled.span`
 `;
 const SubmitButton = styled(Button)`
   position: absolute;
-  left: 600px;
+  left: 680px;
   bottom: 43px;
   background-color: transparent;
   color: ${({ theme }) => theme.status.cancel};
@@ -166,74 +164,12 @@ const SubmitButton = styled(Button)`
     $isLoading || !$hasValue ? 0.5 : 1};
 `;
 
-const UploadButton = styled(Button)`
-  position: relative;
-  top: -15px;
-  background-color: transparent;
-  color: ${({ theme }) => theme.status.cancel};
-  font-size: ${FONTSIZE.sm};
-
-  &:hover {
-    background-color: ${({ theme }) => theme.hover};
-  }
-`;
 const MessageForm = styled.form`
   width: 100%;
 `;
 const TextAreaWrapper = styled.div`
   position: relative;
   width: 100%;
-`;
-
-// pdf
-const PdfContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: ${SPACING.sm} ${SPACING.md};
-  margin-bottom: ${SPACING.md};
-  border: 1px solid ${({ theme }) => theme.greys.light};
-  border-radius: 8px;
-  background-color: ${({ theme }) => theme.primaryLight};
-  max-width: 33%;
-  margin-left: 4.5rem;
-
-  @media (max-width: 768px) {
-    max-width: 90%;
-    margin-left: 1rem;
-  }
-`;
-
-const PdfName = styled.span`
-  display: flex;
-  align-items: center;
-  gap: ${SPACING.sm};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: ${FONTSIZE.sm};
-  color: ${({ theme }) => theme.text};
-`;
-
-const PdfIcon = styled.img`
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-`;
-
-const RemoveButton = styled.button`
-  background: none;
-  border: none;
-  color: ${({ theme }) => theme.greys.medium};
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  transition: color 0.2s ease;
-
-  &:hover {
-    color: ${({ theme }) => theme.status.delete};
-  }
 `;
 
 const ActionButtons = styled.div`
@@ -293,10 +229,12 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   const [versionData, setVersionData] = useState({});
   const messagesEndRef = useRef(null);
   const modifyChatLogMutation = useModifyChatLog();
-  const [pdfFile, setPdfFile] = useState(null); // ✅ Add this
   const [copiedMessageId, setCopiedMessageId] = useState(null);
   const [scpiSuggestions, setScpiSuggestions] = useState([]);
   const [ghostText, setGhostText] = useState("");
+
+  const detectedInstrument = "PZ2100A";
+  const { data: instrumentsData, isLoading: instrumentsLoading, error: instrumentsError } = useGetAllInstruments();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -307,34 +245,41 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     scrollToBottom();
   }, [chat.messages, isLoading]);
 
+
   useEffect(() => {
-  console.log("Fetching SCPI data..."); // Log when fetching starts
-  fetch("/scpi_response.json") // Fetch from the public directory
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then((data) => {
-      console.log("Fetched SCPI data:", data); // Log raw SCPI data
-      setScpiSuggestions(data); // Directly set scpiSuggestions
-    })
-    .catch((error) => console.error("Failed to fetch SCPI data:", error));
-}, []);
+    if (!instrumentsData || instrumentsLoading) return;
+
+    const instruments = instrumentsData.instruments || [];
+
+    const matchedInstrument = instruments.find((instrument) => {
+      const names = instrument.instrument_name.split("_").map(n => n.toLowerCase());
+      return names.includes(detectedInstrument.toLowerCase());
+    });
+
+    if (matchedInstrument && matchedInstrument.json_url) {
+      fetch(matchedInstrument.json_url)
+        .then(res => {
+          if (!res.ok) throw new Error(`Failed to fetch JSON: ${res.status}`);
+          return res.json();
+        })
+        .then(data => {
+          console.log("Fetched SCPI JSON data:", data);
+          setScpiSuggestions(data);
+        })
+        .catch(err => {
+          console.error("Error fetching SCPI JSON:", err);
+        });
+    } else {
+        console.warn("Instrument not found. Upload a PDF to get started.");
+    }
+  }, [instrumentsData, instrumentsLoading, detectedInstrument]);
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!isLoading) {
-      if (inputValue.trim()) {
-        // If there is text input, send it along with PDF file if any
-        onSendMessage(inputValue, pdfFile);
-      } else if (pdfFile) {
-        // If no text but PDF uploaded, send the PDF file name only
-        onSendMessage(null, pdfFile);
-      }
+    if (!isLoading && inputValue.trim()) {
+      onSendMessage(inputValue);
       setInputValue("");
-      setPdfFile(null);
     }
   };
 
@@ -406,96 +351,83 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     return message.content;
   };
 
-  const handleUpload = (content) => {
-    // Simulate upload functionality
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `chat-response-${Date.now()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+
+  const handleInputChange = (value) => {
+    console.log("Input value:", value);
+    setInputValue(value);
+
+    // If input is empty, clear ghost text and stop
+    if (!value.trim()) {
+      setGhostText("");
+      return;
+    }
+
+    // Preserve empty token if user has just typed space
+    const parts = value.endsWith(" ")
+      ? [...value.trim().split(" "), ""]
+      : value.trim().split(" ");
+
+    const currentLevel = parts.length;
+    console.log("Parts:", parts);
+    console.log("Current level:", currentLevel);
+
+    if (currentLevel === 1) {
+      const matchingIntents = Object.keys(scpiSuggestions[0] || {}).filter((intent) =>
+        intent.toLowerCase().startsWith(parts[0].toLowerCase())
+      );
+      setGhostText(matchingIntents[0]?.slice(parts[0].length) || "");
+    }
+    else if (currentLevel === 2) {
+      const intent = parts[0];
+      const matchingSubsystems =
+        scpiSuggestions[0]?.[intent] &&
+        Object.keys(scpiSuggestions[0][intent]).filter((subsystem) =>
+          subsystem.toLowerCase().startsWith(parts[1].toLowerCase())
+        );
+      setGhostText(matchingSubsystems[0]?.slice(parts[1].length) || "");
+    }
+    else if (currentLevel === 3) {
+      const [intent, subsystem] = parts;
+      const matchingParameters =
+        scpiSuggestions[0]?.[intent]?.[subsystem]?.parameters
+          ?.map((param) => param.toLowerCase()) // lowercase params
+          ?.filter((param) =>
+            param.startsWith(parts[2].toLowerCase())
+          );
+      setGhostText(matchingParameters?.[0]?.slice(parts[2].length) || "");
+    }
+    else if (currentLevel === 4) {
+      const [intent, subsystem, parameter] = parts;
+      const matchingValues =
+        scpiSuggestions[0]?.[intent]?.[subsystem]?.values?.[parameter?.toLowerCase()] // lowercase key lookup
+          ?.map((val) => val.toLowerCase()) // lowercase values
+          ?.filter((val) =>
+            val.startsWith(parts[3].toLowerCase())
+          );
+      setGhostText(matchingValues?.[0]?.slice(parts[3].length) || "");
+    }
+    else {
+      setGhostText("");
+    }
   };
 
+  const handleKeyDown = (e) => {
+    console.log("Key pressed:", e.key);
 
-const handleInputChange = (value) => {
-  console.log("Input value:", value);
-  setInputValue(value);
-
-  // If input is empty, clear ghost text and stop
-  if (!value.trim()) {
-    setGhostText("");
-    return;
-  }
-
-  // Preserve empty token if user has just typed space
-  const parts = value.endsWith(" ")
-    ? [...value.trim().split(" "), ""]
-    : value.trim().split(" ");
-
-  const currentLevel = parts.length;
-  console.log("Parts:", parts);
-  console.log("Current level:", currentLevel);
-
-  if (currentLevel === 1) {
-    const matchingIntents = Object.keys(scpiSuggestions[0] || {}).filter((intent) =>
-      intent.toLowerCase().startsWith(parts[0].toLowerCase())
-    );
-    setGhostText(matchingIntents[0]?.slice(parts[0].length) || "");
-  } 
-  else if (currentLevel === 2) {
-    const intent = parts[0];
-    const matchingSubsystems =
-      scpiSuggestions[0]?.[intent] &&
-      Object.keys(scpiSuggestions[0][intent]).filter((subsystem) =>
-        subsystem.toLowerCase().startsWith(parts[1].toLowerCase())
-      );
-    setGhostText(matchingSubsystems[0]?.slice(parts[1].length) || "");
-  } 
-  else if (currentLevel === 3) {
-    const [intent, subsystem] = parts;
-    const matchingParameters =
-      scpiSuggestions[0]?.[intent]?.[subsystem]?.parameters
-        ?.map((param) => param.toLowerCase()) // lowercase params
-        ?.filter((param) =>
-          param.startsWith(parts[2].toLowerCase())
-        );
-    setGhostText(matchingParameters?.[0]?.slice(parts[2].length) || "");
-  } 
-  else if (currentLevel === 4) {
-    const [intent, subsystem, parameter] = parts;
-    const matchingValues =
-      scpiSuggestions[0]?.[intent]?.[subsystem]?.values?.[parameter?.toLowerCase()] // lowercase key lookup
-        ?.map((val) => val.toLowerCase()) // lowercase values
-        ?.filter((val) =>
-          val.startsWith(parts[3].toLowerCase())
-        );
-    setGhostText(matchingValues?.[0]?.slice(parts[3].length) || "");
-  } 
-  else {
-    setGhostText("");
-  }
-};
-
-const handleKeyDown = (e) => {
-  console.log("Key pressed:", e.key);
-
-  if (e.key === " ") {
-    e.preventDefault();
-    handleInputChange(inputValue + " ");
-  } 
-  else if ((e.key === "Tab" || e.key === "ArrowRight") && ghostText) {
-    e.preventDefault();
-    setInputValue((prev) => prev + ghostText);
-    setGhostText("");
-  }
-  else if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    handleSubmit(e);
-  }
-};
+    if (e.key === " ") {
+      e.preventDefault();
+      handleInputChange(inputValue + " ");
+    }
+    else if ((e.key === "Tab" || e.key === "ArrowRight") && ghostText) {
+      e.preventDefault();
+      setInputValue((prev) => prev + ghostText);
+      setGhostText("");
+    }
+    else if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
 
 
   return (
@@ -503,43 +435,42 @@ const handleKeyDown = (e) => {
       <MessagesContainer>
         {viewingHistory && versionData[viewingHistory]
           ? (() => {
-              console.log("🧠 Version Viewer Debug Info:");
-              console.log("viewingHistory:", viewingHistory);
-              console.log("versionData:", versionData);
-              console.log(
-                "versionData[viewingHistory]:",
-                versionData[viewingHistory]
-              );
-              console.log("Number of response:", versionData.responses);
+            console.log("🧠 Version Viewer Debug Info:");
+            console.log("viewingHistory:", viewingHistory);
+            console.log("versionData:", versionData);
+            console.log(
+              "versionData[viewingHistory]:",
+              versionData[viewingHistory]
+            );
+            console.log("Number of response:", versionData.responses);
 
-              return (
-                <PreviousVersionViewer
-                  versions={versionData[viewingHistory]}
-                  onBack={handleBackToCurrent}
-                />
-              );
-            })()
-          : chat.messages.map((message) => (
-              <Message
-                key={message.message_id}
-                message={message}
-                isEditing={editingMessageId === message.message_id}
-                editContent={editContent}
-                setEditContent={setEditContent}
-                onSaveEdit={handleSaveEdit}
-                onCancelEdit={handleCancelEdit}
-                onCopy={(text) => copyToClipboard(text, message.message_id)}
-                onEdit={handleEditMessage}
-                onUpload={handleUpload}
-                versions={messageVersions[message.message_id] || []}
-                currentVersionIndex={currentVersions[message.message_id]}
-                isViewingHistory={viewingHistory === message.message_id}
-                onViewVersion={handleViewVersion}
-                onBackToCurrent={handleBackToCurrent}
-                getMessageContent={getMessageContent}
-                copiedMessageId={copiedMessageId}
+            return (
+              <PreviousVersionViewer
+                versions={versionData[viewingHistory]}
+                onBack={handleBackToCurrent}
               />
-            ))}
+            );
+          })()
+          : chat.messages.map((message) => (
+            <Message
+              key={message.message_id}
+              message={message}
+              isEditing={editingMessageId === message.message_id}
+              editContent={editContent}
+              setEditContent={setEditContent}
+              onSaveEdit={handleSaveEdit}
+              onCancelEdit={handleCancelEdit}
+              onCopy={(text) => copyToClipboard(text, message.message_id)}
+              onEdit={handleEditMessage}
+              versions={messageVersions[message.message_id] || []}
+              currentVersionIndex={currentVersions[message.message_id]}
+              isViewingHistory={viewingHistory === message.message_id}
+              onViewVersion={handleViewVersion}
+              onBackToCurrent={handleBackToCurrent}
+              getMessageContent={getMessageContent}
+              copiedMessageId={copiedMessageId}
+            />
+          ))}
         {isLoading && <LoadingIndicator />}
         <div ref={messagesEndRef} />
       </MessagesContainer>
@@ -550,8 +481,6 @@ const handleKeyDown = (e) => {
           onChange={handleInputChange}
           onSubmit={handleSubmit}
           isLoading={isLoading}
-          pdfFile={pdfFile} //  pass the file
-          setPdfFile={setPdfFile} //  pass the setter
           ghostText={ghostText}
           onKeyDown={handleKeyDown}
         />
@@ -611,7 +540,6 @@ function Message({
   onCancelEdit,
   onCopy,
   onEdit,
-  onUpload,
   isStarred,
   versions,
   currentVersionIndex,
@@ -643,7 +571,6 @@ function Message({
     <BotMessage
       message={message}
       onCopy={onCopy}
-      onUpload={onUpload}
       isStarred={isStarred}
       versions={versions}
       copiedMessageId={copiedMessageId}
@@ -884,26 +811,11 @@ function MessageInput({
   onChange,
   onSubmit,
   isLoading,
-  pdfFile,
-  setPdfFile,
   ghostText,
   onKeyDown,
 }) {
   const textareaRef = useRef(null);
-  const [pdfUrl, setPdfUrl] = useState(null);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.type === "application/pdf") {
-        setPdfFile(file);
-      } else {
-        alert("Only PDF files are allowed.");
-      }
-    }
-    // Reset input value to allow re-uploading the same file
-    e.target.value = null;
-  };
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -914,34 +826,8 @@ function MessageInput({
 
   return (
     <>
-      {pdfFile && (
-        <PdfContainer>
-          <PdfName>
-            <PdfIcon src={pdfIcon} alt="PDF icon" />
-            {pdfFile.name}
-          </PdfName>
-          <RemoveButton
-            onClick={() => setPdfFile(null)}
-            aria-label="Remove PDF"
-            type="button"
-          >
-            <X size={16} />
-          </RemoveButton>
-        </PdfContainer>
-      )}
       <MessageForm onSubmit={onSubmit}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <UploadButton component="label">
-            <Upload size={16} style={{ marginRight: 4 }} />
-            <input
-              key={pdfFile ? pdfFile.name : "empty"} // force remount input on file change
-              type="file"
-              hidden
-              accept="application/pdf"
-              onChange={handleFileChange}
-            />
-          </UploadButton>
-
           <TextAreaWrapper style={{ flex: 1, position: "relative" }}>
             <MessageTextArea
               ref={textareaRef}
@@ -962,9 +848,9 @@ function MessageInput({
             <SubmitButton
               type="submit"
               size="icon"
-              disabled={isLoading || (!value.trim() && !pdfFile)}
+              disabled={isLoading || (!value.trim())}
               $isLoading={isLoading}
-              $hasValue={!!value.trim() || !!pdfFile}
+              $hasValue={!!value.trim()}
             >
               {isLoading ? <LoadingIcon /> : <Send size={16} />}
             </SubmitButton>
