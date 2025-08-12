@@ -64,7 +64,7 @@ def extract_instrument_name(text):
     """
     # Regex to match instrument models
     instrument_regex = re.compile(
-        r"((?:[A-Z]{2}\d{4}[A-Z](?:/\d{4}[A-Z])?)(?:\s*&\s*[A-Z]{2}\d{4}[A-Z])*)",
+        r"\b([A-Z]\d{3,4}[A-Z]|\d{2,4}[A-Z])\b(?:[/&]\d{2,4}[A-Z])*",
         re.IGNORECASE
     )
     matches = instrument_regex.findall(text)
@@ -180,6 +180,20 @@ def process_scpi_text(text):
     except json.JSONDecodeError as e:
         print(f"JSON Parsing Error: {e}")
         return None
+    
+def merge_scpi_json(json_list):
+    merged = {}
+
+    for item in json_list:
+        if not isinstance(item, dict):
+            continue  # skip nulls or non-dicts
+        for intent, subsystems in item.items():
+            if intent not in merged:
+                merged[intent] = {}
+            for subsystem, details in subsystems.items():
+                merged[intent][subsystem] = details
+
+    return merged
 
 def extract_scpi_from_pdf(file):
     """
@@ -192,11 +206,13 @@ def extract_scpi_from_pdf(file):
         # Step 2: Process SCPI pages
         with ThreadPoolExecutor() as executor:
             results = list(executor.map(process_scpi_text, scpi_pages))
+            
+        merged_results = merge_scpi_json(results)
 
         # Step 3: Return extracted data
         return {
             "instrument_name": instrument_name,
-            "scpi_commands": results,
+            "scpi_commands": merged_results,
         }
     except Exception as e:
         raise ValueError(f"Failed to extract SCPI commands from PDF: {str(e)}")

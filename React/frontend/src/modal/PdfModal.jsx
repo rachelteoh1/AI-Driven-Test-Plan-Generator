@@ -78,9 +78,9 @@ const LoadingIcon = styled(Loader2)`
 
 export default function PdfModal({ hideModal }) {
   const [selectedFile, setSelectedFile] = useState(null);
-  const [loading, setLoading] = useState(false); // Track loading state
-  const [showSuccessModal, setShowSuccessModal] = useState(false); // Track success modal
-  const [showErrorModal, setShowErrorModal] = useState(false); // Track error modal
+  const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
