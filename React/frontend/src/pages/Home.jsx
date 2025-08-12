@@ -123,6 +123,11 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
   const addChatLogMutation = useAddChatLog();
   const detectIntentMutation  = useDetectIntent();
   const hasCreatedChatRef = useRef(false); //prevent duplicate call
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handlePdfUploadSuccess = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   useEffect(() => {
     if (!isChatsLoading && !isLoading && user && chats.length === 0 && !hasCreatedChatRef.current) {
@@ -228,6 +233,7 @@ const handleSendMessage = async (message) => {
             onRenameChat={handleRenameChat}
             onDeleteChat={handleDeleteChat}
             isChatsLoading={isChatsLoading}
+            onPdfUploadSuccess={handlePdfUploadSuccess}
           />
           <MainContent>
             <HeaderWrapper>
@@ -255,6 +261,7 @@ const handleSendMessage = async (message) => {
             </ContentContainer>
             <ChatWrapper>
               <ChatInterface
+                key={refreshTrigger}
                 chat={{
                   ...activeChat,
                   messages: activeChatLogs,

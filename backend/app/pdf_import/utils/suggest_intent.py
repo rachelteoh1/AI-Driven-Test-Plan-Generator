@@ -58,28 +58,33 @@ def normalize_text(text):
     return text.strip()
 
 def extract_instrument_name(text):
-    """
-    Extracts the instrument model(s) from the text.
-    Handles formats like "PZ2100A", "PZ2120A/PZ2121A", and "E8257D/67D & E8663D".
-    """
-    # Regex to match instrument models
+    # Match full or partial instrument models in one chunk
     instrument_regex = re.compile(
-        r"\b([A-Z]\d{3,4}[A-Z]|\d{2,4}[A-Z])\b(?:[/&]\d{2,4}[A-Z])*",
-        re.IGNORECASE
+        r"\b[A-Z]{1,3}\d{3,4}[A-Z]?(?:[/&]\d{2,4}[A-Z]?)*\b"
     )
-    matches = instrument_regex.findall(text)
-    if matches:
-        unique_instruments = set()
-        for match in matches:
-            # Normalize the instrument name by replacing slashes and ampersands with spaces
-            normalized_name = match.replace("/", " ").replace("&", "").strip()
-            unique_instruments.update(normalized_name.split())
-            
-        instrument_name = "_".join(sorted(unique_instruments))
-        return instrument_name
-    else:
-        # Fallback: Use a default name if no instrument name is found
-        return "unknown_instrument"
+
+    matches = instrument_regex.finditer(text)
+    unique_instruments = set()
+
+    for match in matches:
+        part = match.group(0)
+        pieces = re.split(r"[/&]", part)
+
+        # Detect base prefix (letters + first number sequence) from first piece
+        base_prefix = re.match(r"[A-Z]+\d*", pieces[0]).group(0)
+
+        for p in pieces:
+            p = p.strip()
+            if not p:
+                continue
+            if re.match(r"^\d", p):
+                # If starts with digit, prepend the base's letters
+                letters = re.match(r"[A-Z]+", base_prefix).group(0)
+                unique_instruments.add(letters + p)
+            else:
+                unique_instruments.add(p)
+
+    return "_".join(sorted(unique_instruments)) if unique_instruments else "unknown_instrument"
     
 def extract_scpi_pages(file):
     """
