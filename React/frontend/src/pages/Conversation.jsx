@@ -236,6 +236,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   const detectedInstrument = "PZ2100A";
   const { data: instrumentsData, isLoading: instrumentsLoading, error: instrumentsError } = useGetAllInstruments();
 
+  
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -270,7 +271,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
           console.error("Error fetching SCPI JSON:", err);
         });
     } else {
-        console.warn("Instrument not found. Upload a PDF to get started.");
+      console.warn("Instrument not found. Upload a PDF to get started.");
     }
   }, [instrumentsData, instrumentsLoading, detectedInstrument]);
 
@@ -356,13 +357,11 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     console.log("Input value:", value);
     setInputValue(value);
 
-    // If input is empty, clear ghost text and stop
     if (!value.trim()) {
       setGhostText("");
       return;
     }
 
-    // Preserve empty token if user has just typed space
     const parts = value.endsWith(" ")
       ? [...value.trim().split(" "), ""]
       : value.trim().split(" ");
@@ -372,7 +371,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     console.log("Current level:", currentLevel);
 
     if (currentLevel === 1) {
-      const matchingIntents = Object.keys(scpiSuggestions[0] || {}).filter((intent) =>
+      const matchingIntents = Object.keys(scpiSuggestions || {}).filter((intent) =>
         intent.toLowerCase().startsWith(parts[0].toLowerCase())
       );
       setGhostText(matchingIntents[0]?.slice(parts[0].length) || "");
@@ -380,8 +379,8 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     else if (currentLevel === 2) {
       const intent = parts[0];
       const matchingSubsystems =
-        scpiSuggestions[0]?.[intent] &&
-        Object.keys(scpiSuggestions[0][intent]).filter((subsystem) =>
+        scpiSuggestions?.[intent] &&
+        Object.keys(scpiSuggestions[intent]).filter((subsystem) =>
           subsystem.toLowerCase().startsWith(parts[1].toLowerCase())
         );
       setGhostText(matchingSubsystems[0]?.slice(parts[1].length) || "");
@@ -389,8 +388,8 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     else if (currentLevel === 3) {
       const [intent, subsystem] = parts;
       const matchingParameters =
-        scpiSuggestions[0]?.[intent]?.[subsystem]?.parameters
-          ?.map((param) => param.toLowerCase()) // lowercase params
+        scpiSuggestions?.[intent]?.[subsystem]?.parameters
+          ?.map((param) => param.toLowerCase())
           ?.filter((param) =>
             param.startsWith(parts[2].toLowerCase())
           );
@@ -399,8 +398,8 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     else if (currentLevel === 4) {
       const [intent, subsystem, parameter] = parts;
       const matchingValues =
-        scpiSuggestions[0]?.[intent]?.[subsystem]?.values?.[parameter?.toLowerCase()] // lowercase key lookup
-          ?.map((val) => val.toLowerCase()) // lowercase values
+        scpiSuggestions?.[intent]?.[subsystem]?.values?.[parameter?.toLowerCase()]
+          ?.map((val) => val.toLowerCase())
           ?.filter((val) =>
             val.startsWith(parts[3].toLowerCase())
           );
@@ -410,6 +409,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
       setGhostText("");
     }
   };
+
 
   const handleKeyDown = (e) => {
     console.log("Key pressed:", e.key);

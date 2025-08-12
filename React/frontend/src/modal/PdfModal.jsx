@@ -76,11 +76,11 @@ const LoadingIcon = styled(Loader2)`
   animation: ${spin} 1s linear infinite;
 `;
 
-export default function PdfModal({ hideModal }) {
+export default function PdfModal({ hideModal, onUploadSuccess }) {
   const [selectedFile, setSelectedFile] = useState(null);
-  const [loading, setLoading] = useState(false); // Track loading state
-  const [showSuccessModal, setShowSuccessModal] = useState(false); // Track success modal
-  const [showErrorModal, setShowErrorModal] = useState(false); // Track error modal
+  const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
@@ -94,7 +94,11 @@ export default function PdfModal({ hideModal }) {
         formData.append("file", selectedFile);
 
         // Call the backend to process the PDF
-        const response = await service.uploadPdf(formData);
+        await service.uploadPdf(formData);
+
+        if (onUploadSuccess) {
+          onUploadSuccess(); // ⬅️ notify parent
+        }
 
         // Show success modal on successful upload
         setShowSuccessModal(true);
