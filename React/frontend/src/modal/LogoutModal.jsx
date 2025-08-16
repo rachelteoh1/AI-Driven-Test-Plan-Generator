@@ -41,6 +41,7 @@ export default function LogoutModal({
   const [status, setStatus] = useState(null);
   const navigate = useNavigate(); // <-- Use the hook
 
+
   const handleLogout = async () => {
     try {
       await onLogout?.();
@@ -53,6 +54,7 @@ export default function LogoutModal({
       setStatus("fail");
     }
   };
+
 
   if (status === "success") {
     return (

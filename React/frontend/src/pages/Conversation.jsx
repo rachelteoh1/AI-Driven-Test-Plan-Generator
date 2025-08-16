@@ -411,6 +411,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   };
 
 
+
   const handleKeyDown = (e) => {
     console.log("Key pressed:", e.key);
 
@@ -435,6 +436,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
       <MessagesContainer>
         {viewingHistory && versionData[viewingHistory]
           ? (() => {
+
             console.log("🧠 Version Viewer Debug Info:");
             console.log("viewingHistory:", viewingHistory);
             console.log("versionData:", versionData);
@@ -471,6 +473,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
               copiedMessageId={copiedMessageId}
             />
           ))}
+
         {isLoading && <LoadingIndicator />}
         <div ref={messagesEndRef} />
       </MessagesContainer>
@@ -483,6 +486,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
           isLoading={isLoading}
           ghostText={ghostText}
           onKeyDown={handleKeyDown}
+
         />
       </InputArea>
     </Container>
