@@ -45,20 +45,25 @@ export default function LogoutModal({
   const navigate = useNavigate();
 
 
-  const handleLogout = () => {
-    const result = onLogout?.(); // returns true if successful
-    if (result) {
-      setStatus("success");
-    } else {
-      setStatus("fail");
-    }
-  };
+const handleLogout = async () => {
+  const result = await onLogout?.();
+  if (result) {
+    setStatus("success");
+  } else {
+    setStatus("fail");
+  }
+};
    
   useEffect(() => {
-    if (status === "success") {
-        navigate("/");
-    }
-  }, [status, navigate]);
+  if (status === "success") {
+    const timeout = setTimeout(() => {
+      hideModal();
+      navigate("/signin");
+    }, 1500); // show modal for 1.5 seconds before redirect
+
+    return () => clearTimeout(timeout);
+  }
+}, [status, navigate, hideModal]);
 
   if (status === "success") {
     return (
