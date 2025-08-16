@@ -121,3 +121,14 @@ class Dashboard(Base):
     total_reduced_redundancy = Column(Integer, default=0)
     most_used_device = Column(String)
     month = Column(Date)
+
+# -------------------------------
+# Instrument Model
+# -------------------------------
+class InstrumentMetadata(Base):
+    __tablename__ = "instrument_metadata"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    instrument_name = Column(String, nullable=False, unique=True)
+    json_url = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))

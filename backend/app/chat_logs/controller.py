@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter
+from fastapi import APIRouter, File, UploadFile, Form
 from starlette import status
 from . import  models
 from . import service
@@ -16,7 +16,6 @@ router = APIRouter(
 @router.post("/", response_model= models.LogResponse ,status_code=status.HTTP_201_CREATED)
 async def add_new_chat_log(request: models.LogCreate , db: DbSession):
     return service.create_chat_log(db, request)
-
 
 
 @router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -40,5 +39,3 @@ async def modify_chat_log(request:  models.ModifyLog, db: DbSession):
 @router.post("/detect-intent", response_model = models.LogResponse)
 async def detect_intent(request: models.LogCreate , db: DbSession):
     return service.detect_intent(db, request)
-
-

@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime, timezone
 from typing import Annotated
 from uuid import UUID, uuid4
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from ..entities.entities import ChatLog, ChatLogVersion
 import logging
@@ -11,6 +11,7 @@ from .models import LogCreate, LogResponse
 from ..utils.intent_classifier import classify_intent_ml
 from ..utils.nlp_utils import preprocess_input
 from ..exceptions import ChatCreationError, ChatNotFoundError,ChatRenameError
+from ..pdf_import.utils.suggest_intent import extract_scpi_from_pdf
 
 logger = logging.getLogger(__name__)
 
@@ -173,3 +174,4 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
     except Exception as e:
         logger.exception("Intent detection failed")
         raise HTTPException(status_code=500, detail="Failed to detect intent, please enter your request again")
+

@@ -5,6 +5,7 @@ import DeleteModal from "../modal/DeleteModal";
 import ClearModal from "../modal/ClearConversationModal";
 import SearchChatModal from "../modal/SearchChatModal";
 import LogoutModal from "../modal/LogoutModal";
+import PdfModal from "../modal/PdfModal";
 
 import {
   Plus,
@@ -197,6 +198,7 @@ export function AppSidebar({
   onDeleteChat,
   onSetChat,
   isChatsLoading,
+  onPdfUploadSuccess,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -204,6 +206,20 @@ export function AppSidebar({
   const { data: profile } = useUserProfile(true);
   const logout = useLogout();
   const bottomItems = [
+    {
+      title: "Import Manual",
+      icon: Download,
+      action: () => {
+        showModal({
+          modal: (
+            <PdfModal
+              hideModal={hideModal}
+              onUploadSuccess={onPdfUploadSuccess}
+            />
+          ),
+        });
+      },
+    },
     {
       title: "Search Chat",
       icon: Search,
@@ -250,17 +266,20 @@ export function AppSidebar({
           modal: (
             <LogoutModal
               title="Logout?"
-              onLogout={logout}
-              // onLogout={async () => {
-              //   await logout(profile, profile?.pref_autosave ?? true);
-              //   return true;
-              // }}
+
+              onLogout={async () => {
+                await logout(profile, profile?.pref_autosave ?? true);
+              }}
+
               hideModal={hideModal}
+              navigateTo="/signin"
             />
           ),
         });
-      },
-    },
+
+      }
+    }
+
   ];
 
   return (

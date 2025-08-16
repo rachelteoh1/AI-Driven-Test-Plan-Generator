@@ -1,15 +1,11 @@
-import { useState,useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-
+import { useState } from "react";
 import styled from "styled-components";
 import { COLORS, FONTSIZE, FONTWEIGHT } from "../lib/styles";
-
 import { Button } from "@mui/material";
 import TickedModal from "./TickModal";
 import CrossedModal from "./CrossedModal";
+import { useNavigate } from "react-router-dom";
 
-
-// Styled components
 const CenteredDiv = styled.div`
   display: flex;
   flex-direction: column;
@@ -40,30 +36,25 @@ export default function LogoutModal({
   title,
   onLogout,
   hideModal,
+  navigateTo = "/signin",
 }) {
   const [status, setStatus] = useState(null);
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // <-- Use the hook
 
 
-const handleLogout = async () => {
-  const result = await onLogout?.();
-  if (result) {
-    setStatus("success");
-  } else {
-    setStatus("fail");
-  }
-};
-   
-  useEffect(() => {
-  if (status === "success") {
-    const timeout = setTimeout(() => {
-      hideModal();
-      navigate("/signin");
-    }, 1500); // show modal for 1.5 seconds before redirect
+  const handleLogout = async () => {
+    try {
+      await onLogout?.();
+      setStatus("success");
+      setTimeout(() => {
+        hideModal();
+        navigate(navigateTo);
+      }, 6000);
+    } catch {
+      setStatus("fail");
+    }
+  };
 
-    return () => clearTimeout(timeout);
-  }
-}, [status, navigate, hideModal]);
 
   if (status === "success") {
     return (
@@ -80,7 +71,6 @@ const handleLogout = async () => {
       />
     );
   }
-
 
   return (
     <CenteredDiv>

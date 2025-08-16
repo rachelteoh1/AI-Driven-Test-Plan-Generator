@@ -13,7 +13,6 @@ import {
   ArrowLeft,
   Check,
   X,
-  FileText,
 } from "lucide-react";
 import {
   Tooltip,
@@ -30,7 +29,8 @@ import {
   useDetectIntent,
 } from "../hook/useChat";
 import { getVersionChatLogs } from "../services/chatServices";
-import pdfIcon from "../assets/pdf.png";
+import { useGetAllInstruments } from "../hook/usePdf";
+
 // Animation
 const spin = keyframes`
   from { transform: rotate(0deg); }
@@ -91,6 +91,7 @@ const BotMessageContainer = styled.div`
 const BotMessageContent = styled.div`
   color: ${({ theme }) => theme.text};
   font-weight: ${FONTWEIGHT.normal};
+  font-size: ${FONTSIZE.sm};
   line-height: 1.625;
   max-width: 64rem;
   word-wrap: break-word;
@@ -120,7 +121,7 @@ const MessageTextArea = styled.textarea`
   width: 100%;
   min-height: 2.5rem;
   max-height: 12rem;
-  padding: 12px 40px 12px 16px;
+  padding: 12px 16px;
   background-color: ${({ $isLoading, theme }) =>
     $isLoading ? theme.background : theme.backgroundMedium};
   border: 1px solid ${({ theme }) => theme.status.tick};
@@ -132,12 +133,30 @@ const MessageTextArea = styled.textarea`
   line-height: 1.5;
   font-family: inherit;
   font-size: ${FONTSIZE.base};
+  font-weight: ${FONTWEIGHT.normal};
   overflow-y: auto;
   box-sizing: border-box;
+  z-index: 1;
+`;
+
+const GhostText = styled.span`
+  position: absolute;
+  top: 30%;
+  left: 16.55px;
+  transform: translateY(-50%);
+  color: ${({ theme }) => theme.greys.medium};
+  pointer-events: none;
+  font-size: ${FONTSIZE.base};
+  font-weight: ${FONTWEIGHT.normal};
+  line-height: 1.5;
+  font-family: inherit;
+  white-space: nowrap; 
+  opacity: 0.5;
+  z-index: 0;
 `;
 const SubmitButton = styled(Button)`
   position: absolute;
-  left: 600px;
+  left: 680px;
   bottom: 43px;
   background-color: transparent;
   color: ${({ theme }) => theme.status.cancel};
@@ -145,74 +164,12 @@ const SubmitButton = styled(Button)`
     $isLoading || !$hasValue ? 0.5 : 1};
 `;
 
-const UploadButton = styled(Button)`
-  position: relative;
-  top: -15px;
-  background-color: transparent;
-  color: ${({ theme }) => theme.status.cancel};
-  font-size: ${FONTSIZE.sm};
-
-  &:hover {
-    background-color: ${({ theme }) => theme.hover};
-  }
-`;
 const MessageForm = styled.form`
   width: 100%;
 `;
 const TextAreaWrapper = styled.div`
   position: relative;
   width: 100%;
-`;
-
-// pdf
-const PdfContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: ${SPACING.sm} ${SPACING.md};
-  margin-bottom: ${SPACING.md};
-  border: 1px solid ${({ theme }) => theme.greys.light};
-  border-radius: 8px;
-  background-color: ${({ theme }) => theme.primaryLight};
-  max-width: 33%;
-  margin-left: 4.5rem;
-
-  @media (max-width: 768px) {
-    max-width: 90%;
-    margin-left: 1rem;
-  }
-`;
-
-const PdfName = styled.span`
-  display: flex;
-  align-items: center;
-  gap: ${SPACING.sm};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: ${FONTSIZE.sm};
-  color: ${({ theme }) => theme.text};
-`;
-
-const PdfIcon = styled.img`
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-`;
-
-const RemoveButton = styled.button`
-  background: none;
-  border: none;
-  color: ${({ theme }) => theme.greys.medium};
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  transition: color 0.2s ease;
-
-  &:hover {
-    color: ${({ theme }) => theme.status.delete};
-  }
 `;
 
 const ActionButtons = styled.div`
@@ -272,29 +229,58 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   const [versionData, setVersionData] = useState({});
   const messagesEndRef = useRef(null);
   const modifyChatLogMutation = useModifyChatLog();
-  const [pdfFile, setPdfFile] = useState(null); // ✅ Add this
   const [copiedMessageId, setCopiedMessageId] = useState(null);
+  const [scpiSuggestions, setScpiSuggestions] = useState([]);
+  const [ghostText, setGhostText] = useState("");
 
+  const detectedInstrument = "PZ2100A";
+  const { data: instrumentsData, isLoading: instrumentsLoading, error: instrumentsError } = useGetAllInstruments();
+
+  
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
 
   useEffect(() => {
     scrollToBottom();
   }, [chat.messages, isLoading]);
 
+
+  useEffect(() => {
+    if (!instrumentsData || instrumentsLoading) return;
+
+    const instruments = instrumentsData.instruments || [];
+
+    const matchedInstrument = instruments.find((instrument) => {
+      const names = instrument.instrument_name.split("_").map(n => n.toLowerCase());
+      return names.includes(detectedInstrument.toLowerCase());
+    });
+
+    if (matchedInstrument && matchedInstrument.json_url) {
+      fetch(matchedInstrument.json_url)
+        .then(res => {
+          if (!res.ok) throw new Error(`Failed to fetch JSON: ${res.status}`);
+          return res.json();
+        })
+        .then(data => {
+          console.log("Fetched SCPI JSON data:", data);
+          setScpiSuggestions(data);
+        })
+        .catch(err => {
+          console.error("Error fetching SCPI JSON:", err);
+        });
+    } else {
+      console.warn("Instrument not found. Upload a PDF to get started.");
+    }
+  }, [instrumentsData, instrumentsLoading, detectedInstrument]);
+
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!isLoading) {
-      if (inputValue.trim()) {
-        // If there is text input, send it along with PDF file if any
-        onSendMessage(inputValue, pdfFile);
-      } else if (pdfFile) {
-        // If no text but PDF uploaded, send the PDF file name only
-        onSendMessage(null, pdfFile);
-      }
+    if (!isLoading && inputValue.trim()) {
+      onSendMessage(inputValue);
       setInputValue("");
-      setPdfFile(null);
     }
   };
 
@@ -366,61 +352,128 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     return message.content;
   };
 
-  const handleUpload = (content) => {
-    // Simulate upload functionality
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `chat-response-${Date.now()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+
+  const handleInputChange = (value) => {
+    console.log("Input value:", value);
+    setInputValue(value);
+
+    if (!value.trim()) {
+      setGhostText("");
+      return;
+    }
+
+    const parts = value.endsWith(" ")
+      ? [...value.trim().split(" "), ""]
+      : value.trim().split(" ");
+
+    const currentLevel = parts.length;
+    console.log("Parts:", parts);
+    console.log("Current level:", currentLevel);
+
+    if (currentLevel === 1) {
+      const matchingIntents = Object.keys(scpiSuggestions || {}).filter((intent) =>
+        intent.toLowerCase().startsWith(parts[0].toLowerCase())
+      );
+      setGhostText(matchingIntents[0]?.slice(parts[0].length) || "");
+    }
+    else if (currentLevel === 2) {
+      const intent = parts[0];
+      const matchingSubsystems =
+        scpiSuggestions?.[intent] &&
+        Object.keys(scpiSuggestions[intent]).filter((subsystem) =>
+          subsystem.toLowerCase().startsWith(parts[1].toLowerCase())
+        );
+      setGhostText(matchingSubsystems[0]?.slice(parts[1].length) || "");
+    }
+    else if (currentLevel === 3) {
+      const [intent, subsystem] = parts;
+      const matchingParameters =
+        scpiSuggestions?.[intent]?.[subsystem]?.parameters
+          ?.map((param) => param.toLowerCase())
+          ?.filter((param) =>
+            param.startsWith(parts[2].toLowerCase())
+          );
+      setGhostText(matchingParameters?.[0]?.slice(parts[2].length) || "");
+    }
+    else if (currentLevel === 4) {
+      const [intent, subsystem, parameter] = parts;
+      const matchingValues =
+        scpiSuggestions?.[intent]?.[subsystem]?.values?.[parameter?.toLowerCase()]
+          ?.map((val) => val.toLowerCase())
+          ?.filter((val) =>
+            val.startsWith(parts[3].toLowerCase())
+          );
+      setGhostText(matchingValues?.[0]?.slice(parts[3].length) || "");
+    }
+    else {
+      setGhostText("");
+    }
   };
+
+
+
+  const handleKeyDown = (e) => {
+    console.log("Key pressed:", e.key);
+
+    if (e.key === " ") {
+      e.preventDefault();
+      handleInputChange(inputValue + " ");
+    }
+    else if ((e.key === "Tab" || e.key === "ArrowRight") && ghostText) {
+      e.preventDefault();
+      setInputValue((prev) => prev + ghostText);
+      setGhostText("");
+    }
+    else if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
 
   return (
     <Container>
       <MessagesContainer>
         {viewingHistory && versionData[viewingHistory]
           ? (() => {
-              console.log("🧠 Version Viewer Debug Info:");
-              console.log("viewingHistory:", viewingHistory);
-              console.log("versionData:", versionData);
-              console.log(
-                "versionData[viewingHistory]:",
-                versionData[viewingHistory]
-              );
-              console.log("Number of response:", versionData.responses);
 
-              return (
-                <PreviousVersionViewer
-                  versions={versionData[viewingHistory]}
-                  onBack={handleBackToCurrent}
-                />
-              );
-            })()
-          : chat.messages.map((message) => (
-              <Message
-                key={message.message_id}
-                message={message}
-                isEditing={editingMessageId === message.message_id}
-                editContent={editContent}
-                setEditContent={setEditContent}
-                onSaveEdit={handleSaveEdit}
-                onCancelEdit={handleCancelEdit}
-                onCopy={(text) => copyToClipboard(text, message.message_id)}
-                onEdit={handleEditMessage}
-                onUpload={handleUpload}
-                versions={messageVersions[message.message_id] || []}
-                currentVersionIndex={currentVersions[message.message_id]}
-                isViewingHistory={viewingHistory === message.message_id}
-                onViewVersion={handleViewVersion}
-                onBackToCurrent={handleBackToCurrent}
-                getMessageContent={getMessageContent}
-                copiedMessageId={copiedMessageId}
+            console.log("🧠 Version Viewer Debug Info:");
+            console.log("viewingHistory:", viewingHistory);
+            console.log("versionData:", versionData);
+            console.log(
+              "versionData[viewingHistory]:",
+              versionData[viewingHistory]
+            );
+            console.log("Number of response:", versionData.responses);
+
+            return (
+              <PreviousVersionViewer
+                versions={versionData[viewingHistory]}
+                onBack={handleBackToCurrent}
               />
-            ))}
+            );
+          })()
+          : chat.messages.map((message) => (
+            <Message
+              key={message.message_id}
+              message={message}
+              isEditing={editingMessageId === message.message_id}
+              editContent={editContent}
+              setEditContent={setEditContent}
+              onSaveEdit={handleSaveEdit}
+              onCancelEdit={handleCancelEdit}
+              onCopy={(text) => copyToClipboard(text, message.message_id)}
+              onEdit={handleEditMessage}
+              versions={messageVersions[message.message_id] || []}
+              currentVersionIndex={currentVersions[message.message_id]}
+              isViewingHistory={viewingHistory === message.message_id}
+              onViewVersion={handleViewVersion}
+              onBackToCurrent={handleBackToCurrent}
+              getMessageContent={getMessageContent}
+              copiedMessageId={copiedMessageId}
+            />
+          ))}
+
         {isLoading && <LoadingIndicator />}
         <div ref={messagesEndRef} />
       </MessagesContainer>
@@ -428,11 +481,12 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
       <InputArea>
         <MessageInput
           value={inputValue}
-          onChange={setInputValue}
+          onChange={handleInputChange}
           onSubmit={handleSubmit}
           isLoading={isLoading}
-          pdfFile={pdfFile} //  pass the file
-          setPdfFile={setPdfFile} //  pass the setter
+          ghostText={ghostText}
+          onKeyDown={handleKeyDown}
+
         />
       </InputArea>
     </Container>
@@ -490,7 +544,6 @@ function Message({
   onCancelEdit,
   onCopy,
   onEdit,
-  onUpload,
   isStarred,
   versions,
   currentVersionIndex,
@@ -522,7 +575,6 @@ function Message({
     <BotMessage
       message={message}
       onCopy={onCopy}
-      onUpload={onUpload}
       isStarred={isStarred}
       versions={versions}
       copiedMessageId={copiedMessageId}
@@ -763,31 +815,11 @@ function MessageInput({
   onChange,
   onSubmit,
   isLoading,
-  pdfFile,
-  setPdfFile,
+  ghostText,
+  onKeyDown,
 }) {
   const textareaRef = useRef(null);
-  const [pdfUrl, setPdfUrl] = useState(null);
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      onSubmit(e);
-    }
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.type === "application/pdf") {
-        setPdfFile(file);
-      } else {
-        alert("Only PDF files are allowed.");
-      }
-    }
-    // Reset input value to allow re-uploading the same file
-    e.target.value = null;
-  };
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -798,51 +830,31 @@ function MessageInput({
 
   return (
     <>
-      {pdfFile && (
-        <PdfContainer>
-          <PdfName>
-            <PdfIcon src={pdfIcon} alt="PDF icon" />
-            {pdfFile.name}
-          </PdfName>
-          <RemoveButton
-            onClick={() => setPdfFile(null)}
-            aria-label="Remove PDF"
-            type="button"
-          >
-            <X size={16} />
-          </RemoveButton>
-        </PdfContainer>
-      )}
       <MessageForm onSubmit={onSubmit}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <UploadButton component="label">
-            <Upload size={16} style={{ marginRight: 4 }} />
-            <input
-              key={pdfFile ? pdfFile.name : "empty"} // force remount input on file change
-              type="file"
-              hidden
-              accept="application/pdf"
-              onChange={handleFileChange}
-            />
-          </UploadButton>
-
           <TextAreaWrapper style={{ flex: 1, position: "relative" }}>
             <MessageTextArea
               ref={textareaRef}
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type message (Shift+Enter for newline)"
+              onKeyDown={onKeyDown}
+              placeholder="Type your intent (e.g., measure)"
               rows={1}
               $isLoading={isLoading}
               disabled={isLoading}
             />
+            {ghostText && (
+              <GhostText>
+                {value}
+                <span>{ghostText}</span>
+              </GhostText>
+            )}
             <SubmitButton
               type="submit"
               size="icon"
-              disabled={isLoading || (!value.trim() && !pdfFile)}
+              disabled={isLoading || (!value.trim())}
               $isLoading={isLoading}
-              $hasValue={!!value.trim() || !!pdfFile}
+              $hasValue={!!value.trim()}
             >
               {isLoading ? <LoadingIcon /> : <Send size={16} />}
             </SubmitButton>
