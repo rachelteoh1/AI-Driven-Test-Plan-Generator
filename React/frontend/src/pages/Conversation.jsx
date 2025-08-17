@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import * as React from "react";
 import Button from "@mui/material/Button";
+import ScanInstrumentModal from "../modal/ScanInstrumentModal";
+import useModal from "../modal/useModal";
 import {
   Send,
   Loader2,
@@ -30,6 +32,7 @@ import {
 } from "../hook/useChat";
 import { getVersionChatLogs } from "../services/chatServices";
 import { useGetAllInstruments } from "../hook/usePdf";
+import ScanImage from "../assets/instrumentScanning.png";
 
 // Animation
 const spin = keyframes`
@@ -121,6 +124,7 @@ const MessageTextArea = styled.textarea`
   width: 100%;
   min-height: 2.5rem;
   max-height: 12rem;
+  max-width: 40rem;
   padding: 12px 16px;
   background-color: ${({ $isLoading, theme }) =>
     $isLoading ? theme.background : theme.backgroundMedium};
@@ -150,13 +154,12 @@ const GhostText = styled.span`
   font-weight: ${FONTWEIGHT.normal};
   line-height: 1.5;
   font-family: inherit;
-  white-space: nowrap; 
+  white-space: nowrap;
   opacity: 0.5;
   z-index: 0;
 `;
 const SubmitButton = styled(Button)`
-  position: absolute;
-  left: 680px;
+  left: 630px;
   bottom: 43px;
   background-color: transparent;
   color: ${({ theme }) => theme.status.cancel};
@@ -164,12 +167,24 @@ const SubmitButton = styled(Button)`
     $isLoading || !$hasValue ? 0.5 : 1};
 `;
 
+const ScanInstrumentButton = styled(Button)`
+  bottom: 15px;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  color: ${({ theme }) => theme.status.cancel};
+
+  img {
+    display: block;
+  }
+`;
 const MessageForm = styled.form`
   width: 100%;
 `;
+
 const TextAreaWrapper = styled.div`
+  flex: 1;
   position: relative;
-  width: 100%;
 `;
 
 const ActionButtons = styled.div`
@@ -232,20 +247,22 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   const [copiedMessageId, setCopiedMessageId] = useState(null);
   const [scpiSuggestions, setScpiSuggestions] = useState([]);
   const [ghostText, setGhostText] = useState("");
+  const { showModal, hideModal } = useModal();
 
   const detectedInstrument = "PZ2100A";
-  const { data: instrumentsData, isLoading: instrumentsLoading, error: instrumentsError } = useGetAllInstruments();
+  const {
+    data: instrumentsData,
+    isLoading: instrumentsLoading,
+    error: instrumentsError,
+  } = useGetAllInstruments();
 
-  
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-
   useEffect(() => {
     scrollToBottom();
   }, [chat.messages, isLoading]);
-
 
   useEffect(() => {
     if (!instrumentsData || instrumentsLoading) return;
@@ -253,28 +270,29 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     const instruments = instrumentsData.instruments || [];
 
     const matchedInstrument = instruments.find((instrument) => {
-      const names = instrument.instrument_name.split("_").map(n => n.toLowerCase());
+      const names = instrument.instrument_name
+        .split("_")
+        .map((n) => n.toLowerCase());
       return names.includes(detectedInstrument.toLowerCase());
     });
 
     if (matchedInstrument && matchedInstrument.json_url) {
       fetch(matchedInstrument.json_url)
-        .then(res => {
+        .then((res) => {
           if (!res.ok) throw new Error(`Failed to fetch JSON: ${res.status}`);
           return res.json();
         })
-        .then(data => {
+        .then((data) => {
           console.log("Fetched SCPI JSON data:", data);
           setScpiSuggestions(data);
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("Error fetching SCPI JSON:", err);
         });
     } else {
       console.warn("Instrument not found. Upload a PDF to get started.");
     }
   }, [instrumentsData, instrumentsLoading, detectedInstrument]);
-
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -283,6 +301,16 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
       setInputValue("");
     }
   };
+  const handleScanInstrument = async()=>{
+    showModal({
+              modal: (
+                <ScanInstrumentModal
+                  hideModal={hideModal}
+                  showModal={showModal}
+                />
+              ),
+            });  
+  }
 
   const copyToClipboard = async (text, messageId) => {
     try {
@@ -352,7 +380,6 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     return message.content;
   };
 
-
   const handleInputChange = (value) => {
     console.log("Input value:", value);
     setInputValue(value);
@@ -371,12 +398,11 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     console.log("Current level:", currentLevel);
 
     if (currentLevel === 1) {
-      const matchingIntents = Object.keys(scpiSuggestions || {}).filter((intent) =>
-        intent.toLowerCase().startsWith(parts[0].toLowerCase())
+      const matchingIntents = Object.keys(scpiSuggestions || {}).filter(
+        (intent) => intent.toLowerCase().startsWith(parts[0].toLowerCase())
       );
       setGhostText(matchingIntents[0]?.slice(parts[0].length) || "");
-    }
-    else if (currentLevel === 2) {
+    } else if (currentLevel === 2) {
       const intent = parts[0];
       const matchingSubsystems =
         scpiSuggestions?.[intent] &&
@@ -384,33 +410,26 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
           subsystem.toLowerCase().startsWith(parts[1].toLowerCase())
         );
       setGhostText(matchingSubsystems[0]?.slice(parts[1].length) || "");
-    }
-    else if (currentLevel === 3) {
+    } else if (currentLevel === 3) {
       const [intent, subsystem] = parts;
-      const matchingParameters =
-        scpiSuggestions?.[intent]?.[subsystem]?.parameters
-          ?.map((param) => param.toLowerCase())
-          ?.filter((param) =>
-            param.startsWith(parts[2].toLowerCase())
-          );
+      const matchingParameters = scpiSuggestions?.[intent]?.[
+        subsystem
+      ]?.parameters
+        ?.map((param) => param.toLowerCase())
+        ?.filter((param) => param.startsWith(parts[2].toLowerCase()));
       setGhostText(matchingParameters?.[0]?.slice(parts[2].length) || "");
-    }
-    else if (currentLevel === 4) {
+    } else if (currentLevel === 4) {
       const [intent, subsystem, parameter] = parts;
-      const matchingValues =
-        scpiSuggestions?.[intent]?.[subsystem]?.values?.[parameter?.toLowerCase()]
-          ?.map((val) => val.toLowerCase())
-          ?.filter((val) =>
-            val.startsWith(parts[3].toLowerCase())
-          );
+      const matchingValues = scpiSuggestions?.[intent]?.[subsystem]?.values?.[
+        parameter?.toLowerCase()
+      ]
+        ?.map((val) => val.toLowerCase())
+        ?.filter((val) => val.startsWith(parts[3].toLowerCase()));
       setGhostText(matchingValues?.[0]?.slice(parts[3].length) || "");
-    }
-    else {
+    } else {
       setGhostText("");
     }
   };
-
-
 
   const handleKeyDown = (e) => {
     console.log("Key pressed:", e.key);
@@ -418,61 +437,58 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     if (e.key === " ") {
       e.preventDefault();
       handleInputChange(inputValue + " ");
-    }
-    else if ((e.key === "Tab" || e.key === "ArrowRight") && ghostText) {
+    } else if ((e.key === "Tab" || e.key === "ArrowRight") && ghostText) {
       e.preventDefault();
       setInputValue((prev) => prev + ghostText);
       setGhostText("");
-    }
-    else if (e.key === "Enter" && !e.shiftKey) {
+    } else if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
-
 
   return (
     <Container>
       <MessagesContainer>
         {viewingHistory && versionData[viewingHistory]
           ? (() => {
+              console.log("🧠 Version Viewer Debug Info:");
+              console.log("viewingHistory:", viewingHistory);
+              console.log("versionData:", versionData);
+              console.log(
+                "versionData[viewingHistory]:",
+                versionData[viewingHistory]
+              );
+              console.log("Number of response:", versionData.responses);
 
-            console.log("🧠 Version Viewer Debug Info:");
-            console.log("viewingHistory:", viewingHistory);
-            console.log("versionData:", versionData);
-            console.log(
-              "versionData[viewingHistory]:",
-              versionData[viewingHistory]
-            );
-            console.log("Number of response:", versionData.responses);
-
-            return (
-              <PreviousVersionViewer
-                versions={versionData[viewingHistory]}
-                onBack={handleBackToCurrent}
-              />
-            );
-          })()
+              return (
+                <PreviousVersionViewer
+                  versions={versionData[viewingHistory]}
+                  onBack={handleBackToCurrent}
+                />
+              );
+            })()
           : chat.messages.map((message) => (
-            <Message
-              key={message.message_id}
-              message={message}
-              isEditing={editingMessageId === message.message_id}
-              editContent={editContent}
-              setEditContent={setEditContent}
-              onSaveEdit={handleSaveEdit}
-              onCancelEdit={handleCancelEdit}
-              onCopy={(text) => copyToClipboard(text, message.message_id)}
-              onEdit={handleEditMessage}
-              versions={messageVersions[message.message_id] || []}
-              currentVersionIndex={currentVersions[message.message_id]}
-              isViewingHistory={viewingHistory === message.message_id}
-              onViewVersion={handleViewVersion}
-              onBackToCurrent={handleBackToCurrent}
-              getMessageContent={getMessageContent}
-              copiedMessageId={copiedMessageId}
-            />
-          ))}
+              <Message
+                key={message.message_id}
+                message={message}
+                isEditing={editingMessageId === message.message_id}
+                editContent={editContent}
+                setEditContent={setEditContent}
+                onSaveEdit={handleSaveEdit}
+                onCancelEdit={handleCancelEdit}
+                onCopy={(text) => copyToClipboard(text, message.message_id)}
+                onEdit={handleEditMessage}
+                versions={messageVersions[message.message_id] || []}
+                currentVersionIndex={currentVersions[message.message_id]}
+                isViewingHistory={viewingHistory === message.message_id}
+                onViewVersion={handleViewVersion}
+                onBackToCurrent={handleBackToCurrent}
+                getMessageContent={getMessageContent}
+                copiedMessageId={copiedMessageId}
+               
+              />
+            ))}
 
         {isLoading && <LoadingIndicator />}
         <div ref={messagesEndRef} />
@@ -486,7 +502,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
           isLoading={isLoading}
           ghostText={ghostText}
           onKeyDown={handleKeyDown}
-
+          onScan={handleScanInstrument}
         />
       </InputArea>
     </Container>
@@ -551,7 +567,8 @@ function Message({
   onViewVersion,
   onBackToCurrent,
   getMessageContent,
-  copiedMessageId
+  copiedMessageId,
+  onScan
 }) {
   return message.role === "user" ? (
     <UserMessage
@@ -817,9 +834,9 @@ function MessageInput({
   isLoading,
   ghostText,
   onKeyDown,
+  onScan
 }) {
   const textareaRef = useRef(null);
-
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -831,8 +848,33 @@ function MessageInput({
   return (
     <>
       <MessageForm onSubmit={onSubmit}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <TextAreaWrapper style={{ flex: 1, position: "relative" }}>
+        <div style={{ display: "flex", alignItems: "center" }}>
+        
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <ScanInstrumentButton
+                    type="button"
+                    size="icon"
+                    $isLoading={isLoading}
+                    $hasValue={!!value.trim()}
+                    onClick={onScan}
+                  >
+                    <img
+                      src={ScanImage}
+                      alt="Scan Instrument"
+                      style={{ width: "20px", height: "20px" }}
+                    />
+                  </ScanInstrumentButton>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Scan instrument</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+         
+
+          <TextAreaWrapper style={{ position: "relative" }}>
             <MessageTextArea
               ref={textareaRef}
               value={value}
@@ -842,22 +884,22 @@ function MessageInput({
               rows={1}
               $isLoading={isLoading}
               disabled={isLoading}
-            />
+            />{" "}
             {ghostText && (
               <GhostText>
-                {value}
-                <span>{ghostText}</span>
+                {" "}
+                {value} <span>{ghostText}</span>{" "}
               </GhostText>
-            )}
+            )}{" "}
             <SubmitButton
               type="submit"
               size="icon"
-              disabled={isLoading || (!value.trim())}
+              disabled={isLoading || !value.trim()}
               $isLoading={isLoading}
               $hasValue={!!value.trim()}
             >
-              {isLoading ? <LoadingIcon /> : <Send size={16} />}
-            </SubmitButton>
+              {isLoading ? <LoadingIcon /> : <Send size={16} />}{" "}
+            </SubmitButton>{" "}
           </TextAreaWrapper>
         </div>
       </MessageForm>

@@ -11,3 +11,8 @@ export const uploadPdf = (formData) => {
 export const getAllInstruments = () => {
   return api.get(`/pdf/instruments`);
 }
+
+export const scanInstrument = ()=>{
+  return api.get(`/instruments/scan`);
+}
+

@@ -132,3 +132,39 @@ class InstrumentMetadata(Base):
     instrument_name = Column(String, nullable=False, unique=True)
     json_url = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    
+    
+# -------------------------------
+# Scan Instrument 
+# -------------------------------
+
+class DetectedInstrument(Base):
+    __tablename__ = "detected_instruments"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    resource_string = Column(String, nullable=False, unique=True)  # VISA address
+    idn = Column(String, nullable=True)  # full *IDN? response
+    manufacturer = Column(String, nullable=True)
+    model = Column(String, nullable=True)  # e.g., "34461A"
+    serial = Column(String, nullable=True)  # e.g., "MY12345678"
+    firmware = Column(String, nullable=True)  # e.g., "3.15-2.35-01.00-01.10"
+    json_url = Column(String, nullable=True)  # SCPI metadata file
+    is_active = Column(Boolean, default=True)
+    last_seen = Column(DateTime, default=datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+
+class SelectedInstrument(Base):
+    __tablename__ = "selected_instruments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id = Column(UUID(as_uuid=True), ForeignKey("chat_sessions.session_id", ondelete="CASCADE"), nullable=False)
+    message_id = Column(UUID(as_uuid=True), ForeignKey("chat_logs.id", ondelete="CASCADE"), nullable=False)
+    instrument_id = Column(UUID(as_uuid=True), ForeignKey("detected_instruments.id", ondelete="SET NULL"))  
+    resource_string = Column(String, nullable=False)
+    idn = Column(String, nullable=True)
+    manufacturer = Column(String, nullable=True)
+    model = Column(String, nullable=True)
+    serial = Column(String, nullable=True)
+    firmware = Column(String, nullable=True)
+    json_url = Column(String, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
