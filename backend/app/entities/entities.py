@@ -157,7 +157,7 @@ class SelectedInstrument(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     session_id = Column(UUID(as_uuid=True), ForeignKey("chat_sessions.session_id", ondelete="CASCADE"), nullable=False)
-    message_id = Column(UUID(as_uuid=True), ForeignKey("chat_logs.id", ondelete="CASCADE"), nullable=False)
+    message_id = Column(UUID(as_uuid=True), ForeignKey("chat_logs.message_id", ondelete="CASCADE"), nullable=True)
     instrument_id = Column(UUID(as_uuid=True), ForeignKey("detected_instruments.id", ondelete="SET NULL"))  
     resource_string = Column(String, nullable=False)
     idn = Column(String, nullable=True)

@@ -4,7 +4,7 @@ import styled from "styled-components";
 import instrumentScanning from "../assets/instrumentScanning.png";
 import { COLORS, FONTSIZE, FONTWEIGHT } from "../lib/styles";
 import CrossedModal from "./CrossedModal";
-import ResultModal from "./ResultModal";
+import ScanResultModal from "./ScantResultModal";
 
 const CenteredDiv = styled.div`
   display: flex;
@@ -30,7 +30,7 @@ const StyledButton = styled(Button)`
   background-color: ${COLORS.blue} !important;
 `;
 
-export default function ScanInstrumentModal({ hideModal, showModal }) {
+export default function ScanInstrumentModal({ hideModal, showModal ,  detectedInstruments,onSelectInstrument,selectedInstrument,}) {
   const [scanning, setScanning] = useState(false);
   const abortRef = useRef(null);
 
@@ -43,11 +43,10 @@ export default function ScanInstrumentModal({ hideModal, showModal }) {
       });
       const data = await res.json();
 
-      // ✅ Decide what modal to show next
-      hideModal(); // close scanning modal
+      
       if (data.length > 0) {
         showModal({
-          modal: <ResultModal results={data} hideModal={hideModal} />,
+          modal: <ScanResultModal results={data} hideModal={hideModal} detectedInstruments={detectedInstruments} onSelectInstrument={onSelectInstrument} selectedInstrument={selectedInstrument} />,
         });
       } else {
         showModal({

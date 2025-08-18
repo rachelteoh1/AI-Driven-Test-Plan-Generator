@@ -4,6 +4,14 @@ import Button from "@mui/material/Button";
 import ScanInstrumentModal from "../modal/ScanInstrumentModal";
 import useModal from "../modal/useModal";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu"
+import { Badge } from "@mui/icons-material"
+import {
   Send,
   Loader2,
   Upload,
@@ -15,6 +23,9 @@ import {
   ArrowLeft,
   Check,
   X,
+  ChevronDown,
+  Radar,
+  Trash2,
 } from "lucide-react";
 import {
   Tooltip,
@@ -32,7 +43,8 @@ import {
 } from "../hook/useChat";
 import { getVersionChatLogs } from "../services/chatServices";
 import { useGetAllInstruments } from "../hook/usePdf";
-import ScanImage from "../assets/instrumentScanning.png";
+import ScanResultsModal from "../modal/ScantResultModal";
+import CrossedModal from "../modal/CrossedModal";
 
 // Animation
 const spin = keyframes`
@@ -124,7 +136,7 @@ const MessageTextArea = styled.textarea`
   width: 100%;
   min-height: 2.5rem;
   max-height: 12rem;
-  max-width: 40rem;
+  max-width: 38rem;
   padding: 12px 16px;
   background-color: ${({ $isLoading, theme }) =>
     $isLoading ? theme.background : theme.backgroundMedium};
@@ -159,7 +171,7 @@ const GhostText = styled.span`
   z-index: 0;
 `;
 const SubmitButton = styled(Button)`
-  left: 630px;
+  left: 590px;
   bottom: 43px;
   background-color: transparent;
   color: ${({ theme }) => theme.status.cancel};
@@ -248,7 +260,14 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   const [scpiSuggestions, setScpiSuggestions] = useState([]);
   const [ghostText, setGhostText] = useState("");
   const { showModal, hideModal } = useModal();
+  const [isScanning, setIsScanning] = useState(false)
+const [detectedInstruments, setDetectedInstruments] = useState([
+    { id: "1", name: "Oscilloscope", model: "DSOX3024T", address: "192.168.1.100" },
+    { id: "2", name: "Function Generator", model: "33500B", address: "192.168.1.101" },
+    { id: "3", name: "Multimeter", model: "34465A", address: "192.168.1.102" },
+  ])
 
+  const [selectedInstrument, setSelectedInstrument] = useState(null)
   const detectedInstrument = "PZ2100A";
   const {
     data: instrumentsData,
@@ -301,16 +320,76 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
       setInputValue("");
     }
   };
-  const handleScanInstrument = async()=>{
-    showModal({
-              modal: (
-                <ScanInstrumentModal
-                  hideModal={hideModal}
-                  showModal={showModal}
-                />
-              ),
-            });  
+
+const [showScanResults, setShowScanResults] = useState(false);
+
+const handleScanInstrument = async () => {
+  setIsScanning(true);
+  
+  setTimeout(() => {
+
+    const data = [{ id: "1", name: "Oscilloscope", model: "DSOX3024T", address: "192.168.1.100" },
+    { id: "2", name: "Function Generator", model: "33500B", address: "192.168.1.101" },
+    { id: "3", name: "Multimeter", model: "34465A", address: "192.168.1.102" }]; // try [ { id: 1, name: "Instrument A" } ] to test ScanResultModal
+if (data.length > 0) {
+  showModal({
+        modal: (
+          <ScanResultsModal
+            // results={data}
+            hideModal={hideModal}
+            // detectedInstruments={detectedInstruments}
+            detectedInstruments={data}
+            onSelectInstrument={setSelectedInstrument}
+            selectedInstrument={selectedInstrument}
+          />
+        ),
+      });
+    } else{
+  showModal({
+        modal: (
+          <CrossedModal
+            title="No instruments detected"
+            description="Make sure instrument is connected."
+            hideModal={hideModal}
+          />
+        ),
+      });
+}
+setIsScanning(false);
+  }, 1000);
+};
+
+
+
+
+
+  const handleSubmitInstrument = (e) => {
+    e.preventDefault()
+    if (inputValue.trim()) {
+      console.log("Submitting:", inputValue, "with instrument:", selectedInstrument)
+      setInputValue("")
+    }
   }
+
+
+
+
+  const handleSelectInstrument = (instrument) => {
+    setSelectedInstrument(instrument)
+  }
+
+  const handleDeleteInstrument = (instrumentId) => {
+    setDetectedInstruments((prev) => prev.filter((inst) => inst.id !== instrumentId))
+    if (selectedInstrument?.id === instrumentId) {
+      setSelectedInstrument(null)
+    }
+  }
+
+  const handleDeleteAllInstruments = () => {
+    setDetectedInstruments([])
+    setSelectedInstrument(null)
+  }
+
 
   const copyToClipboard = async (text, messageId) => {
     try {
@@ -452,7 +531,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
       <MessagesContainer>
         {viewingHistory && versionData[viewingHistory]
           ? (() => {
-              console.log("🧠 Version Viewer Debug Info:");
+              console.log(" Version Viewer Debug Info:");
               console.log("viewingHistory:", viewingHistory);
               console.log("versionData:", versionData);
               console.log(
@@ -503,6 +582,14 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
           ghostText={ghostText}
           onKeyDown={handleKeyDown}
           onScan={handleScanInstrument}
+          selectedInstrument={selectedInstrument}
+          detectedInstruments={detectedInstruments}
+          handleDeleteAllInstruments={handleDeleteAllInstruments}
+          handleDeleteInstrument={handleDeleteInstrument}
+          handleSelectInstrument={handleSelectInstrument}
+          isScanning={isScanning}
+          handleSubmitInstrument={handleSubmitInstrument}
+          
         />
       </InputArea>
     </Container>
@@ -834,7 +921,11 @@ function MessageInput({
   isLoading,
   ghostText,
   onKeyDown,
-  onScan
+  onScan,
+  handleSubmitInstrument,
+  selectedInstrument,detectedInstruments,handleDeleteAllInstruments,handleDeleteInstrument, handleSelectInstrument, isScanning
+  
+
 }) {
   const textareaRef = useRef(null);
 
@@ -847,24 +938,21 @@ function MessageInput({
 
   return (
     <>
-      <MessageForm onSubmit={onSubmit}>
         <div style={{ display: "flex", alignItems: "center" }}>
         
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
+                 
                   <ScanInstrumentButton
                     type="button"
                     size="icon"
                     $isLoading={isLoading}
                     $hasValue={!!value.trim()}
                     onClick={onScan}
+                    disabled={isScanning}
                   >
-                    <img
-                      src={ScanImage}
-                      alt="Scan Instrument"
-                      style={{ width: "20px", height: "20px" }}
-                    />
+                    <Radar className={`h-4 w-4 ${isScanning ? "animate-spin" : ""}`} />
                   </ScanInstrumentButton>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -872,8 +960,74 @@ function MessageInput({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-         
+              <DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <div>
+    <Button variant="outline" className="shrink-0  bg-white ">
+      {selectedInstrument ? (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-xs">
+            {selectedInstrument.name}
+          </Badge>
+          <span className="text-xs text-muted-foreground">
+            {selectedInstrument.model}
+          </span>
+        </div>
+      ) : (
+        <span className="text-muted-foreground text-xs"></span>
+      )}
+      <ChevronDown className="h-5 w-5 opacity-50 shrink-0" />
+    </Button>
+    </div>
+  </DropdownMenuTrigger>
 
+  <DropdownMenuContent align="start" className="w-80 bg-white shadow-md">
+    {detectedInstruments.length === 0 ? (
+      <DropdownMenuItem disabled>No instruments detected</DropdownMenuItem>
+    ) : (
+      <>
+        {Array.isArray(detectedInstruments) &&
+          detectedInstruments.map((instrument) => (
+            <DropdownMenuItem
+              key={instrument.id}
+              className="flex items-center justify-between p-3"
+            >
+              <div
+                className="flex-1 cursor-pointer"
+                onClick={() => handleSelectInstrument(instrument)}
+              >
+                <div className="font-medium">{instrument.name}</div>
+                <div className="text-sm text-muted-foreground">
+                  {instrument.model} • {instrument.address}
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDeleteInstrument(instrument.id)
+                }}
+                className="ml-2 h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </DropdownMenuItem>
+          ))}
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          onClick={handleDeleteAllInstruments}
+          className="text-destructive focus:text-destructive-foreground focus:bg-destructive"
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete All Instruments
+        </DropdownMenuItem>
+      </>
+    )}
+  </DropdownMenuContent>
+</DropdownMenu>
           <TextAreaWrapper style={{ position: "relative" }}>
             <MessageTextArea
               ref={textareaRef}
@@ -902,7 +1056,16 @@ function MessageInput({
             </SubmitButton>{" "}
           </TextAreaWrapper>
         </div>
-      </MessageForm>
+     
+       {selectedInstrument && (
+            <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Selected:</span>
+              <Badge variant="outline">
+                {selectedInstrument.name} ({selectedInstrument.model})
+              </Badge>
+            </div>
+          )}
+         
     </>
   );
 }
