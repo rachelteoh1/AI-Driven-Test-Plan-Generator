@@ -28,8 +28,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "./ui/sidebar"
-import { useNavigate, useLocation } from "react-router-dom"
+} from "./ui/sidebar";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import useModal from "../modal/useModal";
 import { useLogout } from "../hook/useAuth";
@@ -37,8 +37,8 @@ import styled, { css } from "styled-components";
 import { COLORS, FONTSIZE, FONTWEIGHT, SPACING } from "../lib/styles";
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { Check, ChevronRight, Circle } from "lucide-react";
-import * as React from "react"
-import { PanelLeft } from "lucide-react"
+import * as React from "react";
+import { PanelLeft } from "lucide-react";
 import { useUserProfile } from "../hook/useProfile";
 
 // Button variants
@@ -78,7 +78,7 @@ const Button = styled.button`
   border-radius: 0.375rem;
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
-  
+
   ${({ variant = "default" }) => variantStyles[variant]};
   ${({ size = "default" }) => sizeStyles[size]};
 
@@ -100,13 +100,13 @@ const menuItem = css`
   gap: ${SPACING.sm};
   padding: ${SPACING.sm};
   font-size: ${FONTSIZE.sm};
-  color:  ${({ theme }) => theme.greys.dark};
+  color: ${({ theme }) => theme.greys.dark};
   cursor: pointer;
   border-radius: 0.375rem;
   min-width: 8rem;
   &:hover,
   &[data-highlighted] {
-    background-color:  ${({ theme }) => theme.newChat};
+    background-color: ${({ theme }) => theme.newChat};
   }
   &[data-disabled] {
     opacity: 0.5;
@@ -129,17 +129,17 @@ const StyledChatItem = styled.div`
 
   &:hover {
     background-color: ${({ isActive, theme }) =>
-    isActive ? theme.newChat : theme.hover};
+      isActive ? theme.newChat : theme.hover};
   }
 `;
 
 // rename n delete
 const DropdownMenuContent = styled(Dropdown.Content)`
   background-color: ${({ theme }) => theme.background};
-  border: 1px solid  ${({ theme }) => theme.greys.medium};
+  border: 1px solid ${({ theme }) => theme.greys.medium};
   border-radius: 0.375rem;
   padding: ${SPACING.xs};
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 `;
 
 const DropdownMenuItem = styled(Dropdown.Item)`
@@ -163,7 +163,7 @@ const DropdownMenuSubTrigger = styled(Dropdown.SubTrigger)`
 
 const DropdownMenuSubContent = styled(Dropdown.SubContent)`
   background-color: white;
-  border: 1px solid  ${({ theme }) => theme.greys.medium};
+  border: 1px solid ${({ theme }) => theme.greys.medium};
   border-radius: 0.375rem;
   padding: ${SPACING.xs};
   margin-left: ${SPACING.sm};
@@ -266,24 +266,26 @@ export function AppSidebar({
           modal: (
             <LogoutModal
               title="Logout?"
+
               onLogout={async () => {
                 await logout(profile, profile?.pref_autosave ?? true);
               }}
+
               hideModal={hideModal}
               navigateTo="/signin"
             />
           ),
         });
+
       }
     }
+
   ];
 
   return (
     <Sidebar className="w-64 h-screen flex flex-col border-r border-gray-200 fixed top-0 left-0 bg-white z-10">
       <SidebarHeader className="p-4">
-        <Button
-          onClick={onNewChat}
-        >
+        <Button onClick={onNewChat}>
           <Plus className="h-4 w-4" />
           New chat
         </Button>
@@ -332,8 +334,9 @@ export function AppSidebar({
                   style={{ width: "100%", textAlign: "left" }}
                 >
                   <item.icon
-                    className={`h-4 w-4 ${item.disabled ? "text-gray-400" : ""
-                      }`}
+                    className={`h-4 w-4 ${
+                      item.disabled ? "text-gray-400" : ""
+                    }`}
                   />
                   <span>{item.title}</span>
                 </Button>

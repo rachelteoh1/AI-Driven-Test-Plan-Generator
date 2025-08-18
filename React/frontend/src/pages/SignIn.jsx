@@ -201,7 +201,7 @@ export default function SignInPage() {
                     />
 
                     <StyledLink to="/resetpw"><TextSmRegular>Forgot password?</TextSmRegular></StyledLink>
-                    <StyledButton type='submit' disabled={!isFormValid}>Submit</StyledButton></div>
+                    <StyledButton type='submit' >Submit</StyledButton></div>
                 </form>
 
                 <RowContainer>
