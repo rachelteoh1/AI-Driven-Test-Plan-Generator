@@ -233,7 +233,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   const [scpiSuggestions, setScpiSuggestions] = useState([]);
   const [ghostText, setGhostText] = useState("");
 
-  const detectedInstrument = "E8257D";
+  const detectedInstrument = "PZ2100A";
   const { data: instrumentsData, isLoading: instrumentsLoading, error: instrumentsError } = useGetAllInstruments();
 
 

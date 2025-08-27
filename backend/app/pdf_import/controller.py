@@ -6,6 +6,7 @@ from .service import process_pdf_upload
 from .models import PDFUploadResponse
 from app.entities.entities import InstrumentMetadata
 import logging
+from .utils.suggest_intent import extract_scpi_pages
 
 
 router = APIRouter(
@@ -26,3 +27,25 @@ async def get_all_instruments(db: Session = Depends(get_db)):
     return {
         "instruments": [instrument.__dict__ for instrument in instruments]
     }
+    
+@router.post("/test-extract-scpi")
+async def test_extract_scpi(file: UploadFile = File(...)):
+    """
+    Endpoint to test the extract_scpi_pages function.
+    This does not save any data to the database.
+    """
+    if not file:
+        raise HTTPException(status_code=422, detail="No file uploaded")
+
+    try:
+        # Call the extract_scpi_pages function
+        instrument_name, scpi_pages = extract_scpi_pages(file)
+
+        # Return the extracted data as a response
+        return JSONResponse(content={
+            "instrument_name": instrument_name,
+            "scpi_pages": scpi_pages
+        })
+    except Exception as e:
+        logging.exception("Failed to extract SCPI pages")
+        raise HTTPException(status_code=500, detail=f"Error extracting SCPI pages: {str(e)}")
