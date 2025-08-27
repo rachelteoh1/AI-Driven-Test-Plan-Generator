@@ -125,13 +125,13 @@ class Dashboard(Base):
 # -------------------------------
 # Instrument Model
 # -------------------------------
-class InstrumentMetadata(Base):
-    __tablename__ = "instrument_metadata"
+# class InstrumentMetadata(Base):
+#     __tablename__ = "instrument_metadata"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    instrument_name = Column(String, nullable=False, unique=True)
-    json_url = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+#     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+#     instrument_name = Column(String, nullable=False, unique=True)
+#     json_url = Column(String, nullable=False)
+#     created_at = Column(DateTime, default=datetime.now(timezone.utc))
     
     
 # -------------------------------
@@ -166,5 +166,6 @@ class SelectedInstrument(Base):
     serial = Column(String, nullable=True)
     firmware = Column(String, nullable=True)
     json_url = Column(String, nullable=True)
-
+    instrument_filename = Column(String, nullable=True)
+    json_url_manual = Column(String, nullable=True)  # uploaded user manual pdf
     created_at = Column(DateTime, default=datetime.now(timezone.utc))

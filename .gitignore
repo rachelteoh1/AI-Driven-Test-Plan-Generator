@@ -18,4 +18,10 @@ __pycache__/
 # Mac system files
 .DS_Store
 
+# Visual Studio
+.vs/
+bin/
+obj/
+*.user
+*.suo
 

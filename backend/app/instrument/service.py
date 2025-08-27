@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 # --- Save selected instrument ---
-def save_selected_instrument(db: Session, instrument_id: UUID,session_id: UUID, chatlog_id: UUID = None):
+def save_selected_instrument(db: Session, instrument_id: UUID, session_id: UUID, chatlog_id: UUID = None):
     try:
-        instrument= db.query(DetectedInstrument).filter_by(id=instrument_id).first()
+        instrument = db.query(DetectedInstrument).filter_by(id=instrument_id).first()
         if not instrument:
             raise HTTPException(status_code=404, detail=f"Instrument {instrument_id} not found")
         
@@ -27,16 +27,14 @@ def save_selected_instrument(db: Session, instrument_id: UUID,session_id: UUID, 
             instrument_id=instrument_id,
             session_id=session_id,
             message_id=chatlog_id,
-            resource_string= instrument.resource_string,
-            idn= instrument.idn,
-            manufacturer = instrument.manufacturer,
-            model = instrument.model,
-            serial = instrument.serial,
+            resource_string=instrument.resource_string,
+            idn=instrument.idn,
+            manufacturer=instrument.manufacturer,
+            model=instrument.model,
+            serial=instrument.serial,
             firmware=instrument.firmware,
             json_url=instrument.json_url,
-          
         )
-       
 
         db.add(selected)
         db.commit()

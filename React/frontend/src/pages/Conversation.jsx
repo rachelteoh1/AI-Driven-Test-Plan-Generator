@@ -268,7 +268,7 @@ const [detectedInstruments, setDetectedInstruments] = useState([
   ])
 
   const [selectedInstrument, setSelectedInstrument] = useState(null)
-  const detectedInstrument = "PZ2100A";
+
   const {
     data: instrumentsData,
     isLoading: instrumentsLoading,
@@ -289,14 +289,14 @@ const [detectedInstruments, setDetectedInstruments] = useState([
     const instruments = instrumentsData.instruments || [];
 
     const matchedInstrument = instruments.find((instrument) => {
-      const names = instrument.instrument_name
+      const names = instrument.instrument_filename
         .split("_")
         .map((n) => n.toLowerCase());
-      return names.includes(detectedInstrument.toLowerCase());
+      return names.includes(selectedInstrument.toLowerCase());
     });
 
-    if (matchedInstrument && matchedInstrument.json_url) {
-      fetch(matchedInstrument.json_url)
+    if (matchedInstrument && matchedInstrument.json_url_manual) {
+      fetch(matchedInstrument.json_url_manual)
         .then((res) => {
           if (!res.ok) throw new Error(`Failed to fetch JSON: ${res.status}`);
           return res.json();
@@ -311,7 +311,7 @@ const [detectedInstruments, setDetectedInstruments] = useState([
     } else {
       console.warn("Instrument not found. Upload a PDF to get started.");
     }
-  }, [instrumentsData, instrumentsLoading, detectedInstrument]);
+  }, [instrumentsData, instrumentsLoading, selectedInstrument]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

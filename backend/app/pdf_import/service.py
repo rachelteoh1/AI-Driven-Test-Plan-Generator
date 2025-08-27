@@ -2,7 +2,7 @@ from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from uuid import UUID
 from .utils.suggest_intent import extract_scpi_from_pdf
-from ..entities.entities import InstrumentMetadata
+from ..entities.entities import SelectedInstrument
 from .utils.supabase import upload_to_supabase
 import logging
 
@@ -13,31 +13,31 @@ def process_pdf_upload(db: Session, file: UploadFile):
     try:
         # Extract instrument name and SCPI commands
         extracted_data = extract_scpi_from_pdf(file)
-        instrument_name = extracted_data["instrument_name"]
+        instrument_filename = extracted_data["instrument_name"]
         scpi_commands = extracted_data["scpi_commands"]
 
         # Check if the instrument already exists in the database
-        existing_entry = db.query(InstrumentMetadata).filter_by(instrument_name=instrument_name).first()
+        existing_entry = db.query(SelectedInstrument).filter_by(instrument_filename=instrument_filename).first()
         if existing_entry:
-            logger.info(f"Instrument '{instrument_name}' already exists. Returning existing JSON URL.")
-            return {"instrument_name": instrument_name, "json_url": existing_entry.json_url}
+            logger.info(f"Instrument '{instrument_filename}' already exists. Returning existing JSON URL.")
+            return {"instrument_name": instrument_filename, "json_url_manual": existing_entry.json_url_manual}
 
         # Upload JSON data to Supabase
         bucket_name = "scpi-json"
 
-        json_file_name = f"{instrument_name}.json"
-        json_url = upload_to_supabase(bucket_name, scpi_commands, json_file_name)
+        json_file_name = f"{instrument_filename}.json"
+        json_url_manual = upload_to_supabase(bucket_name, scpi_commands, json_file_name)
 
         # Save metadata to the database
-        new_metadata = InstrumentMetadata(
-            instrument_name=instrument_name,
-            json_url=json_url,
+        detected_instrument = SelectedInstrument(
+            instrument_filename=instrument_filename,
+            json_url_manual=json_url_manual,
         )
-        db.add(new_metadata)
+        db.add(detected_instrument)
         db.commit()
 
-        logger.info(f"SCPI commands for '{instrument_name}' saved to Supabase and metadata saved to PostgreSQL.")
-        return {"instrument_name": instrument_name, "json_url": json_url}
+        logger.info(f"SCPI commands for '{instrument_filename}' saved to Supabase and metadata saved to PostgreSQL.")
+        return {"instrument_name": instrument_filename, "json_url_manual": json_url_manual}
 
     except Exception as e:
         db.rollback()

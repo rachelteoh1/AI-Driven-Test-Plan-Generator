@@ -2,14 +2,15 @@
   "profiles": {
     "Debug with editor (Windows)": {
       "commandName": "Executable",
-      "commandLineArgs": "tui",
-      "executablePath": "tap.exe",
-      "dotnetRunMessages": true
+      "executablePath": "C:\\Program Files\\OpenTAP\\tap.exe",
+      "commandLineArgs": "editor",
+      "dotnetRunMessages": true,
+      "jsWebView2Debugging": true
     },
     "Debug with editor (Linux / Mac)": {
       "commandName": "Executable",
-      "commandLineArgs": "tap.dll tui",
       "executablePath": "dotnet",
+      "commandLineArgs": "tap.dll tui",
       "dotnetRunMessages": true
     }
   }

@@ -16,7 +16,9 @@ class InstrumentInfo(BaseModel):
     model: str | None = None
     serial: str | None = None
     firmware: str | None = None
-    
+    instrument_filename: str | None = None
+    json_url_manual: str | None = None  # Add this field
+
 class InstrumentSelectedRequest(BaseModel):
     session_id: UUID
     message_id:UUID
@@ -24,22 +26,25 @@ class InstrumentSelectedRequest(BaseModel):
 class InstrumentSelectedResponse(BaseModel):
     id: UUID
     session_id: UUID
-    message_id:UUID
+    message_id: UUID
     resource_string: str
     idn: str | None = None
     manufacturer: str | None = None
     model: str | None = None
     serial: str | None = None
     firmware: str | None = None
-    
+    instrument_filename: str | None = None
+    json_url_manual: str | None = None  # Add this field
+
 class AllInstrumentResponse(BaseModel):
-    id:UUID
+    id: UUID
     resource_string: str
     idn: str | None = None
     manufacturer: str | None = None
     model: str | None = None
     serial: str | None = None
     firmware: str | None = None
+    json_url_manual: str | None = None  # Add this field
    
    
    
@@ -80,6 +85,6 @@ def delete_all_instrument(db:DbSession):
     return service.delete_all_detected_instruments(db)
 
 
-    
+
 
 
