@@ -236,7 +236,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   const detectedInstrument = "PZ2100A";
   const { data: instrumentsData, isLoading: instrumentsLoading, error: instrumentsError } = useGetAllInstruments();
 
-  
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -362,9 +362,17 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
       return;
     }
 
-    const parts = value.endsWith(" ")
-      ? [...value.trim().split(" "), ""]
-      : value.trim().split(" ");
+    const rawParts = value.split(" ");
+
+    // collapse trailing empties into one
+    let parts = rawParts.filter((p, idx) => p !== "" || idx < rawParts.length - 1);
+
+    if (value.endsWith(" ")) {
+      if (parts[parts.length - 1] !== "") {
+        parts.push("");
+      }
+    }
+
 
     const currentLevel = parts.length;
     console.log("Parts:", parts);
@@ -378,32 +386,38 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     }
     else if (currentLevel === 2) {
       const intent = parts[0];
-      const matchingSubsystems =
-        scpiSuggestions?.[intent] &&
-        Object.keys(scpiSuggestions[intent]).filter((subsystem) =>
-          subsystem.toLowerCase().startsWith(parts[1].toLowerCase())
+      if (scpiSuggestions?.[intent]) {
+        const matchingSubsystems = Object.keys(scpiSuggestions[intent] || {}).filter((subsystem) =>
+          subsystem.toLowerCase().startsWith(parts[1]?.toLowerCase() || "")
         );
-      setGhostText(matchingSubsystems[0]?.slice(parts[1].length) || "");
+        setGhostText(matchingSubsystems[0]?.slice(parts[1]?.length || 0) || "");
+      } else {
+        setGhostText("");
+      }
     }
     else if (currentLevel === 3) {
       const [intent, subsystem] = parts;
-      const matchingParameters =
-        scpiSuggestions?.[intent]?.[subsystem]?.parameters
-          ?.map((param) => param.toLowerCase())
-          ?.filter((param) =>
-            param.startsWith(parts[2].toLowerCase())
-          );
-      setGhostText(matchingParameters?.[0]?.slice(parts[2].length) || "");
+      if (scpiSuggestions?.[intent]?.[subsystem]) {
+        const matchingParameters =
+          scpiSuggestions[intent][subsystem]?.parameters
+            ?.map((param) => param.toLowerCase())
+            ?.filter((param) => param.startsWith(parts[2]?.toLowerCase() || ""));
+        setGhostText(matchingParameters?.[0]?.slice(parts[2]?.length || 0) || "");
+      } else {
+        setGhostText("");
+      }
     }
     else if (currentLevel === 4) {
       const [intent, subsystem, parameter] = parts;
-      const matchingValues =
-        scpiSuggestions?.[intent]?.[subsystem]?.values?.[parameter?.toLowerCase()]
-          ?.map((val) => val.toLowerCase())
-          ?.filter((val) =>
-            val.startsWith(parts[3].toLowerCase())
-          );
-      setGhostText(matchingValues?.[0]?.slice(parts[3].length) || "");
+      if (scpiSuggestions?.[intent]?.[subsystem]?.values?.[parameter?.toLowerCase()]) {
+        const matchingValues =
+          scpiSuggestions[intent][subsystem].values[parameter.toLowerCase()]
+            ?.map((val) => val.toLowerCase())
+            ?.filter((val) => val.startsWith(parts[3]?.toLowerCase() || ""));
+        setGhostText(matchingValues?.[0]?.slice(parts[3]?.length || 0) || "");
+      } else {
+        setGhostText("");
+      }
     }
     else {
       setGhostText("");

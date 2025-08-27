@@ -58,34 +58,41 @@ def normalize_text(text):
     return text.strip()
 
 def extract_instrument_name(text):
-    # Match full or partial instrument models in one chunk
     instrument_regex = re.compile(
         r"\b[A-Z]{1,3}\d{3,4}[A-Z]?(?:[/&]\d{2,4}[A-Z]?)*\b"
     )
 
     matches = instrument_regex.finditer(text)
-    unique_instruments = set()
+    seen = set()
+    instruments = []
 
     for match in matches:
         part = match.group(0)
         pieces = re.split(r"[/&]", part)
 
-        # Detect base prefix (letters + first number sequence) from first piece
-        base_prefix = re.match(r"[A-Z]+\d*", pieces[0]).group(0)
+        # Extract base model (letters + digits + optional suffix)
+        base_full = pieces[0]
+        base_letters = re.match(r"[A-Z]+", base_full).group(0)
+        base_digits = re.search(r"\d+", base_full).group(0)
 
         for p in pieces:
             p = p.strip()
             if not p:
                 continue
             if re.match(r"^\d", p):
-                # If starts with digit, prepend the base's letters
-                letters = re.match(r"[A-Z]+", base_prefix).group(0)
-                unique_instruments.add(letters + p)
+                # If starts with digit, inherit letters and possibly part of digits
+                # Example: base E8257D + "67D" => E8267D
+                # Rule: take base letters + first 2 digits of base + this piece
+                inst = base_letters + base_digits[:2] + p
             else:
-                unique_instruments.add(p)
+                inst = p
 
-    return "_".join(sorted(unique_instruments)) if unique_instruments else "unknown_instrument"
-    
+            if inst not in seen:
+                seen.add(inst)
+                instruments.append(inst)
+
+    return "_".join(instruments) if instruments else "unknown_instrument"
+
 def extract_scpi_pages(file):
     """
     Extracts text from pages that likely contain SCPI subsystem commands.
@@ -105,9 +112,10 @@ def extract_scpi_pages(file):
             if is_unwanted_page(text):
                 continue
 
-            # Check if the first 10 words contain "subsystem"
-            first_10_words = " ".join(text.split()[:20]).lower()
-            if SUBSYSTEM_HEADER_REGEX.search(first_10_words) and SCPI_REGEX.search(text):
+            # # Check if the first 10 words contain "subsystem"
+            # first_10_words = " ".join(text.split()[:10]).lower()
+            # print(f"Page {page_number} - First 10 words: {first_10_words}")
+            if SUBSYSTEM_HEADER_REGEX.search(text) and SCPI_REGEX.search(text):
                 scpi_pages.append(text)
                 # Uncomment for debugging
                 print(f"Page {page_number} contains 'subsystem'")
@@ -174,6 +182,8 @@ def process_scpi_text(text):
         "    }\n"
         "  }\n"
         "}\n\n"
+        "Only extract commands that show a SCPI command line starting with ':' or '*'."
+        "Do not include generic subsystem headers (e.g., 'FETCh Subsystem', 'FORMat Subsystem') unless they also include at least one explicit SCPI command."
         f"Now extract from this text:\n{text}\n"
         "Return only valid JSON without code block markers."
     )
