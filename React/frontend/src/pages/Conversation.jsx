@@ -261,10 +261,11 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   const [ghostText, setGhostText] = useState("");
   const { showModal, hideModal } = useModal();
   const [isScanning, setIsScanning] = useState(false)
-const [detectedInstruments, setDetectedInstruments] = useState([
+  const [detectedInstruments, setDetectedInstruments] = useState([
     { id: "1", name: "Oscilloscope", model: "DSOX3024T", address: "192.168.1.100" },
     { id: "2", name: "Function Generator", model: "33500B", address: "192.168.1.101" },
     { id: "3", name: "Multimeter", model: "34465A", address: "192.168.1.102" },
+    { id: "4", name: "Power Supply", model: "PZ2100A", address: "192.168.1.103" },
   ])
 
   const [selectedInstrument, setSelectedInstrument] = useState(null)
@@ -284,35 +285,36 @@ const [detectedInstruments, setDetectedInstruments] = useState([
   }, [chat.messages, isLoading]);
 
   useEffect(() => {
-    if (!instrumentsData || instrumentsLoading) return;
+  if (!instrumentsData || instrumentsLoading || !selectedInstrument) return;
 
-    const instruments = instrumentsData.instruments || [];
+  // Use the correct key for your instruments array
+  const instruments = instrumentsData.instruments || [];
 
-    const matchedInstrument = instruments.find((instrument) => {
-      const names = instrument.instrument_filename
-        .split("_")
-        .map((n) => n.toLowerCase());
-      return names.includes(selectedInstrument.toLowerCase());
-    });
+  const matchedInstrument = instruments.find((instrument) => {
+    if (!instrument.instrument_filename || !selectedInstrument.model) return false;
+    const names = instrument.instrument_filename
+      .split("_")
+      .map((n) => n.toLowerCase());
+    return names.includes(selectedInstrument.model.toLowerCase());
+  });
 
-    if (matchedInstrument && matchedInstrument.json_url_manual) {
-      fetch(matchedInstrument.json_url_manual)
-        .then((res) => {
-          if (!res.ok) throw new Error(`Failed to fetch JSON: ${res.status}`);
-          return res.json();
-        })
-        .then((data) => {
-          console.log("Fetched SCPI JSON data:", data);
-          setScpiSuggestions(data);
-        })
-        .catch((err) => {
-          console.error("Error fetching SCPI JSON:", err);
-        });
-    } else {
-      console.warn("Instrument not found. Upload a PDF to get started.");
-    }
-  }, [instrumentsData, instrumentsLoading, selectedInstrument]);
-
+  if (matchedInstrument && matchedInstrument.json_url_manual) {
+    fetch(matchedInstrument.json_url_manual)
+      .then((res) => {
+        if (!res.ok) throw new Error(`Failed to fetch JSON: ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        console.log("Fetched SCPI JSON data:", data);
+        setScpiSuggestions(data);
+      })
+      .catch((err) => {
+        console.error("Error fetching SCPI JSON:", err);
+      });
+  } else {
+    console.warn("Instrument not found. Upload a PDF to get started.");
+  }
+}, [instrumentsData, instrumentsLoading, selectedInstrument]);
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!isLoading && inputValue.trim()) {
@@ -321,43 +323,44 @@ const [detectedInstruments, setDetectedInstruments] = useState([
     }
   };
 
-const [showScanResults, setShowScanResults] = useState(false);
+  const [showScanResults, setShowScanResults] = useState(false);
 
-const handleScanInstrument = async () => {
-  setIsScanning(true);
-  
-  setTimeout(() => {
+  const handleScanInstrument = async () => {
+    setIsScanning(true);
 
-    const data = [{ id: "1", name: "Oscilloscope", model: "DSOX3024T", address: "192.168.1.100" },
-    { id: "2", name: "Function Generator", model: "33500B", address: "192.168.1.101" },
-    { id: "3", name: "Multimeter", model: "34465A", address: "192.168.1.102" }]; // try [ { id: 1, name: "Instrument A" } ] to test ScanResultModal
-if (data.length > 0) {
-  showModal({
-        modal: (
-          <ScanResultsModal
-            // results={data}
-            hideModal={hideModal}
-            // detectedInstruments={detectedInstruments}
-            detectedInstruments={data}
-            onSelectInstrument={setSelectedInstrument}
-            selectedInstrument={selectedInstrument}
-          />
-        ),
-      });
-    } else{
-  showModal({
-        modal: (
-          <CrossedModal
-            title="No instruments detected"
-            description="Make sure instrument is connected."
-            hideModal={hideModal}
-          />
-        ),
-      });
-}
-setIsScanning(false);
-  }, 1000);
-};
+    setTimeout(() => {
+
+      const data = [{ id: "1", name: "Oscilloscope", model: "DSOX3024T", address: "192.168.1.100" },
+      { id: "2", name: "Function Generator", model: "33500B", address: "192.168.1.101" },
+      { id: "3", name: "Multimeter", model: "34465A", address: "192.168.1.102" }, // try [ { id: 1, name: "Instrument A" } ] to test ScanResultModal
+      { id: "4", name: "Power Supply", model: "PZ2100A", address: "192.168.1.102" }]
+      if (data.length > 0) {
+        showModal({
+          modal: (
+            <ScanResultsModal
+              // results={data}
+              hideModal={hideModal}
+              // detectedInstruments={detectedInstruments}
+              detectedInstruments={data}
+              onSelectInstrument={setSelectedInstrument}
+              selectedInstrument={selectedInstrument}
+            />
+          ),
+        });
+      } else {
+        showModal({
+          modal: (
+            <CrossedModal
+              title="No instruments detected"
+              description="Make sure instrument is connected."
+              hideModal={hideModal}
+            />
+          ),
+        });
+      }
+      setIsScanning(false);
+    }, 1000);
+  };
 
 
 
@@ -550,43 +553,43 @@ setIsScanning(false);
       <MessagesContainer>
         {viewingHistory && versionData[viewingHistory]
           ? (() => {
-              console.log(" Version Viewer Debug Info:");
-              console.log("viewingHistory:", viewingHistory);
-              console.log("versionData:", versionData);
-              console.log(
-                "versionData[viewingHistory]:",
-                versionData[viewingHistory]
-              );
-              console.log("Number of response:", versionData.responses);
+            console.log(" Version Viewer Debug Info:");
+            console.log("viewingHistory:", viewingHistory);
+            console.log("versionData:", versionData);
+            console.log(
+              "versionData[viewingHistory]:",
+              versionData[viewingHistory]
+            );
+            console.log("Number of response:", versionData.responses);
 
-              return (
-                <PreviousVersionViewer
-                  versions={versionData[viewingHistory]}
-                  onBack={handleBackToCurrent}
-                />
-              );
-            })()
-          : chat.messages.map((message) => (
-              <Message
-                key={message.message_id}
-                message={message}
-                isEditing={editingMessageId === message.message_id}
-                editContent={editContent}
-                setEditContent={setEditContent}
-                onSaveEdit={handleSaveEdit}
-                onCancelEdit={handleCancelEdit}
-                onCopy={(text) => copyToClipboard(text, message.message_id)}
-                onEdit={handleEditMessage}
-                versions={messageVersions[message.message_id] || []}
-                currentVersionIndex={currentVersions[message.message_id]}
-                isViewingHistory={viewingHistory === message.message_id}
-                onViewVersion={handleViewVersion}
-                onBackToCurrent={handleBackToCurrent}
-                getMessageContent={getMessageContent}
-                copiedMessageId={copiedMessageId}
-               
+            return (
+              <PreviousVersionViewer
+                versions={versionData[viewingHistory]}
+                onBack={handleBackToCurrent}
               />
-            ))}
+            );
+          })()
+          : chat.messages.map((message) => (
+            <Message
+              key={message.message_id}
+              message={message}
+              isEditing={editingMessageId === message.message_id}
+              editContent={editContent}
+              setEditContent={setEditContent}
+              onSaveEdit={handleSaveEdit}
+              onCancelEdit={handleCancelEdit}
+              onCopy={(text) => copyToClipboard(text, message.message_id)}
+              onEdit={handleEditMessage}
+              versions={messageVersions[message.message_id] || []}
+              currentVersionIndex={currentVersions[message.message_id]}
+              isViewingHistory={viewingHistory === message.message_id}
+              onViewVersion={handleViewVersion}
+              onBackToCurrent={handleBackToCurrent}
+              getMessageContent={getMessageContent}
+              copiedMessageId={copiedMessageId}
+
+            />
+          ))}
 
         {isLoading && <LoadingIndicator />}
         <div ref={messagesEndRef} />
@@ -608,7 +611,7 @@ setIsScanning(false);
           handleSelectInstrument={handleSelectInstrument}
           isScanning={isScanning}
           handleSubmitInstrument={handleSubmitInstrument}
-          
+
         />
       </InputArea>
     </Container>
@@ -942,8 +945,8 @@ function MessageInput({
   onKeyDown,
   onScan,
   handleSubmitInstrument,
-  selectedInstrument,detectedInstruments,handleDeleteAllInstruments,handleDeleteInstrument, handleSelectInstrument, isScanning
-  
+  selectedInstrument, detectedInstruments, handleDeleteAllInstruments, handleDeleteInstrument, handleSelectInstrument, isScanning
+
 
 }) {
   const textareaRef = useRef(null);
@@ -957,134 +960,133 @@ function MessageInput({
 
   return (
     <>
-        <div style={{ display: "flex", alignItems: "center" }}>
-        
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                 
-                  <ScanInstrumentButton
-                    type="button"
-                    size="icon"
-                    $isLoading={isLoading}
-                    $hasValue={!!value.trim()}
-                    onClick={onScan}
-                    disabled={isScanning}
-                  >
-                    <Radar className={`h-4 w-4 ${isScanning ? "animate-spin" : ""}`} />
-                  </ScanInstrumentButton>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Scan instrument</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-              <DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    <div>
-    <Button variant="outline" className="shrink-0  bg-white ">
-      {selectedInstrument ? (
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-xs">
-            {selectedInstrument.name}
-          </Badge>
-          <span className="text-xs text-muted-foreground">
-            {selectedInstrument.model}
-          </span>
-        </div>
-      ) : (
-        <span className="text-muted-foreground text-xs"></span>
-      )}
-      <ChevronDown className="h-5 w-5 opacity-50 shrink-0" />
-    </Button>
-    </div>
-  </DropdownMenuTrigger>
+      <div style={{ display: "flex", alignItems: "center" }}>
 
-  <DropdownMenuContent align="start" className="w-80 bg-white shadow-md">
-    {detectedInstruments.length === 0 ? (
-      <DropdownMenuItem disabled>No instruments detected</DropdownMenuItem>
-    ) : (
-      <>
-        {Array.isArray(detectedInstruments) &&
-          detectedInstruments.map((instrument) => (
-            <DropdownMenuItem
-              key={instrument.id}
-              className="flex items-center justify-between p-3"
-            >
-              <div
-                className="flex-1 cursor-pointer"
-                onClick={() => handleSelectInstrument(instrument)}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+
+              <ScanInstrumentButton
+                type="button"
+                size="icon"
+                $isLoading={isLoading}
+                $hasValue={!!value.trim()}
+                onClick={onScan}
+                disabled={isScanning}
               >
-                <div className="font-medium">{instrument.name}</div>
-                <div className="text-sm text-muted-foreground">
-                  {instrument.model} • {instrument.address}
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleDeleteInstrument(instrument.id)
-                }}
-                className="ml-2 h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
-              >
-                <X className="h-3 w-3" />
+                <Radar className={`h-4 w-4 ${isScanning ? "animate-spin" : ""}`} />
+              </ScanInstrumentButton>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Scan instrument</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div>
+              <Button variant="outline" className="shrink-0  bg-white ">
+                {selectedInstrument ? (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="text-xs">
+                      {selectedInstrument.name}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {selectedInstrument.model}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground text-xs"></span>
+                )}
+                <ChevronDown className="h-5 w-5 opacity-50 shrink-0" />
               </Button>
-            </DropdownMenuItem>
-          ))}
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuItem
-          onClick={handleDeleteAllInstruments}
-          className="text-destructive focus:text-destructive-foreground focus:bg-destructive"
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Delete All Instruments
-        </DropdownMenuItem>
-      </>
-    )}
-  </DropdownMenuContent>
-</DropdownMenu>
-          <TextAreaWrapper style={{ position: "relative" }}>
-            <MessageTextArea
-              ref={textareaRef}
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              onKeyDown={onKeyDown}
-              placeholder="Type your intent (e.g., measure)"
-              rows={1}
-              $isLoading={isLoading}
-              disabled={isLoading}
-            />{" "}
-            {ghostText && (
-              <GhostText>
-                {" "}
-                {value} <span>{ghostText}</span>{" "}
-              </GhostText>
-            )}{" "}
-            <SubmitButton
-              type="submit"
-              size="icon"
-              disabled={isLoading || !value.trim()}
-              $isLoading={isLoading}
-              $hasValue={!!value.trim()}
-            >
-              {isLoading ? <LoadingIcon /> : <Send size={16} />}{" "}
-            </SubmitButton>{" "}
-          </TextAreaWrapper>
-        </div>
-     
-       {selectedInstrument && (
-            <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Selected:</span>
-              <Badge variant="outline">
-                {selectedInstrument.name} ({selectedInstrument.model})
-              </Badge>
             </div>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="start" className="w-80 bg-white shadow-md">
+            {detectedInstruments.length === 0 ? (
+              <DropdownMenuItem disabled>No instruments detected</DropdownMenuItem>
+            ) : (
+              <>
+                {Array.isArray(detectedInstruments) &&
+                  detectedInstruments.map((instrument) => (
+                    <DropdownMenuItem
+                      key={instrument.id}
+                      className="flex items-center justify-between p-3"
+                    >
+                      <div
+                        className="flex-1 cursor-pointer"
+                        onClick={() => handleSelectInstrument(instrument)}
+                      >
+                        <div className="font-medium">{instrument.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {instrument.model} • {instrument.address}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteInstrument(instrument.id)
+                        }}
+                        className="ml-2 h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuItem>
+                  ))}
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  onClick={handleDeleteAllInstruments}
+                  className="text-destructive focus:text-destructive-foreground focus:bg-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete All Instruments
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <TextAreaWrapper style={{ position: "relative" }}>
+          <MessageTextArea
+            ref={textareaRef}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={onKeyDown}
+            placeholder="Type your intent (e.g., measure)"
+            rows={1}
+            $isLoading={isLoading}
+            disabled={isLoading}
+          />
+          {ghostText && (
+            <GhostText>
+              {value}<span>{ghostText}</span>
+            </GhostText>
           )}
-         
+          <SubmitButton
+            type="submit"
+            size="icon"
+            disabled={isLoading || !value.trim()}
+            $isLoading={isLoading}
+            $hasValue={!!value.trim()}
+          >
+            {isLoading ? <LoadingIcon /> : <Send size={16} />}
+          </SubmitButton>
+        </TextAreaWrapper>
+      </div>
+
+      {selectedInstrument && (
+        <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+          <span>Selected:</span>
+          <Badge variant="outline">
+            {selectedInstrument.name} ({selectedInstrument.model})
+          </Badge>
+        </div>
+      )}
+
     </>
   );
 }

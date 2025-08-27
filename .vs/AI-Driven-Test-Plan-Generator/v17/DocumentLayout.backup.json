@@ -26,7 +26,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Bookmark",
@@ -38,28 +38,28 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "KeysightGPTPanel.cs",
+              "DocumentMoniker": "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\KeysightGPTPanel.cs",
+              "RelativeDocumentMoniker": "KeysightGPT\\KeysightGPTPanel.cs",
+              "ToolTip": "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\KeysightGPTPanel.cs",
+              "RelativeToolTip": "KeysightGPT\\KeysightGPTPanel.cs",
+              "ViewState": "AgIAABUAAAAAAAAAAAAYwBkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-27T06:21:37.578Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 1,
               "Title": "KeysightGPTTestStep.cs",
               "DocumentMoniker": "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\KeysightGPTTestStep.cs",
               "RelativeDocumentMoniker": "KeysightGPT\\KeysightGPTTestStep.cs",
               "ToolTip": "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\KeysightGPTTestStep.cs",
               "RelativeToolTip": "KeysightGPT\\KeysightGPTTestStep.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAyAAAAAAAAAA==",
+              "ViewState": "AgIAAAIAAAAAAAAAAAAgwAwAAAAkAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-08-27T06:41:21.871Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "KeysightGPTPanel.cs",
-              "DocumentMoniker": "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\KeysightGPTPanel.cs",
-              "RelativeDocumentMoniker": "KeysightGPT\\KeysightGPTPanel.cs",
-              "ToolTip": "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\KeysightGPTPanel.cs*",
-              "RelativeToolTip": "KeysightGPT\\KeysightGPTPanel.cs*",
-              "ViewState": "AgIAABAAAAAAAAAAAAAQwBkAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-27T06:21:37.578Z",
               "EditorCaption": ""
             },
             {
@@ -70,7 +70,7 @@
               "RelativeDocumentMoniker": "KeysightGPT\\KeysightGPTPanelPlugin.cs",
               "ToolTip": "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\KeysightGPTPanelPlugin.cs",
               "RelativeToolTip": "KeysightGPT\\KeysightGPTPanelPlugin.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAiAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAALAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-08-27T08:34:46.282Z",
               "EditorCaption": ""
@@ -85,8 +85,7 @@
               "RelativeToolTip": "KeysightGPT\\KeysightGPT.csproj",
               "ViewState": "AgIAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2025-08-27T06:15:12.822Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-08-27T06:15:12.822Z"
             }
           ]
         }

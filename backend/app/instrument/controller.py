@@ -34,7 +34,7 @@ class InstrumentSelectedResponse(BaseModel):
     serial: str | None = None
     firmware: str | None = None
     instrument_filename: str | None = None
-    json_url_manual: str | None = None  # Add this field
+    json_url_manual: str | None = None
 
 class AllInstrumentResponse(BaseModel):
     id: UUID

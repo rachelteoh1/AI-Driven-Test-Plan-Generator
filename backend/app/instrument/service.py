@@ -34,6 +34,8 @@ def save_selected_instrument(db: Session, instrument_id: UUID, session_id: UUID,
             serial=instrument.serial,
             firmware=instrument.firmware,
             json_url=instrument.json_url,
+            instrument_filename=None,
+            json_url_manual=None,
         )
 
         db.add(selected)
