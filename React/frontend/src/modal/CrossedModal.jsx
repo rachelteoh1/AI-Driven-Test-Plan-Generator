@@ -18,19 +18,20 @@ const CenteredDiv = styled.div`
 const Title = styled.h1`
     font-size: ${FONTSIZE['2xl']};
     font-weight: ${FONTWEIGHT.medium};
-    color: ${({ theme }) => theme.text}
+    color: ${({ theme }) => theme.text};
+    margin-bottom: 0rem;
 `;
 
 const Description = styled.p`
     font-size: ${FONTSIZE.lg};
     font-weight: ${FONTWEIGHT.normal};
-    color: ${({ theme }) => theme.text}
+    color: ${({ theme }) => theme.greys.dark};
 `;
 
 
 
 
-export default function CrossedModal({ title, description, hideModal }) {
+export default function CrossedModal( {title, description, hideModal }) {
     return (
         <CenteredDiv>
             <Lottie

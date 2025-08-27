@@ -1,6 +1,16 @@
 import { useState, useRef, useEffect } from "react";
 import * as React from "react";
 import Button from "@mui/material/Button";
+import ScanInstrumentModal from "../modal/ScanInstrumentModal";
+import useModal from "../modal/useModal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu"
+import { Badge } from "@mui/icons-material"
 import {
   Send,
   Loader2,
@@ -13,6 +23,9 @@ import {
   ArrowLeft,
   Check,
   X,
+  ChevronDown,
+  Radar,
+  Trash2,
 } from "lucide-react";
 import {
   Tooltip,
@@ -30,6 +43,8 @@ import {
 } from "../hook/useChat";
 import { getVersionChatLogs } from "../services/chatServices";
 import { useGetAllInstruments } from "../hook/usePdf";
+import ScanResultsModal from "../modal/ScantResultModal";
+import CrossedModal from "../modal/CrossedModal";
 
 // Animation
 const spin = keyframes`
@@ -121,6 +136,7 @@ const MessageTextArea = styled.textarea`
   width: 100%;
   min-height: 2.5rem;
   max-height: 12rem;
+  max-width: 38rem;
   padding: 12px 16px;
   background-color: ${({ $isLoading, theme }) =>
     $isLoading ? theme.background : theme.backgroundMedium};
@@ -150,13 +166,12 @@ const GhostText = styled.span`
   font-weight: ${FONTWEIGHT.normal};
   line-height: 1.5;
   font-family: inherit;
-  white-space: nowrap; 
+  white-space: nowrap;
   opacity: 0.5;
   z-index: 0;
 `;
 const SubmitButton = styled(Button)`
-  position: absolute;
-  left: 680px;
+  left: 590px;
   bottom: 43px;
   background-color: transparent;
   color: ${({ theme }) => theme.status.cancel};
@@ -164,12 +179,24 @@ const SubmitButton = styled(Button)`
     $isLoading || !$hasValue ? 0.5 : 1};
 `;
 
+const ScanInstrumentButton = styled(Button)`
+  bottom: 15px;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  color: ${({ theme }) => theme.status.cancel};
+
+  img {
+    display: block;
+  }
+`;
 const MessageForm = styled.form`
   width: 100%;
 `;
+
 const TextAreaWrapper = styled.div`
+  flex: 1;
   position: relative;
-  width: 100%;
 `;
 
 const ActionButtons = styled.div`
@@ -232,20 +259,29 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   const [copiedMessageId, setCopiedMessageId] = useState(null);
   const [scpiSuggestions, setScpiSuggestions] = useState([]);
   const [ghostText, setGhostText] = useState("");
+  const { showModal, hideModal } = useModal();
+  const [isScanning, setIsScanning] = useState(false)
+const [detectedInstruments, setDetectedInstruments] = useState([
+    { id: "1", name: "Oscilloscope", model: "DSOX3024T", address: "192.168.1.100" },
+    { id: "2", name: "Function Generator", model: "33500B", address: "192.168.1.101" },
+    { id: "3", name: "Multimeter", model: "34465A", address: "192.168.1.102" },
+  ])
 
+  const [selectedInstrument, setSelectedInstrument] = useState(null)
   const detectedInstrument = "PZ2100A";
-  const { data: instrumentsData, isLoading: instrumentsLoading, error: instrumentsError } = useGetAllInstruments();
-
+  const {
+    data: instrumentsData,
+    isLoading: instrumentsLoading,
+    error: instrumentsError,
+  } = useGetAllInstruments();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-
   useEffect(() => {
     scrollToBottom();
   }, [chat.messages, isLoading]);
-
 
   useEffect(() => {
     if (!instrumentsData || instrumentsLoading) return;
@@ -253,28 +289,29 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     const instruments = instrumentsData.instruments || [];
 
     const matchedInstrument = instruments.find((instrument) => {
-      const names = instrument.instrument_name.split("_").map(n => n.toLowerCase());
+      const names = instrument.instrument_name
+        .split("_")
+        .map((n) => n.toLowerCase());
       return names.includes(detectedInstrument.toLowerCase());
     });
 
     if (matchedInstrument && matchedInstrument.json_url) {
       fetch(matchedInstrument.json_url)
-        .then(res => {
+        .then((res) => {
           if (!res.ok) throw new Error(`Failed to fetch JSON: ${res.status}`);
           return res.json();
         })
-        .then(data => {
+        .then((data) => {
           console.log("Fetched SCPI JSON data:", data);
           setScpiSuggestions(data);
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("Error fetching SCPI JSON:", err);
         });
     } else {
       console.warn("Instrument not found. Upload a PDF to get started.");
     }
   }, [instrumentsData, instrumentsLoading, detectedInstrument]);
-
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -283,6 +320,76 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
       setInputValue("");
     }
   };
+
+const [showScanResults, setShowScanResults] = useState(false);
+
+const handleScanInstrument = async () => {
+  setIsScanning(true);
+  
+  setTimeout(() => {
+
+    const data = [{ id: "1", name: "Oscilloscope", model: "DSOX3024T", address: "192.168.1.100" },
+    { id: "2", name: "Function Generator", model: "33500B", address: "192.168.1.101" },
+    { id: "3", name: "Multimeter", model: "34465A", address: "192.168.1.102" }]; // try [ { id: 1, name: "Instrument A" } ] to test ScanResultModal
+if (data.length > 0) {
+  showModal({
+        modal: (
+          <ScanResultsModal
+            // results={data}
+            hideModal={hideModal}
+            // detectedInstruments={detectedInstruments}
+            detectedInstruments={data}
+            onSelectInstrument={setSelectedInstrument}
+            selectedInstrument={selectedInstrument}
+          />
+        ),
+      });
+    } else{
+  showModal({
+        modal: (
+          <CrossedModal
+            title="No instruments detected"
+            description="Make sure instrument is connected."
+            hideModal={hideModal}
+          />
+        ),
+      });
+}
+setIsScanning(false);
+  }, 1000);
+};
+
+
+
+
+
+  const handleSubmitInstrument = (e) => {
+    e.preventDefault()
+    if (inputValue.trim()) {
+      console.log("Submitting:", inputValue, "with instrument:", selectedInstrument)
+      setInputValue("")
+    }
+  }
+
+
+
+
+  const handleSelectInstrument = (instrument) => {
+    setSelectedInstrument(instrument)
+  }
+
+  const handleDeleteInstrument = (instrumentId) => {
+    setDetectedInstruments((prev) => prev.filter((inst) => inst.id !== instrumentId))
+    if (selectedInstrument?.id === instrumentId) {
+      setSelectedInstrument(null)
+    }
+  }
+
+  const handleDeleteAllInstruments = () => {
+    setDetectedInstruments([])
+    setSelectedInstrument(null)
+  }
+
 
   const copyToClipboard = async (text, messageId) => {
     try {
@@ -352,7 +459,6 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     return message.content;
   };
 
-
   const handleInputChange = (value) => {
     console.log("Input value:", value);
     setInputValue(value);
@@ -379,12 +485,11 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     console.log("Current level:", currentLevel);
 
     if (currentLevel === 1) {
-      const matchingIntents = Object.keys(scpiSuggestions || {}).filter((intent) =>
-        intent.toLowerCase().startsWith(parts[0].toLowerCase())
+      const matchingIntents = Object.keys(scpiSuggestions || {}).filter(
+        (intent) => intent.toLowerCase().startsWith(parts[0].toLowerCase())
       );
       setGhostText(matchingIntents[0]?.slice(parts[0].length) || "");
-    }
-    else if (currentLevel === 2) {
+    } else if (currentLevel === 2) {
       const intent = parts[0];
       if (scpiSuggestions?.[intent]) {
         const matchingSubsystems = Object.keys(scpiSuggestions[intent] || {}).filter((subsystem) =>
@@ -424,69 +529,64 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     }
   };
 
-
-
   const handleKeyDown = (e) => {
     console.log("Key pressed:", e.key);
 
     if (e.key === " ") {
       e.preventDefault();
       handleInputChange(inputValue + " ");
-    }
-    else if ((e.key === "Tab" || e.key === "ArrowRight") && ghostText) {
+    } else if ((e.key === "Tab" || e.key === "ArrowRight") && ghostText) {
       e.preventDefault();
       setInputValue((prev) => prev + ghostText);
       setGhostText("");
-    }
-    else if (e.key === "Enter" && !e.shiftKey) {
+    } else if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
-
 
   return (
     <Container>
       <MessagesContainer>
         {viewingHistory && versionData[viewingHistory]
           ? (() => {
+              console.log(" Version Viewer Debug Info:");
+              console.log("viewingHistory:", viewingHistory);
+              console.log("versionData:", versionData);
+              console.log(
+                "versionData[viewingHistory]:",
+                versionData[viewingHistory]
+              );
+              console.log("Number of response:", versionData.responses);
 
-            console.log("🧠 Version Viewer Debug Info:");
-            console.log("viewingHistory:", viewingHistory);
-            console.log("versionData:", versionData);
-            console.log(
-              "versionData[viewingHistory]:",
-              versionData[viewingHistory]
-            );
-            console.log("Number of response:", versionData.responses);
-
-            return (
-              <PreviousVersionViewer
-                versions={versionData[viewingHistory]}
-                onBack={handleBackToCurrent}
-              />
-            );
-          })()
+              return (
+                <PreviousVersionViewer
+                  versions={versionData[viewingHistory]}
+                  onBack={handleBackToCurrent}
+                />
+              );
+            })()
           : chat.messages.map((message) => (
-            <Message
-              key={message.message_id}
-              message={message}
-              isEditing={editingMessageId === message.message_id}
-              editContent={editContent}
-              setEditContent={setEditContent}
-              onSaveEdit={handleSaveEdit}
-              onCancelEdit={handleCancelEdit}
-              onCopy={(text) => copyToClipboard(text, message.message_id)}
-              onEdit={handleEditMessage}
-              versions={messageVersions[message.message_id] || []}
-              currentVersionIndex={currentVersions[message.message_id]}
-              isViewingHistory={viewingHistory === message.message_id}
-              onViewVersion={handleViewVersion}
-              onBackToCurrent={handleBackToCurrent}
-              getMessageContent={getMessageContent}
-              copiedMessageId={copiedMessageId}
-            />
-          ))}
+              <Message
+                key={message.message_id}
+                message={message}
+                isEditing={editingMessageId === message.message_id}
+                editContent={editContent}
+                setEditContent={setEditContent}
+                onSaveEdit={handleSaveEdit}
+                onCancelEdit={handleCancelEdit}
+                onCopy={(text) => copyToClipboard(text, message.message_id)}
+                onEdit={handleEditMessage}
+                versions={messageVersions[message.message_id] || []}
+                currentVersionIndex={currentVersions[message.message_id]}
+                isViewingHistory={viewingHistory === message.message_id}
+                onViewVersion={handleViewVersion}
+                onBackToCurrent={handleBackToCurrent}
+                getMessageContent={getMessageContent}
+                copiedMessageId={copiedMessageId}
+               
+              />
+            ))}
 
         {isLoading && <LoadingIndicator />}
         <div ref={messagesEndRef} />
@@ -500,7 +600,15 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
           isLoading={isLoading}
           ghostText={ghostText}
           onKeyDown={handleKeyDown}
-
+          onScan={handleScanInstrument}
+          selectedInstrument={selectedInstrument}
+          detectedInstruments={detectedInstruments}
+          handleDeleteAllInstruments={handleDeleteAllInstruments}
+          handleDeleteInstrument={handleDeleteInstrument}
+          handleSelectInstrument={handleSelectInstrument}
+          isScanning={isScanning}
+          handleSubmitInstrument={handleSubmitInstrument}
+          
         />
       </InputArea>
     </Container>
@@ -565,7 +673,8 @@ function Message({
   onViewVersion,
   onBackToCurrent,
   getMessageContent,
-  copiedMessageId
+  copiedMessageId,
+  onScan
 }) {
   return message.role === "user" ? (
     <UserMessage
@@ -831,9 +940,13 @@ function MessageInput({
   isLoading,
   ghostText,
   onKeyDown,
+  onScan,
+  handleSubmitInstrument,
+  selectedInstrument,detectedInstruments,handleDeleteAllInstruments,handleDeleteInstrument, handleSelectInstrument, isScanning
+  
+
 }) {
   const textareaRef = useRef(null);
-
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -844,9 +957,97 @@ function MessageInput({
 
   return (
     <>
-      <MessageForm onSubmit={onSubmit}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <TextAreaWrapper style={{ flex: 1, position: "relative" }}>
+        <div style={{ display: "flex", alignItems: "center" }}>
+        
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                 
+                  <ScanInstrumentButton
+                    type="button"
+                    size="icon"
+                    $isLoading={isLoading}
+                    $hasValue={!!value.trim()}
+                    onClick={onScan}
+                    disabled={isScanning}
+                  >
+                    <Radar className={`h-4 w-4 ${isScanning ? "animate-spin" : ""}`} />
+                  </ScanInstrumentButton>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Scan instrument</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+              <DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <div>
+    <Button variant="outline" className="shrink-0  bg-white ">
+      {selectedInstrument ? (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-xs">
+            {selectedInstrument.name}
+          </Badge>
+          <span className="text-xs text-muted-foreground">
+            {selectedInstrument.model}
+          </span>
+        </div>
+      ) : (
+        <span className="text-muted-foreground text-xs"></span>
+      )}
+      <ChevronDown className="h-5 w-5 opacity-50 shrink-0" />
+    </Button>
+    </div>
+  </DropdownMenuTrigger>
+
+  <DropdownMenuContent align="start" className="w-80 bg-white shadow-md">
+    {detectedInstruments.length === 0 ? (
+      <DropdownMenuItem disabled>No instruments detected</DropdownMenuItem>
+    ) : (
+      <>
+        {Array.isArray(detectedInstruments) &&
+          detectedInstruments.map((instrument) => (
+            <DropdownMenuItem
+              key={instrument.id}
+              className="flex items-center justify-between p-3"
+            >
+              <div
+                className="flex-1 cursor-pointer"
+                onClick={() => handleSelectInstrument(instrument)}
+              >
+                <div className="font-medium">{instrument.name}</div>
+                <div className="text-sm text-muted-foreground">
+                  {instrument.model} • {instrument.address}
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDeleteInstrument(instrument.id)
+                }}
+                className="ml-2 h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </DropdownMenuItem>
+          ))}
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          onClick={handleDeleteAllInstruments}
+          className="text-destructive focus:text-destructive-foreground focus:bg-destructive"
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete All Instruments
+        </DropdownMenuItem>
+      </>
+    )}
+  </DropdownMenuContent>
+</DropdownMenu>
+          <TextAreaWrapper style={{ position: "relative" }}>
             <MessageTextArea
               ref={textareaRef}
               value={value}
@@ -856,25 +1057,34 @@ function MessageInput({
               rows={1}
               $isLoading={isLoading}
               disabled={isLoading}
-            />
+            />{" "}
             {ghostText && (
               <GhostText>
-                {value}
-                <span>{ghostText}</span>
+                {" "}
+                {value} <span>{ghostText}</span>{" "}
               </GhostText>
-            )}
+            )}{" "}
             <SubmitButton
               type="submit"
               size="icon"
-              disabled={isLoading || (!value.trim())}
+              disabled={isLoading || !value.trim()}
               $isLoading={isLoading}
               $hasValue={!!value.trim()}
             >
-              {isLoading ? <LoadingIcon /> : <Send size={16} />}
-            </SubmitButton>
+              {isLoading ? <LoadingIcon /> : <Send size={16} />}{" "}
+            </SubmitButton>{" "}
           </TextAreaWrapper>
         </div>
-      </MessageForm>
+     
+       {selectedInstrument && (
+            <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Selected:</span>
+              <Badge variant="outline">
+                {selectedInstrument.name} ({selectedInstrument.model})
+              </Badge>
+            </div>
+          )}
+         
     </>
   );
 }

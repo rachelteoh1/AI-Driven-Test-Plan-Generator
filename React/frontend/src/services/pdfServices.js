@@ -7,3 +7,5 @@ export const uploadPdf = async (formData) => {
 export const getAllInstruments = async () => {
   return (await api.getAllInstruments()).data;
 }
+
+
