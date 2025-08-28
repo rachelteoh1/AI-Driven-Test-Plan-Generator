@@ -40,7 +40,7 @@ const ContentContainer = styled.div`
   padding: ${SPACING.L};
   overflow-y: auto;
   background-color: ${({ theme }) => theme.background};
-  height: calc(100vh - ${SPACING.xl} - 64px); /* still needed */
+  height: calc(100vh - ${SPACING.xl} - 64px);
   margin-top: 80px;
   margin-bottom: 0px;
   margin-left: 0rem;
@@ -52,7 +52,7 @@ const CenterContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  flex: 1; /* take all available space */
+  flex: 1;
   width: 100%;
   text-align: center;
 `;

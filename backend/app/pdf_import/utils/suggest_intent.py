@@ -112,9 +112,9 @@ def extract_scpi_pages(file):
             if is_unwanted_page(text):
                 continue
 
-            # # Check if the first 10 words contain "subsystem"
-            # first_10_words = " ".join(text.split()[:10]).lower()
-            # print(f"Page {page_number} - First 10 words: {first_10_words}")
+            # Check if the first 10 words contain "subsystem"
+            #first_10_words = " ".join(text.split()[:10]).lower()
+            #print(f"Page {page_number} - First 10 words: {first_10_words}")
             if SUBSYSTEM_HEADER_REGEX.search(text) and SCPI_REGEX.search(text):
                 scpi_pages.append(text)
                 # Uncomment for debugging
@@ -185,12 +185,20 @@ def process_scpi_text(text):
         "Only extract commands that show a SCPI command line starting with ':' or '*'."
         "Do not include generic subsystem headers (e.g., 'FETCh Subsystem', 'FORMat Subsystem') unless they also include at least one explicit SCPI command."
         f"Now extract from this text:\n{text}\n"
-        "Return only valid JSON without code block markers."
     )
     response = query_gemini(prompt)
     print(f"Model Response:\n{response}\n{'-' * 40}")
     try:
-        response_json = json.loads(response)
+        # Strip Markdown fences if present
+        cleaned = response.strip()
+        if cleaned.startswith("```"):
+            cleaned = re.sub(r"^```(json)?", "", cleaned, flags=re.IGNORECASE).strip()
+            cleaned = re.sub(r"```$", "", cleaned).strip()
+
+        response_json = json.loads(cleaned)
+        # Ignore empty {}
+        if not response_json:
+            return None
         return response_json
     except json.JSONDecodeError as e:
         print(f"JSON Parsing Error: {e}")

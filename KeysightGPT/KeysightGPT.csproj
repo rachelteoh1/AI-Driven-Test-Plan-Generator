@@ -37,4 +37,20 @@
 			<HintPath>..\..\..\..\..\..\..\..\Program Files\OpenTAP\Packages\WPF Controls\Keysight.OpenTap.Wpf.dll</HintPath>
 		</Reference>
 	</ItemGroup>
+
+	<!-- Post-build step to copy DLLs into OpenTAP plugin folder -->
+	<Target Name="CopyToOpenTap" AfterTargets="Build">
+		<ItemGroup>
+			<MyOutput Include="$(OutputPath)*.dll" />
+			<WebView2LoaderDlls Include="$(OutputPath)runtimes\win-x64\native\WebView2Loader.dll" />
+			<!-- Above that loader file source need modify -->
+		</ItemGroup>
+
+		<!-- Copy managed DLLs -->
+		<Copy SourceFiles="@(MyOutput)" DestinationFolder="C:\Program Files\OpenTAP\Packages\KeysightGPT\" />
+
+		<!-- Copy WebView2 native loader -->
+		<Copy SourceFiles="@(WebView2LoaderDlls)" DestinationFolder="C:\Program Files\OpenTAP\Packages\KeysightGPT\" SkipUnchangedFiles="true" />
+	</Target>
 </Project>
+

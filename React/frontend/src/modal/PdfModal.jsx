@@ -1,11 +1,11 @@
 import styled, { keyframes } from "styled-components";
 import { Button } from "@mui/material";
-import { useState } from "react";
-import { X, Loader2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { X, Loader2, UploadCloud } from "lucide-react";
 import { COLORS, FONTSIZE, SPACING } from "../lib/styles";
 import * as service from "../services/pdfServices";
-import TickedModal from "./TickModal"; // Import TickedModal
-import CrossedModal from "./CrossedModal"; // Import CrossedModal
+import TickedModal from "./TickModal";
+import CrossedModal from "./CrossedModal";
 
 const spin = keyframes`
   from { transform: rotate(0deg); }
@@ -13,74 +13,149 @@ const spin = keyframes`
 `;
 
 const ModalWrapper = styled.div`
-  background-color: ${({ theme }) => theme.background};
+  background-color: rgba(0, 0, 0, 0.08);
   display: flex;
   justify-content: center;
   align-items: center;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
 `;
 
-const CenteredDiv = styled.div`
+const ModalCard = styled.div`
+  background: ${({ theme }) => theme.background};
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+  padding: 2.5rem 2rem 2rem 2rem;
+  width: 600px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 2rem;
-  min-height: 40vh;
-  margin: 0 auto;
-  background-color: ${({ theme }) => theme.background};
-`;
-
-const RowDiv = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
   position: relative;
 `;
 
-const Input = styled.input`
-  width: 30rem;
-  min-height: 2.5rem;
-  padding: 12px 16px;
-  background-color: ${({ theme }) => theme.backgroundMedium};
-  border: 1px solid ${({ theme }) => theme.status.tick};
-  border-radius: 1rem;
-  outline: none;
-  color: ${({ theme }) => theme.text};
-  font-size: ${FONTSIZE.base};
-  font-family: inherit;
-  opacity: 1;
-  line-height: 1.5;
-  box-sizing: border-box;
-  &::placeholder {
-    color: ${({ theme }) => theme.greys.dark};
+const Title = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: ${FONTSIZE.xl};
+  font-weight: 600;
+  color: ${({ theme }) => theme.primary};
+`;
+
+const Description = styled.div`
+  color: ${({ theme }) => theme.greys.light};
+  font-size: ${FONTSIZE.sm};
+  margin-bottom: 0.5rem;
+`;
+
+const CloseButton = styled(Button)`
+  && {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    min-width: 0;
+    padding: 0;
+    color: #888;
   }
 `;
 
-const LoadingContainer = styled.div`
-  color: ${({ theme }) => theme.text};
-  line-height: 1.625;
-  max-width: 64rem;
+const DropZone = styled.label`
+  border: 2px dashed ${({ theme }) => theme.status.cancel};
+  border-radius: 1rem;
+  background: ${({ theme }) => theme.background};
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  &:hover {
+    border-color: ${({ theme }) => theme.secondary};
+  }
+`;
+
+const UploadIcon = styled(UploadCloud)`
+  width: 2.5rem;
+  height: 2.5rem;
+  color: ${({ theme }) => theme.greys.light};
+  margin-bottom: 0.5rem;
+`;
+
+const ChooseFileButton = styled(Button)`
+  && {
+    margin-top: 1rem;
+    background: ${({ theme }) => theme.background};
+    color: ${({ theme }) => theme.text};
+    border: 1px solid #d3d3d3;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    text-transform: none;
+    box-shadow: none;
+    &:hover {
+      background: ${({ theme }) => theme.background};
+      border-color: ${({ theme }) => theme.secondary};
+      color: ${({ theme }) => theme.secondary};
+    }
+  }
+`;
+
+const FileInput = styled.input`
+  display: none;
+`;
+
+const InfoText = styled.div`
+  color: ${({ theme }) => theme.greys.light};
+  font-size: ${FONTSIZE.sm};
+  text-align: left;
+  line-height: 1.5;
 `;
 
 const LoadingContent = styled.div`
   display: flex;
   align-items: center;
-  gap: ${SPACING.sm};
+  gap: 0.75rem;
   color: ${({ theme }) => theme.text};
+  font-size: 1rem;
 `;
 
 const LoadingIcon = styled(Loader2)`
-  height: ${FONTSIZE.lg};
-  width: ${FONTSIZE.lg};
+  height: 1.5rem;
+  width: 1.5rem;
   animation: ${spin} 1s linear infinite;
 `;
 
+const UploadPdfButton = styled(Button)`
+  && {
+    width: 100%;
+    margin-top: 1rem;
+    background: ${({ theme }) => theme.secondary};
+    color: ${({ theme }) => theme.primaryLight};
+    box-shadow: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    text-transform: none;
+    &:hover {
+      background: ${({ theme }) => theme.accent};
+      color: ${({ theme }) => theme.hover};
+    }
+    &.Mui-disabled {
+      background: ${({ theme }) => theme.greys.light};
+      color: ${({ theme }) => theme.background.medium};
+      cursor: not-allowed;
+    }
+  }
+`;
+ 
 export default function PdfModal({ hideModal, onUploadSuccess }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const fileInputRef = useRef();
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
@@ -88,32 +163,21 @@ export default function PdfModal({ hideModal, onUploadSuccess }) {
 
   const handleUpload = async () => {
     if (selectedFile) {
-      setLoading(true); // Set loading to true when upload starts
+      setLoading(true);
       try {
         const formData = new FormData();
         formData.append("file", selectedFile);
-
-        // Call the backend to process the PDF
         await service.uploadPdf(formData);
-
-        if (onUploadSuccess) {
-          onUploadSuccess(); // ⬅️ notify parent
-        }
-
-        // Show success modal on successful upload
+        if (onUploadSuccess) onUploadSuccess();
         setShowSuccessModal(true);
       } catch (error) {
-        console.error("Error uploading PDF:", error);
-
-        // Show error modal on failed upload
         setShowErrorModal(true);
       } finally {
-        setLoading(false); // Set loading to false when upload finishes
+        setLoading(false);
       }
     }
   };
 
-  // Hide all modals and reset state
   const handleCloseModals = () => {
     setShowSuccessModal(false);
     setShowErrorModal(false);
@@ -142,42 +206,73 @@ export default function PdfModal({ hideModal, onUploadSuccess }) {
 
   return (
     <ModalWrapper>
-      <CenteredDiv>
-        <RowDiv>
-          <Input
+      <ModalCard>
+        <Title>
+          <span style={{ color: "#d32f2f", fontWeight: 700 }}>
+            Import PDF Manual
+          </span>
+          <CloseButton onClick={hideModal}>
+            <X className="h-5 w-5" />
+          </CloseButton>
+        </Title>
+        <Description>
+          Please import a PDF manual to get started with KeysightGPT. This will
+          help me understand your device and provide accurate assistance.
+        </Description>
+        <DropZone htmlFor="pdf-upload">
+          <UploadIcon />
+          <div
+            style={{
+              color: "#888",
+              fontSize: "1rem",
+              marginBottom: "0.5rem",
+            }}
+          >
+            Drag and drop your PDF here, or click to browse
+          </div>
+          <FileInput
+            id="pdf-upload"
             type="file"
             accept="application/pdf"
             onChange={handleFileChange}
-            disabled={loading} // Disable input while loading
+            disabled={loading}
+            ref={fileInputRef}
           />
-          <Button
-            onClick={hideModal}
-            variant="text"
-            size="small"
-            style={{ position: "absolute", right: 0 }}
-            disabled={loading} // Disable close button while loading
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </RowDiv>
+          <ChooseFileButton component="span" variant="outlined" disabled={loading}>
+            Choose PDF File
+          </ChooseFileButton>
+          {selectedFile && (
+            <div
+              style={{
+                color: "#1976d2",
+                marginTop: "0.5rem",
+                fontSize: "0.95rem",
+              }}
+            >
+              {selectedFile.name}
+            </div>
+          )}
+        </DropZone>
         {loading ? (
-          <LoadingContainer>
-            <LoadingContent>
-              <LoadingIcon />
-              Uploading...
-            </LoadingContent>
-          </LoadingContainer>
+          <LoadingContent>
+            <LoadingIcon />
+            Uploading...
+          </LoadingContent>
         ) : (
-          <Button
+          <UploadPdfButton
             variant="contained"
-            color="primary"
             onClick={handleUpload}
-            disabled={!selectedFile || loading} // Disable button if no file or loading
+            disabled={!selectedFile || loading}
           >
             Upload PDF
-          </Button>
+          </UploadPdfButton>
         )}
-      </CenteredDiv>
+        <InfoText>
+          • Supported format: PDF only
+          <br />
+          • Device manuals work best for accurate responses
+        </InfoText>
+      </ModalCard>
     </ModalWrapper>
   );
 }
