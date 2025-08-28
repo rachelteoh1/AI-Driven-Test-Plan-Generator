@@ -1,0 +1,52 @@
+﻿2025-08-27 16:28:34.638225 ; Session        ; Debug       ; Session log loaded as 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Debug\SessionLogs\tap 2025-08-27 16-28-33.txt'. [2.78 ms]
+2025-08-27 16:28:34.684406 ; Session        ; Debug       ; Running '"C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Debug\tap.exe" ' in 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Debug'.
+2025-08-27 16:28:34.721580 ; AssemblyFinder ; Debug       ; Found 19/43 assembly files. [10.0 ms]
+2025-08-27 16:28:34.748669 ; Resolver       ; Debug       ; Found match for System.Collections.Immutable, Version=1.2.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a in C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Debug\Dependencies\System.Collections.Immutable.1.2.3.0\System.Collections.Immutable.dll
+2025-08-27 16:28:34.924036 ; Searcher       ; Warning     ; Multiple assemblies of different versions named tap exists 
+2025-08-27 16:28:34.924036 ; Searcher       ; Debug       ; Assembly 1: C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Debug\tap.dll version: 8
+2025-08-27 16:28:34.924036 ; Searcher       ; Debug       ; Assembly 2: C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Debug\tap.exe version: 9.28.2
+2025-08-27 16:28:35.250832 ; Resolver       ; Debug       ; Found match for System.Reflection.Metadata, Version=1.4.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a in C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Debug\Dependencies\System.Reflection.Metadata.1.4.3.0\System.Reflection.Metadata.dll
+2025-08-27 16:28:35.788986 ; Searcher       ; Debug       ; Ordered 13 assemblies according to references. [1.02 s]
+2025-08-27 16:28:35.856566 ; PluginManager  ; Debug       ; Found 5 plugin assemblies containing 186 plugin types. [1.09 s]
+2025-08-27 16:28:35.857559 ; PluginManager  ; Debug       ; Found version 9.28.2+504225fd  of OpenTap.dll
+2025-08-27 16:28:35.857559 ; PluginManager  ; Debug       ; Found version 0.0.0            of KeysightGPT.dll
+2025-08-27 16:28:35.857559 ; PluginManager  ; Debug       ; Found version 9.28.2+504225fd  of OpenTap.Package.dll
+2025-08-27 16:28:35.857559 ; PluginManager  ; Debug       ; Found version 9.28.2+504225fd  of OpenTap.Plugins.BasicSteps.dll
+2025-08-27 16:28:35.857559 ; PluginManager  ; Debug       ; Found version 1.1.1+507fd903   of OpenTap.Tui.dll
+2025-08-27 16:28:35.857559 ; PluginManager  ; Debug       ; Searched 19 Assemblies. [1.09 s]
+2025-08-27 16:28:35.869751 ; AssemblyData   ; Debug       ; Loaded OpenTap. [557 us]
+2025-08-27 16:28:35.883973 ; SystemInfo     ; Debug       ; Microsoft Windows 10.0.19045 X64
+2025-08-27 16:28:35.883973 ; SystemInfo     ; Debug       ; .NET Framework 4.8.9310.0
+2025-08-27 16:28:35.884751 ; SystemInfo     ; Debug       ; OpenTAP Engine 9.28.2+504225fd X64
+2025-08-27 16:28:35.888751 ; AssemblyData   ; Debug       ; Loaded OpenTap.Package. [3.96 ms]
+2025-08-27 16:28:35.899686 ; Settings       ; Debug       ; No settings file exists for EngineSettings. A new instance with default values has been created. [9.20 ms]
+2025-08-27 16:28:35.949748 ; Session        ; Debug       ; Session log loaded as 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Debug\SessionLogs\SessionLog 2025-08-27 16-28-33.txt'. [17.6 ms]
+2025-08-27 16:28:35.959922 ; AssemblyData   ; Debug       ; Loaded OpenTap.Tui. [4.36 ms]
+2025-08-27 16:28:35.959922 ; AssemblyData   ; Debug       ; Loaded OpenTap.Plugins.BasicSteps. [4.56 ms]
+2025-08-27 16:28:35.969923 ; tap            ; Information ; OpenTAP Command Line Interface (9.28.2+504225fd)
+2025-08-27 16:28:35.969923 ; tap            ; Information ; Usage: "tap.exe <command> [<subcommand(s)>] [<args>]"
+2025-08-27 16:28:35.969923 ; tap            ; Information ; Valid commands are:
+2025-08-27 16:28:35.970919 ; tap            ; Information ; image              
+2025-08-27 16:28:35.970919 ; tap            ; Information ;    install         Install the specified image, overwriting the existing installation.
+2025-08-27 16:28:35.970919 ; tap            ; Information ; package            
+2025-08-27 16:28:35.970919 ; tap            ; Information ;    create          Create a package based on an XML description file.
+2025-08-27 16:28:35.970919 ; tap            ; Information ;    download        Download one or more packages.
+2025-08-27 16:28:35.970919 ; tap            ; Information ;    install         Install one or more packages.
+2025-08-27 16:28:35.970919 ; tap            ; Information ;    list            List locally installed packages and browse the online package repository.
+2025-08-27 16:28:35.970919 ; tap            ; Information ;    show            Show information about a package.
+2025-08-27 16:28:35.970919 ; tap            ; Information ;    test            Run tests on one or more packages.
+2025-08-27 16:28:35.970919 ; tap            ; Information ;    uninstall       Uninstall one or more packages.
+2025-08-27 16:28:35.970919 ; tap            ; Information ;    verify          Verify the integrity of one or all installed packages by checking their fingerprints.
+2025-08-27 16:28:35.970919 ; tap            ; Information ; run                Run a test plan.
+2025-08-27 16:28:35.970919 ; tap            ; Information ; sdk                
+2025-08-27 16:28:35.970919 ; tap            ; Information ;    gitversion      Calculate the semantic version number for a specific git commit.
+2025-08-27 16:28:35.970919 ; tap            ; Information ; tui                View, edit and run test plans using TUI.
+2025-08-27 16:28:35.970919 ; tap            ; Information ; tui-pm             Open package manager using TUI. (Experimental)
+2025-08-27 16:28:35.970919 ; tap            ; Information ; tui-results        Open TUI results viewer. (Experimental)
+2025-08-27 16:28:35.970919 ; tap            ; Information ; Run "tap.exe <command> [<subcommand(s)>] -h" to get additional help for a specific command.
+2025-08-27 16:28:36.035343 ; AssemblyData   ; Debug       ; Loaded mscorlib. [100 ns]
+2025-08-27 16:28:36.235558 ; Installation   ; Debug       ; OpenTAP                        - 9.28.2+504225fd
+2025-08-27 16:28:36.235558 ; Installation   ; Debug       ; TUI                            - 1.1.1+507fd903
+2025-08-27 16:28:36.235558 ; Installation   ; Debug       ; Keysight Fixed License Manager - 1.6.2+d58f8a89
+2025-08-27 16:28:36.235558 ; Installation   ; Debug       ; Keysight IO Libraries Suite    - 18.4.30319-beta.2.5+a2799c9d
+2025-08-27 16:28:36.235558 ; Installation   ; Debug       ; PathWave License Manager       - 7.4.1+efeba870
