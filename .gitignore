@@ -20,7 +20,6 @@ __pycache__/
 
 # Visual Studio
 .vs/
-bin/
 obj/
 *.user
 *.suo
