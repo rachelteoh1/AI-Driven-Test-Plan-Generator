@@ -1,18 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Package InfoLink="http://www.keysight.com/find/TAP" Date="05/05/2025 07:57:45" Name="OpenTAP" Version="9.28.2+504225fd" Architecture="arm64" OS="MacOS" xmlns="http://opentap.io/schemas/package">
-  <Hash>7dfNVYB9TH0EqZpuSjMSjXrp0TU</Hash>
+<Package InfoLink="http://www.keysight.com/find/TAP" Date="05/05/2025 07:58:29" Name="OpenTAP" Version="9.28.2+504225fd" Architecture="x64" OS="Windows" xmlns="http://opentap.io/schemas/package">
+  <Hash>ONsQWd8FMS9k2GeDQPFxN_HTeeI</Hash>
   <Description>This is the OpenTAP package that contain the most common functionality used in test automation. It controls test plan (list of test steps) execution and provides access to functionality offered by plugins. This covers logging functionality, result handling (database) and instrument communication (user-developed hardware drivers, for example). OpenTAP also includes a CLI and a plugin manager that finds and handles plugins (test steps, DUT and Instrument interfaces, etc.).
         <Status>Released</Status><Organisation>Keysight Technologies</Organisation></Description>
   <Owner>OpenTAP</Owner>
   <SourceUrl>https://github.com/opentap/opentap</SourceUrl>
   <SourceLicense>MPL-2.0</SourceLicense>
   <Files>
-    <File Path="tap.runtimeconfig.json">
-      <Hash>97E67435238942CB8A32B32CE47B012BDA99148E</Hash>
-    </File>
-    <File Path="tap.dll">
-      <Hash>77F8A3A0C89EDE0996213318F7038000A46F5758</Hash>
-    </File>
     <File Path="OpenTap.dll">
       <Plugins>
         <Plugin Type="OpenTap.DefaultDataAnnotator" BaseType="IAnnotator">
@@ -470,7 +464,7 @@
           <Groups />
         </Plugin>
       </Plugins>
-      <Hash>23AAEA6B2F6572E85C07076646EE7A18630DAFD1</Hash>
+      <Hash>5E9133BA2D9DC7847AFDA77C3C1E00AFFCC3B66F</Hash>
     </File>
     <File Path="OpenTap.Package.dll">
       <Plugins>
@@ -787,7 +781,7 @@
           <Groups />
         </Plugin>
       </Plugins>
-      <Hash>89FB6FE8E051D6D406C1C68E1F448DD1EA717D64</Hash>
+      <Hash>E73C03FD4DDF293F0D3F71ED76202C0043415BBB</Hash>
     </File>
     <File Path="Packages/OpenTAP/OpenTap.Plugins.BasicSteps.dll">
       <Plugins>
@@ -1002,49 +996,61 @@
           <Groups />
         </Plugin>
       </Plugins>
-      <Hash>E3DAAE04A5B055798322789EC6356E63457C9120</Hash>
+      <Hash>433408C8ACB14F47A0554D2A931CF1B15CDC4140</Hash>
     </File>
     <File Path="Packages/OpenTAP/OpenTap.Cli.dll">
-      <Hash>F0244E6504741909374CEC2828D5FBA2D6C2A278</Hash>
+      <Hash>7AE6D88FCA420E2CD185A6609AD7A4764D5AC098</Hash>
     </File>
-    <File Path="tap">
-      <Hash>31306660A6D29EB2C0F708CC300CD9B0FFC60339</Hash>
+    <File Path="tap.exe">
+      <Hash>82596791E5F019A18A22DEB0DAF5936BC02055A5</Hash>
     </File>
-    <File Path="Dependencies/LibGit2Sharp.0.27.0.0/libgit2-b7bad55.dylib.arm64">
-      <Hash>AFA701FDB44E3C5F44E8B0D972BD40A4BBECC5C2</Hash>
+    <File Path="Packages/OpenTAP/tap.exe.new">
+      <Hash>F2D88A38219B94E437EB8CC5E898F35AAA368E7D</Hash>
+    </File>
+    <File Path="Packages/OpenTAP/Tap.Upgrader.exe">
+      <Hash>2551CD61B09ADA0DD45D69A77B55D89CFDC315C4</Hash>
+    </File>
+    <File Path="OpenTapApiReference.chm">
+      <Hash>5BA378E661C6831C2B33261E429EE2027E1BB6CC</Hash>
+    </File>
+    <File Path="Dependencies/LibGit2Sharp.0.27.0.0/git2-b7bad55.dll.x64">
+      <Hash>B80389A6368B85BA6C3015B2198C2A4F6AB7D262</Hash>
+    </File>
+    <File Path="Dependencies/LibGit2Sharp.0.27.0.0/git2-b7bad55.source">
+      <Hash>C9ED49F40FD8D6DAD67C5760F90ECC73C66C656D</Hash>
     </File>
     <File Path="LICENSE.txt">
-      <Hash>7A68071C4FA4B7CB48610B63AB71DE4EE4F59943</Hash>
+      <Hash>2A2BA2CF192BFDB8DFD212222230AB958E39885A</Hash>
     </File>
     <File Path="Dependencies/LibGit2Sharp.0.27.0.0/LICENSE.txt">
-      <Hash>E78751DEFD24BEB8BD6C2ED058ED13E8374EE799</Hash>
+      <Hash>50C986EEA264F09A4C1CBF76ECCA1A596EB1D1BB</Hash>
     </File>
     <File Path="Dependencies/Mono.Cecil.0.10.1.0/LICENSE.txt">
-      <Hash>22C864FC18E103F628837F761E8D88209E8EB5DD</Hash>
+      <Hash>BF2DB7A95CDEFAB002496C244374F4ED7518F3DB</Hash>
     </File>
     <File Path="Dependencies/System.Reflection.Metadata.1.4.3.0/LICENSE.txt">
-      <Hash>28D4EA6C2F895F6CE371AEE5A98B6C9C40105B3A</Hash>
+      <Hash>26C7C096AC257154020A07532C5EDEBA91EE97E0</Hash>
     </File>
     <File Path="Dependencies/System.Collections.Immutable.1.2.3.0/LICENSE.txt">
-      <Hash>28D4EA6C2F895F6CE371AEE5A98B6C9C40105B3A</Hash>
+      <Hash>26C7C096AC257154020A07532C5EDEBA91EE97E0</Hash>
     </File>
     <File Path="Dependencies/Microsoft.CSharp.4.0.4.0/LICENSE.txt">
-      <Hash>28D4EA6C2F895F6CE371AEE5A98B6C9C40105B3A</Hash>
+      <Hash>26C7C096AC257154020A07532C5EDEBA91EE97E0</Hash>
     </File>
     <File Path="Dependencies/System.ValueTuple.4.0.3.0/LICENSE.txt">
-      <Hash>28D4EA6C2F895F6CE371AEE5A98B6C9C40105B3A</Hash>
+      <Hash>26C7C096AC257154020A07532C5EDEBA91EE97E0</Hash>
     </File>
     <File Path="Dependencies/System.Linq.4.1.0.0/LICENSE.txt">
-      <Hash>8255BF31D3DD7B218A2AF986AE8D7503BD38557F</Hash>
+      <Hash>44482775E8845CAD0F4EF6EAE939DE8FD6E4924F</Hash>
     </File>
     <File Path="Dependencies/DotNet.Glob.3.0.1.0/LICENSE.txt">
-      <Hash>693999E8A39FDE2EEBCE9094289667DFBEA9E4A8</Hash>
+      <Hash>AD0F250CE0E1C661132B37B6DAE3E87598ACC956</Hash>
     </File>
     <File Path="Dependencies/Newtonsoft.Json.13.0.0.0/LICENSE.txt">
-      <Hash>350C94C36C1ED536CB0776CFFAB548AD08E621BD</Hash>
+      <Hash>277802B2810FF917E0D0FAB6F52A2E9485E1B9D0</Hash>
     </File>
     <File Path="Dependencies/Newtonsoft.Json.13.0.0.0/Newtonsoft.Json.dll">
-      <Hash>F3130F7FD4B414B5AEC04EB87ED800EB84DD2154</Hash>
+      <Hash>1E76E6099570EDE620B76ED47CF8D03A936D49F8</Hash>
     </File>
     <File Path="Dependencies/System.Collections.Immutable.1.2.3.0/System.Collections.Immutable.dll">
       <Hash>EEF943E4369166A039DEE90F2D81504613D49CA0</Hash>
@@ -1053,49 +1059,62 @@
       <Hash>303D712269EBBAAC476F8B6DB4472BD2464BD3CE</Hash>
     </File>
     <File Path="Dependencies/System.Text.Json.4.0.1.2/System.Text.Json.dll">
-      <Hash>7BC37B35C719FD5A7BF60E0EFE97133946D9E159</Hash>
+      <Hash>B1144A892338B90D6FC31704F7828590EDC34F58</Hash>
     </File>
     <File Path="Dependencies/Microsoft.CSharp.4.0.4.0/Microsoft.CSharp.dll">
       <Hash>1B37061909C0053B8756A375426C499FF6457A7F</Hash>
     </File>
     <File Path="Dependencies/System.Memory.4.0.1.1/System.Memory.dll">
-      <Hash>D23F11CD8F96AF1E76C847260F9BA6A32E62BD08</Hash>
+      <Hash>19BF79600B716523B5317B9A7B68760AE5D55741</Hash>
     </File>
     <File Path="Dependencies/System.Security.Principal.Windows.5.0.0.0/System.Security.Principal.Windows.dll">
-      <Hash>0CF42E1BD78443AE1D6C16223A7FF463C5105D21</Hash>
+      <Hash>9A5BE1FCF410FE5934D720329D36A2377E83747E</Hash>
     </File>
     <File Path="Dependencies/LibGit2Sharp.0.27.0.0/LibGit2Sharp.dll">
       <Hash>E85E292723AC5C8972502E6F3E5E4C76F300004F</Hash>
     </File>
     <File Path="Dependencies/DotNet.Glob.3.0.1.0/DotNet.Glob.dll">
-      <Hash>C5527F7B11E0ADAA4BCC5F7D1E89EE1227E24475</Hash>
+      <Hash>0065ACB4C9EA4C66DBE8CC63E04984DC69444407</Hash>
     </File>
     <File Path="Dependencies/OpenTap.Repository.Client.4.17.0.0/OpenTap.Repository.Client.dll">
       <Hash>2043E203CD7FA647E5FC6201B8FADE258336F9A1</Hash>
     </File>
-    <File Path="Dependencies/Mono.Cecil.0.11.4.0/Mono.Cecil.dll">
-      <Hash>065791EFA09BA55312CAFEAB231E38DC33224EEB</Hash>
+    <File Path="Dependencies/Mono.Cecil.0.10.1.0/Mono.Cecil.dll">
+      <Hash>B438D49B858946441A6C63461E6A912B05416CDE</Hash>
+    </File>
+    <File Path="Dependencies/System.4.0.0.0/System.dll">
+      <Hash>6DBF901A8F271492CDDD59D699608D09CD58B138</Hash>
     </File>
     <File Path="Dependencies/System.Text.Encodings.Web.4.0.5.1/System.Text.Encodings.Web.dll">
-      <Hash>E214E75E4E8096FD48AEE2D55770CD56A74218EF</Hash>
+      <Hash>E27922C42135475FB0DB26D9816101B549D65AE3</Hash>
+    </File>
+    <File Path="Dependencies/System.ValueTuple.4.0.3.0/System.ValueTuple.dll">
+      <Hash>D1664731719E85AAD7A2273685D77FEB0204EC98</Hash>
     </File>
     <File Path="Dependencies/System.Numerics.Vectors.4.1.4.0/System.Numerics.Vectors.dll">
-      <Hash>81580D6788F5CCF418E89F8A5FD7F720D60BD811</Hash>
+      <Hash>3D216458740AD5CB05BC5F7C3491CDE44A1E5DF0</Hash>
     </File>
     <File Path="Dependencies/System.Threading.Tasks.Extensions.4.2.0.1/System.Threading.Tasks.Extensions.dll">
       <Hash>850849AA6723733E661F3BFE6DA805F4657A2FCB</Hash>
     </File>
     <File Path="Dependencies/Microsoft.Bcl.AsyncInterfaces.1.0.0.0/Microsoft.Bcl.AsyncInterfaces.dll">
-      <Hash>9E134910BB02E162765D0B893FA3CD4860ACCE86</Hash>
+      <Hash>7D8264BE4FCB17F81ACB8B1ADD980CD96A6FD856</Hash>
     </File>
     <File Path="Dependencies/System.Buffers.4.0.3.0/System.Buffers.dll">
-      <Hash>1208E5E0252124F2B2764503608EA1AAD69D0FF1</Hash>
+      <Hash>2F410A0396BC148ED533AD49B6415FB58DD4D641</Hash>
     </File>
     <File Path="Dependencies/System.Runtime.CompilerServices.Unsafe.4.0.6.0/System.Runtime.CompilerServices.Unsafe.dll">
-      <Hash>A05A96E648EC5E1244384E13B3A75A117D21A744</Hash>
+      <Hash>A9A36A7FF7463BA945E61D1AD1585439C5E0A84C</Hash>
+    </File>
+    <File Path="Dependencies/System.Linq.4.1.0.0/System.Linq.dll">
+      <Hash>4FC3733E7D41A66D3C6E42F43994D97F81D2411B</Hash>
+    </File>
+    <File Path="Dependencies/System.CodeDom.4.0.1.0/System.CodeDom.dll">
+      <Hash>2A5DAB71359F6D6A38F44DE28A7C3AF9EA085E62</Hash>
     </File>
   </Files>
   <PackageActionExtensions>
-    <ActionStep ExeFile="chmod" ExpectedExitCodes="0,1" Quiet="false" Optional="false" Arguments="+x tap" ActionName="install"></ActionStep>
+    <ActionStep ExeFile="Packages/OpenTAP/Tap.Upgrader.exe" ExpectedExitCodes="0" Quiet="false" Optional="false" Arguments="" ActionName="install"></ActionStep>
+    <ActionStep ExeFile="Packages/OpenTAP/Tap.Upgrader.exe" ExpectedExitCodes="0" Quiet="false" Optional="false" Arguments="" ActionName="uninstall"></ActionStep>
   </PackageActionExtensions>
 </Package>

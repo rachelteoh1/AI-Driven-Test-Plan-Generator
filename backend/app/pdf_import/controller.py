@@ -4,10 +4,9 @@ from ..database import get_db  # Ensure `get_db` is imported correctly
 from sqlalchemy.orm import Session  # Use `Session` instead of `DbSession`
 from .service import process_pdf_upload
 from .models import PDFUploadResponse
-from app.entities.entities import InstrumentMetadata
 import logging
 from .utils.suggest_intent import extract_scpi_pages
-
+from ..entities.entities import SelectedInstrument
 
 router = APIRouter(
     prefix='/pdf',
@@ -23,7 +22,7 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
 
 @router.get("/instruments")
 async def get_all_instruments(db: Session = Depends(get_db)):
-    instruments = db.query(InstrumentMetadata).all()
+    instruments = db.query(SelectedInstrument).all()
     return {
         "instruments": [instrument.__dict__ for instrument in instruments]
     }

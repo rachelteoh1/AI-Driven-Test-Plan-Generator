@@ -1,37 +1,32 @@
-2025-06-02 12:21:25.904925 ; Session        ; Debug       ; Session log loaded as '/Users/lichee/FYP/AI-Driven-Test-Plan-Generator/KeysightGPT/bin/Debug/SessionLogs/MSBuild.50241 2025-06-02 12-21-25.txt'. [679 us]
-2025-06-02 12:21:25.958575 ; Session        ; Debug       ; Running '/usr/local/share/dotnet/sdk/7.0.203/MSBuild.dll /nologo /nodemode:1 /nodeReuse:true /low:false' in '/Users/lichee/FYP/AI-Driven-Test-Plan-Generator/KeysightGPT'.
-2025-06-02 12:21:25.976855 ; AssemblyFinder ; Debug       ; Found 5/26 assembly files. [2.38 ms]
-2025-06-02 12:21:25.987367 ; Searcher       ; Debug       ; Ordered 5 assemblies according to references. [9.43 ms]
-2025-06-02 12:21:26.002597 ; PluginManager  ; Debug       ; Found 3 plugin assemblies containing 176 plugin types. [24.8 ms]
-2025-06-02 12:21:26.002965 ; PluginManager  ; Debug       ; Found version 9.28.2+504225fd  of OpenTap.dll from /Users/lichee/.nuget/packages/opentap/9.28.2/build/payload/OpenTap.dll
-2025-06-02 12:21:26.002980 ; PluginManager  ; Debug       ; Found version 9.28.2+504225fd  of OpenTap.Package.dll from /Users/lichee/.nuget/packages/opentap/9.28.2/build/payload/OpenTap.Package.dll
-2025-06-02 12:21:26.002984 ; PluginManager  ; Debug       ; Found version 9.28.2+504225fd  of OpenTap.Plugins.BasicSteps.dll from /Users/lichee/.nuget/packages/opentap/9.28.2/build/payload/Packages/OpenTAP/OpenTap.Plugins.BasicSteps.dll
-2025-06-02 12:21:26.002990 ; PluginManager  ; Debug       ; Searched 5 Assemblies. [25.6 ms]
-2025-06-02 12:21:26.009431 ; AssemblyData   ; Debug       ; Loaded OpenTap.Package. [153 us]
-2025-06-02 12:21:26.009455 ; AssemblyData   ; Debug       ; Loaded OpenTap. [177 us]
-2025-06-02 12:21:26.009636 ; AssemblyData   ; Debug       ; Loaded OpenTap.Plugins.BasicSteps. [333 us]
-2025-06-02 12:21:26.030395 ; AssemblyData   ; Debug       ; Loaded System.Private.CoreLib. [600 ns]
-2025-06-02 12:21:26.112263 ; Resolver       ; Debug       ; Found match for OpenTap.Repository.Client, Version=4.17.0.0, Culture=neutral, PublicKeyToken=null in /Users/lichee/.nuget/packages/opentap/9.28.2/build/payload/Dependencies/OpenTap.Repository.Client.4.17.0.0/OpenTap.Repository.Client.dll
-2025-06-02 12:21:26.118568 ; Settings       ; Debug       ; No settings file exists for AuthenticationSettings. A new instance with default values has been created. [122 us]
-2025-06-02 12:21:26.120111 ; Settings       ; Debug       ; No settings file exists for PackageManagerSettings. A new instance with default values has been created. [310 us]
-2025-06-02 12:21:26.164667 ; SystemInfo     ; Debug       ; Darwin 24.5.0 Darwin Kernel Version 24.5.0: Tue Apr 22 19:54:26 PDT 2025; root:xnu-11417.121.6~2/RELEASE_ARM64_T8112Arm64
-2025-06-02 12:21:26.164695 ; SystemInfo     ; Debug       ; .NET 7.0.5
-2025-06-02 12:21:26.164780 ; SystemInfo     ; Debug       ; OpenTAP Engine 9.28.2+504225fd Arm64
-2025-06-02 12:21:26.165293 ; Installation   ; Debug       ; OpenTAP - 9.28.2+504225fd
-2025-06-02 12:21:26.167234 ; FilePackageRepository ; Debug       ; Rebuilding cache: .PackageCache.E1C33F77.2.xml [43.8 ms]
-2025-06-02 12:21:26.168824 ; Package Query  ; Debug       ; Read 2 packages from [FilePackageRepository: file:///Users/lichee/.local/share/OpenTap/PackageCache] [47.2 ms]
-2025-06-02 12:21:27.283856 ; HttpPackageRepository ; Debug       ; {"type":"TapPackage","directory":"/Packages/","version":"","architecture":"arm64","os":"MacOS"} -> found 196 packages. [1.11 s]
-2025-06-02 12:21:27.294223 ; image          ; Debug       ; Resolved image: TUI:1, OpenTAP:9.28.2+504225fd [9.30 ms]
-2025-06-02 12:21:28.083519 ; OpenTAP        ; Information ; Modifying installation in bin/Debug/:
-2025-06-02 12:21:28.083539 ; OpenTAP        ; Information ; - Skipping OpenTAP version 9.28.2+504225fd (arm64-MacOS) - Already installed.
-2025-06-02 12:21:28.083630 ; OpenTAP        ; Information ; - Installing TUI version 1.1.1+507fd903
-2025-06-02 12:21:28.087050 ; Installer      ; Information ; Installing /Users/lichee/.local/share/OpenTap/PackageCache/TUI.1.1.1+507fd903.Windows,Linux,Macos.TapPackage
-2025-06-02 12:21:28.094698 ; package        ; Debug       ; Decompressed bin/Debug/Packages/TUI/OpenTap.Tui.dll [4.96 ms]
-2025-06-02 12:21:28.099407 ; package        ; Debug       ; Decompressed bin/Debug/Packages/TUI/Terminal.Gui.dll [4.69 ms]
-2025-06-02 12:21:28.099675 ; package        ; Debug       ; Decompressed bin/Debug/Packages/TUI/icon.png [261 us]
-2025-06-02 12:21:28.101546 ; package        ; Debug       ; Decompressed bin/Debug/Dependencies/NStack.1.0.7.0/NStack.dll [1.86 ms]
-2025-06-02 12:21:28.102355 ; package        ; Debug       ; Decompressed bin/Debug/Dependencies/System.Management.4.0.0.0/System.Management.dll [800 us]
-2025-06-02 12:21:28.103857 ; package        ; Debug       ; Decompressed bin/Debug/Dependencies/System.CodeDom.7.0.0.0/System.CodeDom.dll [1.49 ms]
-2025-06-02 12:21:28.104045 ; package        ; Debug       ; Decompressed bin/Debug/Packages/TUI/package.xml [180 us]
-2025-06-02 12:21:28.106357 ; Package        ; Debug       ; Found no custom actions to run at 'install' stage.
-2025-06-02 12:21:28.106398 ; Installer      ; Information ; Installed TUI version 1.1.1+507fd903 [19.3 ms]
+﻿2025-08-27 17:09:05.868588 ; Session        ; Debug       ; Session log loaded as 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Debug\SessionLogs\MSBuild.4736 2025-08-27 16-54-47 (1).txt'. [2.13 ms]
+2025-08-27 17:09:05.884575 ; Session        ; Debug       ; Running '"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe" /nologo /nodemode:1 /nodeReuse:true /low:false' in 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT'.
+2025-08-27 17:09:05.979893 ; FilePackageRepository ; Debug       ; Rebuilding cache: .PackageCache.C83F5A61.17.xml [87.9 ms]
+2025-08-27 17:09:05.980895 ; Package Query  ; Debug       ; Read 17 packages from [FilePackageRepository: file:///C:/Users/Rachel/AppData/Local/OpenTap/PackageCache] [89.7 ms]
+2025-08-27 17:09:07.919768 ; HttpPackageRepository ; Debug       ; {"type":"TapPackage","directory":"/Packages/","version":"","architecture":"x64","os":"Windows"} -> found 1752 packages. [1.93 s]
+2025-08-27 17:09:09.338625 ; HttpPackageRepository ; Debug       ; {"type":"TapPackage","directory":"/Packages/","name":"Keysight IO Libraries Suite","version":"beta","architecture":"x64","os":"Windows"} -> found 0 packages. [1.40 s]
+2025-08-27 17:09:09.339629 ; image          ; Debug       ; Resolved image: TUI:1, OpenTAP:9.28.2+504225fd, Keysight Fixed License Manager:^1.6.2+d58f8a89, Keysight IO Libraries Suite:^18.4.30319-beta.2.5+a2799c9d, PathWave License Manager:^7.4.1+efeba870 [1.41 s]
+2025-08-27 17:09:12.232731 ; OpenTAP        ; Information ; Target installation is already up to date.
+2025-08-27 17:10:22.121929 ; Session        ; Debug       ; Session log loaded as 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Debug\SessionLogs\MSBuild.4736 2025-08-27 16-54-47 (2).txt'. [1.41 ms]
+2025-08-27 17:10:22.124930 ; Session        ; Debug       ; Running '"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe" /nologo /nodemode:1 /nodeReuse:true /low:false' in 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT'.
+2025-08-27 17:10:22.209580 ; FilePackageRepository ; Debug       ; Rebuilding cache: .PackageCache.C83F5A61.17.xml [66.6 ms]
+2025-08-27 17:10:22.210580 ; Package Query  ; Debug       ; Read 17 packages from [FilePackageRepository: file:///C:/Users/Rachel/AppData/Local/OpenTap/PackageCache] [68.9 ms]
+2025-08-27 17:10:25.055945 ; HttpPackageRepository ; Debug       ; {"type":"TapPackage","directory":"/Packages/","version":"","architecture":"x64","os":"Windows"} -> found 1752 packages. [2.84 s]
+2025-08-27 17:10:26.325347 ; HttpPackageRepository ; Debug       ; {"type":"TapPackage","directory":"/Packages/","name":"Keysight IO Libraries Suite","version":"beta","architecture":"x64","os":"Windows"} -> found 0 packages. [1.25 s]
+2025-08-27 17:10:26.325347 ; image          ; Debug       ; Resolved image: TUI:1, OpenTAP:9.28.2+504225fd, Keysight Fixed License Manager:^1.6.2+d58f8a89, Keysight IO Libraries Suite:^18.4.30319-beta.2.5+a2799c9d, PathWave License Manager:^7.4.1+efeba870 [1.25 s]
+2025-08-27 17:10:28.207797 ; OpenTAP        ; Information ; Target installation is already up to date.
+2025-08-27 17:12:29.425055 ; Session        ; Debug       ; Session log loaded as 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Debug\SessionLogs\MSBuild.4736 2025-08-27 16-54-47 (1).txt'. [3.13 ms]
+2025-08-27 17:12:29.444055 ; Session        ; Debug       ; Running '"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe" /nologo /nodemode:1 /nodeReuse:true /low:false' in 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT'.
+2025-08-27 17:12:29.528676 ; FilePackageRepository ; Debug       ; Rebuilding cache: .PackageCache.C83F5A61.17.xml [80.2 ms]
+2025-08-27 17:12:29.529671 ; Package Query  ; Debug       ; Read 17 packages from [FilePackageRepository: file:///C:/Users/Rachel/AppData/Local/OpenTap/PackageCache] [82.1 ms]
+2025-08-27 17:12:31.841127 ; HttpPackageRepository ; Debug       ; {"type":"TapPackage","directory":"/Packages/","version":"","architecture":"x64","os":"Windows"} -> found 1752 packages. [2.31 s]
+2025-08-27 17:12:33.449273 ; HttpPackageRepository ; Debug       ; {"type":"TapPackage","directory":"/Packages/","name":"Keysight IO Libraries Suite","version":"beta","architecture":"x64","os":"Windows"} -> found 0 packages. [1.59 s]
+2025-08-27 17:12:33.450271 ; image          ; Debug       ; Resolved image: TUI:1, OpenTAP:9.28.2+504225fd, Keysight Fixed License Manager:^1.6.2+d58f8a89, Keysight IO Libraries Suite:^18.4.30319-beta.2.5+a2799c9d, PathWave License Manager:^7.4.1+efeba870 [1.59 s]
+2025-08-27 17:12:35.486952 ; OpenTAP        ; Information ; Target installation is already up to date.
+2025-08-27 17:14:52.299991 ; Session        ; Debug       ; Session log loaded as 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Debug\SessionLogs\MSBuild.4736 2025-08-27 16-54-47 (2).txt'. [1.39 ms]
+2025-08-27 17:14:52.313992 ; Session        ; Debug       ; Running '"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe" /nologo /nodemode:1 /nodeReuse:true /low:false' in 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT'.
+2025-08-27 17:14:52.373930 ; FilePackageRepository ; Debug       ; Rebuilding cache: .PackageCache.C83F5A61.17.xml [51.4 ms]
+2025-08-27 17:14:52.374930 ; Package Query  ; Debug       ; Read 17 packages from [FilePackageRepository: file:///C:/Users/Rachel/AppData/Local/OpenTap/PackageCache] [53.9 ms]
+2025-08-27 17:14:54.177301 ; HttpPackageRepository ; Debug       ; {"type":"TapPackage","directory":"/Packages/","version":"","architecture":"x64","os":"Windows"} -> found 1752 packages. [1.80 s]
+2025-08-27 17:14:55.712709 ; HttpPackageRepository ; Debug       ; {"type":"TapPackage","directory":"/Packages/","name":"Keysight IO Libraries Suite","version":"beta","architecture":"x64","os":"Windows"} -> found 0 packages. [1.51 s]
+2025-08-27 17:14:55.715713 ; image          ; Debug       ; Resolved image: TUI:1, OpenTAP:9.28.2+504225fd, Keysight Fixed License Manager:^1.6.2+d58f8a89, Keysight IO Libraries Suite:^18.4.30319-beta.2.5+a2799c9d, PathWave License Manager:^7.4.1+efeba870 [1.51 s]
+2025-08-27 17:14:57.519266 ; OpenTAP        ; Information ; Target installation is already up to date.
