@@ -1,4 +1,5 @@
 using System;
+using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Web.WebView2.Wpf;   // WPF WebView2
 using Microsoft.Web.WebView2.Core;
@@ -16,15 +17,38 @@ namespace KeysightGPT
 
         private async void Initialize()
         {
-            webView = new WebView2();
+            try
+            {
+                webView = new WebView2
+                {
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    VerticalAlignment = VerticalAlignment.Stretch
+                };
 
-            Content = webView;  // attach WebView2 into the UserControl
+                // Wrap in a Grid so it always expands
+                var grid = new Grid();
+                grid.Children.Add(webView);
+                Content = grid;
 
-            await webView.EnsureCoreWebView2Async();
+                // Try to init WebView2
+                await webView.EnsureCoreWebView2Async();
 
-            webView.Source = new Uri("http://localhost:3000");
+                // Once ready, set source
+                webView.Source = new Uri("http://localhost:3000");
 
-            webView.WebMessageReceived += OnWebMessageReceived;
+                // Handle messages (optional)
+                webView.WebMessageReceived += OnWebMessageReceived;
+            }
+            catch (Exception ex)
+            {
+                // If initialization fails, show error in UI instead of blank white
+                Content = new TextBlock
+                {
+                    Text = "WebView2 failed: " + ex.Message,
+                    Foreground = System.Windows.Media.Brushes.Red,
+                    Margin = new Thickness(10)
+                };
+            }
         }
 
         private void OnWebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)

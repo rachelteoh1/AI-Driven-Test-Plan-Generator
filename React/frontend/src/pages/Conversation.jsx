@@ -45,6 +45,7 @@ import { getVersionChatLogs } from "../services/chatServices";
 import { useGetAllInstruments } from "../hook/usePdf";
 import ScanResultsModal from "../modal/ScantResultModal";
 import CrossedModal from "../modal/CrossedModal";
+import InstrumentNotFoundModal from "../modal/InstrumentNotFoundModal";
 
 // Animation
 const spin = keyframes`
@@ -312,6 +313,10 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
         console.error("Error fetching SCPI JSON:", err);
       });
   } else {
+    setScpiSuggestions([]);    
+    showModal({
+      modal: <InstrumentNotFoundModal hideModal={hideModal} />
+    });
     console.warn("Instrument not found. Upload a PDF to get started.");
   }
 }, [instrumentsData, instrumentsLoading, selectedInstrument]);

@@ -86,7 +86,7 @@ export const darkTheme = {
 
   primary: "#EF4444",
   secondary: "#3B82F6",
-  accent: "#3B82F6",
+  accent: "#186ef7ff",
 
   hover: "#374151",
   newChat: "#2D3748",

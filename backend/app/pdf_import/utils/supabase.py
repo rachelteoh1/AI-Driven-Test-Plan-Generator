@@ -26,11 +26,14 @@ def upload_to_supabase(bucket_name: str, json_data: list, file_name: str) -> str
         # Convert JSON data to a string
         json_string = json.dumps(json_data, indent=4)
 
+        # Delete the file if it exists
+        supabase.storage.from_(bucket_name).remove([file_name])
+
         # Upload the JSON string to Supabase
         response = supabase.storage.from_(bucket_name).upload(
             file_name,
             json_string.encode("utf-8"),
-        {"content-type": "application/json"}
+            {"content-type": "application/json"}
         )
 
         # Construct the public URL
