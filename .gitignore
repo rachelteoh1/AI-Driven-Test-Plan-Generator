@@ -1,5 +1,15 @@
 # Python virtual environment
 backend/env/
+.env
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+env/
+venv/
+
 
 # SpaCy language models
 **/site-packages/en_core_web_lg/
