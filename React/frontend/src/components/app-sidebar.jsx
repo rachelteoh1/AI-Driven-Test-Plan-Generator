@@ -199,6 +199,7 @@ export function AppSidebar({
   onSetChat,
   isChatsLoading,
   onPdfUploadSuccess,
+  selectedInstrument,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -215,6 +216,7 @@ export function AppSidebar({
             <PdfModal
               hideModal={hideModal}
               onUploadSuccess={onPdfUploadSuccess}
+              selectedInstrument={selectedInstrument}
             />
           ),
         });

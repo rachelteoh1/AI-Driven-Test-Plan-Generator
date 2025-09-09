@@ -247,7 +247,7 @@ const VersionHistoryIndicator = styled.div`
   align-items: center;
 `;
 
-export default function ChatInterface({ chat, onSendMessage, isLoading }) {
+export default function ChatInterface({ chat, onSendMessage, isLoading, onInstrumentChange }) {
   const [inputValue, setInputValue] = useState("");
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editContent, setEditContent] = useState("");
@@ -276,7 +276,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     isLoading: instrumentsLoading,
     error: instrumentsError,
   } = useGetAllInstruments();
-
+  
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -284,6 +284,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   useEffect(() => {
     scrollToBottom();
   }, [chat.messages, isLoading]);
+
 
   useEffect(() => {
   if (!instrumentsData || instrumentsLoading || !selectedInstrument) return;
@@ -313,13 +314,14 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
         console.error("Error fetching SCPI JSON:", err);
       });
   } else {
-    setScpiSuggestions([]);    
+    setScpiSuggestions([]);
     showModal({
       modal: <InstrumentNotFoundModal hideModal={hideModal} />
     });
     console.warn("Instrument not found. Upload a PDF to get started.");
   }
 }, [instrumentsData, instrumentsLoading, selectedInstrument]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!isLoading && inputValue.trim()) {
@@ -380,11 +382,10 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   }
 
 
-
-
   const handleSelectInstrument = (instrument) => {
-    setSelectedInstrument(instrument)
-  }
+  setSelectedInstrument(instrument);
+ // need to fetch full instrument details from instrumentsData
+};
 
   const handleDeleteInstrument = (instrumentId) => {
     setDetectedInstruments((prev) => prev.filter((inst) => inst.id !== instrumentId))

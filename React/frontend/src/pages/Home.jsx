@@ -124,6 +124,7 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
   const detectIntentMutation  = useDetectIntent();
   const hasCreatedChatRef = useRef(false); //prevent duplicate call
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [selectedInstrument, setSelectedInstrument] = useState(null);
 
   const handlePdfUploadSuccess = () => {
     setRefreshTrigger(prev => prev + 1);
@@ -234,6 +235,7 @@ const handleSendMessage = async (message) => {
             onDeleteChat={handleDeleteChat}
             isChatsLoading={isChatsLoading}
             onPdfUploadSuccess={handlePdfUploadSuccess}
+            selectedInstrument={selectedInstrument}
           />
           <MainContent>
             <HeaderWrapper>
@@ -268,6 +270,7 @@ const handleSendMessage = async (message) => {
                 }}
                 onSendMessage={handleSendMessage}
                 isLoading={isReplyLoading}
+                onInstrumentChange={setSelectedInstrument}
               />
             </ChatWrapper>
           </MainContent>

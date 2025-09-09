@@ -60,7 +60,7 @@ export default function InstrumentNotFoundModal({ hideModal }) {
         </CloseButton>
         <Title>Instrument Not Found</Title>
         <Message>
-          Import a PDF to get started.
+          Import a user manual to get started.
         </Message>
         <Button variant="contained" color="primary" onClick={hideModal}>
           OK
