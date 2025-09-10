@@ -310,9 +310,9 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
       });
   } else {
     setScpiSuggestions([]);
-    showModal({
-      modal: <InstrumentNotFoundModal hideModal={hideModal} />
-    });
+    // showModal({
+    //   modal: <InstrumentNotFoundModal hideModal={hideModal} />
+    // });
     console.warn("Instrument not found. Upload a PDF to get started.");
   }
 }, [instrumentsData, instrumentsLoading, selectedInstrument]);
