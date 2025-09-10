@@ -309,18 +309,12 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
         console.error("Error fetching SCPI JSON:", err);
       });
   } else {
-    if (instruments.some(inst => inst.id === selectedInstrument.id)) {
-      setScpiSuggestions([]);
-      showModal({
-        modal: <InstrumentNotFoundModal hideModal={hideModal} />
-      });
-      console.warn("Instrument not found. Upload a PDF to get started.");
-    } else {
-      // instrument was deleted, just clear state silently
-      setScpiSuggestions([]);
-    }
+    setScpiSuggestions([]);
+    showModal({
+      modal: <InstrumentNotFoundModal hideModal={hideModal} />
+    });
+    console.warn("Instrument not found. Upload a PDF to get started.");
   }
-  
 }, [instrumentsData, instrumentsLoading, selectedInstrument]);
 
   const handleSubmit = (e) => {
@@ -388,18 +382,33 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
   // }
 
 
+// const handleSelectInstrument = async (instrument) => {
+//   try {
+//     const response = await selectMutation.mutateAsync({
+//       instrument_id: instrument.id,
+//       session_id: chat.session_id,
+//     });
+//     setSelectedInstrument(response); // response is from API
+//   } catch (err) {
+//     console.error("Failed to select instrument:", err);
+//   }
+// };
 const handleSelectInstrument = async (instrument) => {
   try {
     const response = await selectMutation.mutateAsync({
       instrument_id: instrument.id,
       session_id: chat.session_id,
     });
-    setSelectedInstrument(response); // response is from API
+
+    // Find the full instrument object from instrumentsData
+    const instruments = instrumentsData?.instruments || [];
+    const fullInstrument = instruments.find(inst => inst.id === response.id);
+
+    setSelectedInstrument(fullInstrument || response);
   } catch (err) {
     console.error("Failed to select instrument:", err);
   }
 };
-
 
   const handleDeleteInstrument = (instrumentId) => {
     if (selectedInstrument?.id === instrumentId) {
