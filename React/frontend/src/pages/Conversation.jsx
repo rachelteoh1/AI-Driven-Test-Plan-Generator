@@ -310,9 +310,9 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
       });
   } else {
     setScpiSuggestions([]);
-    showModal({
-      modal: <InstrumentNotFoundModal hideModal={hideModal} />
-    });
+    // showModal({
+    //   modal: <InstrumentNotFoundModal hideModal={hideModal} />
+    // });
     console.warn("Instrument not found. Upload a PDF to get started.");
   }
 }, [instrumentsData, instrumentsLoading, selectedInstrument]);
@@ -405,6 +405,11 @@ const handleSelectInstrument = async (instrument) => {
     const fullInstrument = instruments.find(inst => inst.id === response.id);
 
     setSelectedInstrument(fullInstrument || response);
+
+    // Notify parent (Home.jsx) of the change
+    if (onInstrumentChange) {
+      onInstrumentChange(fullInstrument || response);
+    }
   } catch (err) {
     console.error("Failed to select instrument:", err);
   }
