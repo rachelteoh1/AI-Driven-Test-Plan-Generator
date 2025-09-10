@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import styled from "styled-components"
-import { useState } from "react"
-import { Button } from "@mui/material"
-import { Badge } from "@mui/material"
-import { CheckCircle2, Wifi, X } from "lucide-react"
-import { COLORS } from "../lib/styles"
+import styled from "styled-components";
+import { useState } from "react";
+import { Button } from "@mui/material";
+import { Badge } from "@mui/material";
+import { CheckCircle2, Wifi, X } from "lucide-react";
+import { COLORS } from "../lib/styles";
 
 const ModalWrapper = styled.div`
   background-color: ${({ theme }) => theme.background};
@@ -15,7 +15,7 @@ const ModalWrapper = styled.div`
   position: fixed;
   inset: 0;
   z-index: 50;
-`
+`;
 
 const CenteredDiv = styled.div`
   display: flex;
@@ -29,13 +29,13 @@ const CenteredDiv = styled.div`
   border-radius: 1rem;
   padding: 2rem;
   box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.2);
-`
+`;
 
 const TitleRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-`
+`;
 
 const InstrumentsList = styled.div`
   display: flex;
@@ -43,7 +43,7 @@ const InstrumentsList = styled.div`
   gap: 0.75rem;
   max-height: 15rem;
   overflow-y: auto;
-`
+`;
 
 const InstrumentCard = styled.div`
   padding: 1rem;
@@ -63,29 +63,37 @@ const InstrumentCard = styled.div`
   }
 `
 
+
+
+
+
+
 export default function ScanResultsModal({
   hideModal,
   detectedInstruments,
   onSelectInstrument,
   selectedInstrument,
 }) {
-  const [localSelectedInstrument, setLocalSelectedInstrument] = useState(selectedInstrument)
+  const [localSelectedInstrument, setLocalSelectedInstrument] =
+    useState(selectedInstrument);
 
   const handleSelectInstrument = (instrument) => {
-    setLocalSelectedInstrument(instrument)
-  }
+    setLocalSelectedInstrument(instrument);
+    console.log("Selected instrument:", instrument)
+console.log("Local state:", localSelectedInstrument)
+  };
 
   const handleConfirmSelection = () => {
     if (localSelectedInstrument) {
-      onSelectInstrument(localSelectedInstrument)
+      onSelectInstrument(localSelectedInstrument);
     }
-    hideModal()
-  }
+    hideModal();
+  };
 
   const handleCancel = () => {
-    setLocalSelectedInstrument(selectedInstrument)
-    hideModal()
-  }
+    setLocalSelectedInstrument(selectedInstrument);
+    hideModal();
+  };
 
   return (
     <ModalWrapper>
@@ -116,21 +124,32 @@ export default function ScanResultsModal({
             <div className="text-center py-8 text-gray-400">
               <Wifi className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p>No instruments detected</p>
-              <p className="text-sm">Make sure instruments are connected and powered on.</p>
+              <p className="text-sm">
+                Make sure instruments are connected and powered on.
+              </p>
             </div>
           ) : (
             detectedInstruments.map((instrument) => (
               <InstrumentCard
                 key={instrument.id}
-                isSelected={localSelectedInstrument?.id === instrument.id}
+                isSelected={localSelectedInstrument?.resource_string === instrument.resource_string}
                 onClick={() => handleSelectInstrument(instrument)}
               >
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium">{instrument.name}</span>
-                    <Badge variant="outlined">{instrument.model}</Badge>
+                    <span className="font-medium">
+                      {instrument.model || ""}{" "}
+                    </span>
+                    {instrument.serial && (
+                      <Badge variant="outlined">{instrument.serial}</Badge>
+                    )}
                   </div>
-                  <div className="text-sm text-gray-500">{instrument.address}</div>
+                  <div className="text-sm text-gray-500">
+                    {instrument.resource_string}
+                  </div>
+                   <div className="text-sm text-gray-500">
+                    {instrument.manufacturer || "Unknown"} - Firmware: {instrument.firmware || "N/A"}
+                  </div>
                 </div>
                 {localSelectedInstrument?.id === instrument.id && (
                   <CheckCircle2 className="h-5 w-5 text-blue-500" />
@@ -157,5 +176,5 @@ export default function ScanResultsModal({
         </div>
       </CenteredDiv>
     </ModalWrapper>
-  )
+  );
 }

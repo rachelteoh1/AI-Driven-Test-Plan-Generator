@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import * as React from "react";
 import Button from "@mui/material/Button";
 import ScanInstrumentModal from "../modal/ScanInstrumentModal";
+import { useAllInstruments, useScanInstrument, useSelectInstrument, useDeleteInstrument, useDeleteAllInstrument } from "../hook/useInstrument";
 import useModal from "../modal/useModal";
 import {
   DropdownMenu,
@@ -262,21 +263,15 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
   const [ghostText, setGhostText] = useState("");
   const { showModal, hideModal } = useModal();
   const [isScanning, setIsScanning] = useState(false)
-  const [detectedInstruments, setDetectedInstruments] = useState([
-    { id: "1", name: "Oscilloscope", model: "DSOX3024T", address: "192.168.1.100" },
-    { id: "2", name: "Function Generator", model: "33500B", address: "192.168.1.101" },
-    { id: "3", name: "Multimeter", model: "34465A", address: "192.168.1.102" },
-    { id: "4", name: "Power Supply", model: "PZ2100A", address: "192.168.1.103" },
-  ])
+  const [selectedInstrument, setSelectedInstrument] = useState(null);
 
-  const [selectedInstrument, setSelectedInstrument] = useState(null)
 
   const {
     data: instrumentsData,
     isLoading: instrumentsLoading,
     error: instrumentsError,
   } = useGetAllInstruments();
-  
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -287,117 +282,135 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
 
 
   useEffect(() => {
-  if (!instrumentsData || instrumentsLoading || !selectedInstrument) return;
+    if (!instrumentsData || instrumentsLoading || !selectedInstrument) return;
 
-  // Use the correct key for your instruments array
-  const instruments = instrumentsData.instruments || [];
+    // Use the correct key for your instruments array
+    const instruments = instrumentsData.instruments || [];
 
-  const matchedInstrument = instruments.find((instrument) => {
-    if (!instrument.instrument_filename || !selectedInstrument.model) return false;
-    const names = instrument.instrument_filename
-      .split("_")
-      .map((n) => n.toLowerCase());
-    return names.includes(selectedInstrument.model.toLowerCase());
-  });
-
-  if (matchedInstrument && matchedInstrument.json_url_manual) {
-    fetch(matchedInstrument.json_url_manual)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Failed to fetch JSON: ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        console.log("Fetched SCPI JSON data:", data);
-        setScpiSuggestions(data);
-      })
-      .catch((err) => {
-        console.error("Error fetching SCPI JSON:", err);
-      });
-  } else {
-    setScpiSuggestions([]);
-    showModal({
-      modal: <InstrumentNotFoundModal hideModal={hideModal} />
+    const matchedInstrument = instruments.find((instrument) => {
+      if (!instrument.instrument_filename || !selectedInstrument.model) return false;
+      const names = instrument.instrument_filename
+        .split("_")
+        .map((n) => n.toLowerCase());
+      return names.includes(selectedInstrument.model.toLowerCase());
     });
-    console.warn("Instrument not found. Upload a PDF to get started.");
-  }
-}, [instrumentsData, instrumentsLoading, selectedInstrument]);
+
+    if (matchedInstrument && matchedInstrument.json_url_manual) {
+      fetch(matchedInstrument.json_url_manual)
+        .then((res) => {
+          if (!res.ok) throw new Error(`Failed to fetch JSON: ${res.status}`);
+          return res.json();
+        })
+        .then((data) => {
+          console.log("Fetched SCPI JSON data:", data);
+          setScpiSuggestions(data);
+        })
+        .catch((err) => {
+          console.error("Error fetching SCPI JSON:", err);
+        });
+    } else {
+      if (instruments.some(inst => inst.id === selectedInstrument.id)) {
+        setScpiSuggestions([]);
+        showModal({
+          modal: <InstrumentNotFoundModal hideModal={hideModal} />
+        });
+        console.warn("Instrument not found. Upload a PDF to get started.");
+      } else {
+        // instrument was deleted, just clear state silently
+        setScpiSuggestions([]);
+      }
+    }
+
+  }, [instrumentsData, instrumentsLoading, selectedInstrument]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!isLoading && inputValue.trim()) {
-      onSendMessage(inputValue);
+      onSendMessage(inputValue, selectedInstrument?.id);
       setInputValue("");
     }
   };
 
-  const [showScanResults, setShowScanResults] = useState(false);
+  const { data: instrumentData = [], isLoading: isGettingAllInstrument } = useAllInstruments();
+  const scanMutation = useScanInstrument();
+  const selectMutation = useSelectInstrument();
+  const deleteInstrumentMutation = useDeleteInstrument();
+  const deleteAllInstrumentMutation = useDeleteAllInstrument();
 
-  const handleScanInstrument = async () => {
-    setIsScanning(true);
+  console.log("Session_ID:", chat.session_id);
 
-    setTimeout(() => {
 
-      const data = [{ id: "1", name: "Oscilloscope", model: "DSOX3024T", address: "192.168.1.100" },
-      { id: "2", name: "Function Generator", model: "33500B", address: "192.168.1.101" },
-      { id: "3", name: "Multimeter", model: "34465A", address: "192.168.1.102" }, // try [ { id: 1, name: "Instrument A" } ] to test ScanResultModal
-      { id: "4", name: "Power Supply", model: "PZ2100A", address: "192.168.1.102" }]
-      if (data.length > 0) {
-        showModal({
-          modal: (
-            <ScanResultsModal
-              // results={data}
-              hideModal={hideModal}
-              // detectedInstruments={detectedInstruments}
-              detectedInstruments={data}
-              onSelectInstrument={setSelectedInstrument}
-              selectedInstrument={selectedInstrument}
-            />
-          ),
-        });
-      } else {
-        showModal({
-          modal: (
-            <CrossedModal
-              title="No instruments detected"
-              description="Make sure instrument is connected."
-              hideModal={hideModal}
-            />
-          ),
-        });
-      }
-      setIsScanning(false);
-    }, 1000);
+  const handleScanInstrument = () => {
+    scanMutation.mutate(undefined, {
+      onSuccess: (scannedInstruments) => {
+        if (scannedInstruments.length > 0) {
+          showModal({
+            modal: (
+              <ScanResultsModal
+                hideModal={hideModal}
+                detectedInstruments={scannedInstruments}
+                onSelectInstrument={(instrument) => {
+                  selectMutation.mutate({
+                    instrument_id: instrument.id,
+                    session_id: chat.session_id,
+                  }, {
+                    onSuccess: (response) => {
+                      setSelectedInstrument(response);
+                      hideModal();
+                    }
+                  });
+                }}
+                selectedInstrument={selectedInstrument}
+              />
+            ),
+          });
+        } else {
+          showModal({
+            modal: (
+              <CrossedModal
+                title="No instruments detected"
+                description="Make sure instrument is connected."
+                hideModal={hideModal}
+              />
+            ),
+          });
+        }
+      },
+    });
   };
 
+  // const handleSubmitInstrument = (e) => {
+  //   e.preventDefault()
+  //   if (inputValue.trim()) {
+  //     console.log("Submitting:", inputValue, "with instrument:", selectedInstrument)
+  //     setInputValue("")
+  //   }
+  // }
 
 
-
-
-  const handleSubmitInstrument = (e) => {
-    e.preventDefault()
-    if (inputValue.trim()) {
-      console.log("Submitting:", inputValue, "with instrument:", selectedInstrument)
-      setInputValue("")
+  const handleSelectInstrument = async (instrument) => {
+    try {
+      const response = await selectMutation.mutateAsync({
+        instrument_id: instrument.id,
+        session_id: chat.session_id,
+      });
+      setSelectedInstrument(response); // response is from API
+    } catch (err) {
+      console.error("Failed to select instrument:", err);
     }
-  }
-
-
-  const handleSelectInstrument = (instrument) => {
-  setSelectedInstrument(instrument);
- // need to fetch full instrument details from instrumentsData
-};
+  };
 
   const handleDeleteInstrument = (instrumentId) => {
-    setDetectedInstruments((prev) => prev.filter((inst) => inst.id !== instrumentId))
     if (selectedInstrument?.id === instrumentId) {
-      setSelectedInstrument(null)
+      setSelectedInstrument(null);
     }
-  }
+    deleteInstrumentMutation.mutate({ instrument_id: instrumentId });
+  };
 
   const handleDeleteAllInstruments = () => {
-    setDetectedInstruments([])
-    setSelectedInstrument(null)
-  }
+    setSelectedInstrument(null);
+    deleteAllInstrumentMutation.mutate();
+  };
 
 
   const copyToClipboard = async (text, messageId) => {
@@ -611,12 +624,11 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
           onKeyDown={handleKeyDown}
           onScan={handleScanInstrument}
           selectedInstrument={selectedInstrument}
-          detectedInstruments={detectedInstruments}
           handleDeleteAllInstruments={handleDeleteAllInstruments}
           handleDeleteInstrument={handleDeleteInstrument}
           handleSelectInstrument={handleSelectInstrument}
           isScanning={isScanning}
-          handleSubmitInstrument={handleSubmitInstrument}
+          instrumentData={instrumentData}
 
         />
       </InputArea>
@@ -950,9 +962,12 @@ function MessageInput({
   ghostText,
   onKeyDown,
   onScan,
-  handleSubmitInstrument,
-  selectedInstrument, detectedInstruments, handleDeleteAllInstruments, handleDeleteInstrument, handleSelectInstrument, isScanning
-
+  selectedInstrument,
+  handleDeleteAllInstruments,
+  handleDeleteInstrument,
+  handleSelectInstrument,
+  isScanning,
+  instrumentData,
 
 }) {
   const textareaRef = useRef(null);
@@ -995,7 +1010,7 @@ function MessageInput({
                 {selectedInstrument ? (
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="text-xs">
-                      {selectedInstrument.name}
+                      {selectedInstrument.model}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
                       {selectedInstrument.model}
@@ -1010,12 +1025,12 @@ function MessageInput({
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="start" className="w-80 bg-white shadow-md">
-            {detectedInstruments.length === 0 ? (
+            {!Array.isArray(instrumentData) || instrumentData.length === 0 ? (
               <DropdownMenuItem disabled>No instruments detected</DropdownMenuItem>
             ) : (
               <>
-                {Array.isArray(detectedInstruments) &&
-                  detectedInstruments.map((instrument) => (
+                {Array.isArray(instrumentData) &&
+                  instrumentData.map((instrument) => (
                     <DropdownMenuItem
                       key={instrument.id}
                       className="flex items-center justify-between p-3"
@@ -1024,9 +1039,10 @@ function MessageInput({
                         className="flex-1 cursor-pointer"
                         onClick={() => handleSelectInstrument(instrument)}
                       >
-                        <div className="font-medium">{instrument.name}</div>
+                        <div className="font-medium">{instrument.modal}</div>
                         <div className="text-sm text-muted-foreground">
-                          {instrument.model} • {instrument.address}
+                          {instrument.model} • {instrument.resource_string}
+
                         </div>
                       </div>
                       <Button
@@ -1084,14 +1100,7 @@ function MessageInput({
         </TextAreaWrapper>
       </div>
 
-      {selectedInstrument && (
-        <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Selected:</span>
-          <Badge variant="outline">
-            {selectedInstrument.name} ({selectedInstrument.model})
-          </Badge>
-        </div>
-      )}
+
 
     </>
   );

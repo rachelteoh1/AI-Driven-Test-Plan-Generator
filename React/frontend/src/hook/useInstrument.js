@@ -51,8 +51,10 @@ export const useSelectInstrument = () => {
   return useMutation({
     mutationFn: ({ instrument_id, session_id }) =>
       service.selectInstrument(instrument_id, session_id),
+
     onSuccess: (_, variables) => {
       // invalidate only the relevant session cache
+
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.session(variables.session_id),
       });
@@ -60,7 +62,7 @@ export const useSelectInstrument = () => {
   });
 };
 
-// Update selected instrument
+// Update selected instrument 's message id
 export const useUpdateSelectedInstrument = () => {
   const queryClient = useQueryClient();
 
