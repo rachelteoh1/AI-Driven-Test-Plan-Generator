@@ -1,31 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\KeysightGPT.csproj": {}
+    "/Users/lichee/FYP/temp-clean-repo/KeysightGPT/KeysightGPT.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\KeysightGPT.csproj": {
+    "/Users/lichee/FYP/temp-clean-repo/KeysightGPT/KeysightGPT.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\KeysightGPT.csproj",
+        "projectUniqueName": "/Users/lichee/FYP/temp-clean-repo/KeysightGPT/KeysightGPT.csproj",
         "projectName": "KeysightGPT",
-        "projectPath": "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\KeysightGPT.csproj",
-        "packagesPath": "C:\\Users\\Rachel\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\obj\\",
+        "projectPath": "/Users/lichee/FYP/temp-clean-repo/KeysightGPT/KeysightGPT.csproj",
+        "packagesPath": "/Users/lichee/.nuget/packages/",
+        "outputPath": "/Users/lichee/FYP/temp-clean-repo/KeysightGPT/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Rachel\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/lichee/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net472"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -38,18 +32,18 @@
           "warnAsError": [
             "NU1605"
           ]
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.200"
+        }
       },
       "frameworks": {
         "net472": {
           "targetAlias": "net472",
           "dependencies": {
+            "Microsoft.NETFramework.ReferenceAssemblies": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.0.3, )",
+              "autoReferenced": true
+            },
             "Microsoft.Web.WebView2": {
               "target": "Package",
               "version": "[1.0.3405.78, )"
@@ -63,7 +57,7 @@
               "version": "[9.28.2, )"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/7.0.203/RuntimeIdentifierGraph.json"
         }
       }
     }
