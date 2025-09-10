@@ -405,6 +405,11 @@ const handleSelectInstrument = async (instrument) => {
     const fullInstrument = instruments.find(inst => inst.id === response.id);
 
     setSelectedInstrument(fullInstrument || response);
+
+    // Notify parent (Home.jsx) of the change
+    if (onInstrumentChange) {
+      onInstrumentChange(fullInstrument || response);
+    }
   } catch (err) {
     console.error("Failed to select instrument:", err);
   }
