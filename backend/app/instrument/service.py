@@ -23,6 +23,22 @@ def save_selected_instrument(db: Session, instrument_id: UUID, session_id: UUID,
         if not instrument:
             raise HTTPException(status_code=404, detail=f"Instrument {instrument_id} not found")
         
+        # Check if already selected for this session
+        selected = db.query(SelectedInstrument).filter_by(
+            instrument_id=instrument_id,
+            session_id=session_id
+        ).first()
+        
+        if selected:
+            # Optionally update message_id or other fields if needed
+            if chatlog_id:
+                selected.message_id = chatlog_id
+                db.commit()
+                db.refresh(selected)
+            logger.info(f"Instrument already selected: {selected.instrument_id})")
+            return selected
+
+        # Otherwise, create new selection
         selected = SelectedInstrument(
             instrument_id=instrument_id,
             session_id=session_id,

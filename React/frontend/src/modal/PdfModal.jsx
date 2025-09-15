@@ -157,7 +157,7 @@ export default function PdfModal({ hideModal, onUploadSuccess, selectedInstrumen
   const [showErrorModal, setShowErrorModal] = useState(false);
   const fileInputRef = useRef();
 
-  // console.log("selectedInstrument in PdfModal:", selectedInstrument);
+  console.log("selectedInstrument in PdfModal:", selectedInstrument);
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);

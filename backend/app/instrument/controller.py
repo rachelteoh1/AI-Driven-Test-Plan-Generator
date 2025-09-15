@@ -10,6 +10,7 @@ from typing import List
 router = APIRouter(prefix="/instruments", tags=["instruments"])
 
 class InstrumentInfo(BaseModel):
+    id: UUID | None = None
     resource_string: str
     idn: str | None = None
     manufacturer: str | None = None
@@ -44,8 +45,8 @@ class AllInstrumentResponse(BaseModel):
     model: str | None = None
     serial: str | None = None
     firmware: str | None = None
-    # instrument_filename: str | None = None
-    # json_url_manual: str | None = None
+    instrument_filename: str | None = None
+    json_url_manual: str | None = None
    
    
    
