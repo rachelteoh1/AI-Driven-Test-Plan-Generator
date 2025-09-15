@@ -129,7 +129,7 @@ const StyledChatItem = styled.div`
 
   &:hover {
     background-color: ${({ isActive, theme }) =>
-      isActive ? theme.newChat : theme.hover};
+    isActive ? theme.newChat : theme.hover};
   }
 `;
 
@@ -214,6 +214,7 @@ export function AppSidebar({
         showModal({
           modal: (
             <PdfModal
+              key={selectedInstrument?.id}
               hideModal={hideModal}
               onUploadSuccess={onPdfUploadSuccess}
               selectedInstrument={selectedInstrument}
@@ -336,9 +337,8 @@ export function AppSidebar({
                   style={{ width: "100%", textAlign: "left" }}
                 >
                   <item.icon
-                    className={`h-4 w-4 ${
-                      item.disabled ? "text-gray-400" : ""
-                    }`}
+                    className={`h-4 w-4 ${item.disabled ? "text-gray-400" : ""
+                      }`}
                   />
                   <span>{item.title}</span>
                 </Button>
