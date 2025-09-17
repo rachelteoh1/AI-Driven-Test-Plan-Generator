@@ -262,11 +262,20 @@ def count_scpi_commands(scpi_json):
         for item in scpi_json:
             count += count_scpi_commands(item)
     return count
+
+def normalize_scpi_command(cmd):
+    """
+    Removes brackets, angle brackets, spaces, and symbols from a SCPI command and lowercases it.
+    """
+    cmd = re.sub(r"[\[\]<>]", "", cmd)  # Remove brackets and angle brackets
+    cmd = re.sub(r"\s+", "", cmd)       # Remove all whitespace
+    cmd = re.sub(r"[^\w:*\?]", "", cmd) # Remove non-word characters except :, *, ?
+    return cmd.lower()
     
 def extract_scpi_from_pdf(file_bytes):
     """
     Extracts SCPI commands and metadata from a PDF file by merging all relevant pages,
-    sending them in a single call to the model, and calculating extraction accuracy.
+    sending them in a single call to the model, and calculating extraction coverage.
     """
     try:
         # Step 1: Extract instrument name and SCPI pages
@@ -287,19 +296,46 @@ def extract_scpi_from_pdf(file_bytes):
 
         # Step 2: Extract total SCPI commands from TOC
         toc_result = extract_scpi_commands_from_toc(file_bytes)
+        toc_commands = set(normalize_scpi_command(cmd) for cmd in toc_result.get("scpi_commands", []))
         total_scpi_commands = toc_result.get("total_scpi_commands", 1)  # avoid division by zero
         print(f"Total SCPI commands in TOC: {total_scpi_commands}")
 
-        # Step 3: Calculate accuracy
-        accuracy = int((scpi_command_count / total_scpi_commands) * 100) if total_scpi_commands else 0
-        print(f"Accuracy: {accuracy}%")
+        # Step 3: Collect all normalized extracted SCPI commands
+        def collect_extracted_commands(scpi_json):
+            commands = set()
+            if isinstance(scpi_json, dict):
+                for key, value in scpi_json.items():
+                    if key == "command" and isinstance(value, str):
+                        commands.add(normalize_scpi_command(value))
+                    else:
+                        commands.update(collect_extracted_commands(value))
+            elif isinstance(scpi_json, list):
+                for item in scpi_json:
+                    commands.update(collect_extracted_commands(item))
+            return commands
 
-        # Step 4: Return extracted data with accuracy
+        extracted_commands = collect_extracted_commands(merged_results)
+
+        # Step 4: Calculate how many extracted commands match TOC commands
+        matched_commands = extracted_commands & toc_commands
+        scpi_command_matched = len(matched_commands)
+        print(f"Matched SCPI commands: {scpi_command_matched} / {total_scpi_commands}")
+
+        for cmd in matched_commands:
+            print(f"Matched SCPI command: {cmd}")
+        
+        # Step 5: Calculate coverage
+        coverage = int((scpi_command_matched / total_scpi_commands) * 100) if total_scpi_commands else 0
+        print(f"Coverage: {coverage}%")
+
+        # Step 6: Return extracted data with coverage
         return {
             "instrument_name": instrument_name,
             "scpi_commands": merged_results,
-            "scpi_command_count": scpi_command_count,
-            "accuracy": accuracy
+            "total_scpi_commands_extracted": scpi_command_count,
+            "total_scpi_commands_in_toc": total_scpi_commands,
+            "scpi_command_matched": scpi_command_matched,
+            "coverage": coverage
         }
     except Exception as e:
         raise ValueError(f"Failed to extract SCPI commands from PDF: {str(e)}")

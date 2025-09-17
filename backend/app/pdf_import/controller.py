@@ -48,13 +48,13 @@ async def extract_actual_scpi(file: UploadFile = File(...)):
     if not file:
         raise HTTPException(status_code=422, detail="No file uploaded")
     try:
-        result = extract_scpi_commands_from_toc(file)
+        file_bytes = await file.read()  # Read file as bytes
+        result = extract_scpi_commands_from_toc(file_bytes)  # Pass bytes, not UploadFile
         result["total_scpi_commands"] = len(result.get("scpi_commands", []))
         return JSONResponse(content=result)
     except Exception as e:
         logging.exception("Failed to extract SCPI commands from PDF")
-        raise HTTPException(status_code=500, detail=f"Error extracting SCPI commands: {str(e)}")
-
+        raise HTTPException(status_code=500, detail=f"Error extracting SCPI commands: {str(e)}")
 
 @router.post("/test-extract-scpi-from-pdf")
 async def extract_scpi_from_pdf_endpoint(file: UploadFile = File(...)):
