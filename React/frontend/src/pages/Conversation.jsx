@@ -342,6 +342,9 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
                   }, {
                     onSuccess: (response) => {
                       setSelectedInstrument(response);
+                      if (onInstrumentChange) {
+                        onInstrumentChange(response);
+                      }
                       hideModal();
                     }
                   });
@@ -488,86 +491,94 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
     return message.content;
   };
 
-  const handleInputChange = (value) => {
+const handleInputChange = (value) => {
+  setInputValue(value);
 
-    setInputValue(value);
+  if (!value.trim()) {
+    setGhostText("");
+    return;
+  }
 
-    if (!value.trim()) {
-      setGhostText("");
+  const rawParts = value.split(" ");
+  let parts = rawParts.filter((p, idx) => p !== "" || idx < rawParts.length - 1);
+
+  if (value.endsWith(" ") && parts[parts.length - 1] !== "") {
+    parts.push(""); // placeholder for suggestion
+  }
+
+  console.log("Parts:", parts);
+
+  let node = scpiSuggestions;
+  let ghost = "";
+
+  const metaKeys = ["command", "description", "parameters", "values"];
+
+  // --- 1️⃣ Traverse hierarchy only ---
+  let i = 0;
+  for (; i < parts.length; i++) {
+    const part = parts[i];
+    if (!node || typeof node !== "object") break;
+
+    // ignore metadata keys
+    const keys = Object.keys(node).filter((k) => !metaKeys.includes(k));
+
+    // stop hierarchy traversal once parameters exist
+    if (node.parameters) break;
+
+    if (i < parts.length - 1 || part !== "") {
+      const match = keys.find((k) =>
+        k.toLowerCase().startsWith(part.toLowerCase())
+      );
+      if (match) {
+        if (match.toLowerCase() !== part.toLowerCase()) {
+          ghost = match.slice(part.length);
+          setGhostText(ghost);
+          return;
+        }
+        node = node[match]; // go deeper
+      } else {
+        break;
+      }
+    } else {
+      if (keys.length > 0) {
+        ghost = keys[0];
+        setGhostText(ghost);
+        return;
+      }
+    }
+  }
+
+  // --- 2️⃣ Suggest parameters ---
+  if (node.parameters && i === parts.length - 1) {
+    const typed = parts[parts.length - 1].toLowerCase();
+    const match = node.parameters.find((p) =>
+      p.toLowerCase().startsWith(typed)
+    );
+    if (match && match.toLowerCase() !== typed) {
+      ghost = match.slice(typed.length);
+      setGhostText(ghost);
       return;
     }
+  }
 
-    // Split by spaces and preserve trailing empty (important for space suggestion)
-    const rawParts = value.split(" ");
-    let parts = rawParts.filter((p, idx) => p !== "" || idx < rawParts.length - 1);
+  // --- 3️⃣ Suggest values for selected parameter ---
+  if (node.parameters && node.values) {
+    const lastWord = parts[parts.length - 2]?.toLowerCase(); // param name
+    const typed = parts[parts.length - 1].toLowerCase();
 
-    if (value.endsWith(" ") && parts[parts.length - 1] !== "") {
-      parts.push(""); // keep a placeholder for the next suggestion
+    const vals = node.values[lastWord] || [];
+
+    const match = vals.find((v) => v.toLowerCase().startsWith(typed));
+    if (match && match.toLowerCase() !== typed) {
+      ghost = match.slice(typed.length);
+    } else {
+      ghost = "";
     }
+  }
 
-    console.log("Parts:", parts);
+  setGhostText(ghost);
+};
 
-    let node = scpiSuggestions;
-    let ghost = "";
-
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i];
-
-      if (!node || typeof node !== "object") break;
-
-      const keys = Object.keys(node);
-
-      // --- Handle SCPI hierarchical commands ---
-      if (i < parts.length - 1 || part !== "") {
-        // not the last empty placeholder
-        const match = keys.find((k) =>
-          k.toLowerCase().startsWith(part.toLowerCase())
-        );
-        if (match) {
-          if (match.toLowerCase() !== part.toLowerCase()) {
-            // Partial match → ghost the rest
-            ghost = match.slice(part.length);
-            break;
-          }
-          // Exact match → go deeper
-          node = node[match];
-        } else {
-          break;
-        }
-      } else {
-        // Last part is empty → suggest the "first key" at this level
-        if (keys.length > 0) {
-          ghost = keys[0];
-        }
-      }
-
-      // --- Handle parameters ---
-      if (i === parts.length - 1 && node.parameters) {
-        const paramPart = part;
-        const match = node.parameters.find((p) =>
-          p.toLowerCase().startsWith(paramPart.toLowerCase())
-        );
-        if (match && match.toLowerCase() !== paramPart.toLowerCase()) {
-          ghost = match.slice(paramPart.length);
-        }
-      }
-
-      // --- Handle values ---
-      if (i === parts.length - 1 && node.values) {
-        const prev = parts[parts.length - 2]?.toLowerCase();
-        const values = node.values[prev] || [];
-        const valPart = part;
-        const match = values.find((v) =>
-          v.toLowerCase().startsWith(valPart.toLowerCase())
-        );
-        if (match && match.toLowerCase() !== valPart.toLowerCase()) {
-          ghost = match.slice(valPart.length);
-        }
-      }
-    }
-
-    setGhostText(ghost);
-  };
 
 
   const handleKeyDown = (e) => {

@@ -21,6 +21,13 @@ EXCLUDE_KEYWORDS = [
     "summary"
 ]
 
+TOC = [
+    " . . . . . . . . . . . . . . . .",
+    "............",
+]
+
+import re
+
 SCPI_REGEX = re.compile(
     r"""
     (?<!\S)                                      # token boundary
@@ -41,6 +48,24 @@ SCPI_REGEX = re.compile(
     """,
     re.VERBOSE | re.IGNORECASE,
 )
+
+import re
+
+SCPI_TOC_REGEX = re.compile(r"""
+    ^\s*                             # optional leading spaces
+    ([:\*]                         # must start with :, *, or [
+        (?:\[?[A-Z]{3,4}[a-z]*\]?   # first keyword: 3-4 uppercase, optional lowercase, optional brackets
+            (?:                      
+                :\[?[A-Z]{3,4}[a-z]*\]?   # hierarchy keywords, same pattern
+                |
+                \[[^\]]+\]               # optional brackets content
+                |
+                <[^>]+>                  # optional parameters in <>
+            )*
+        )
+    )
+    \??                               # optional query ?
+    """, re.VERBOSE)
 
 def is_unwanted_page(text):
     """Check if page is likely a TOC or unrelated."""
@@ -96,13 +121,13 @@ def extract_instrument_name(text):
 
     return "_".join(instruments) if instruments else "unknown_instrument"
 
-def extract_scpi_pages(file):
+def extract_scpi_pages(file_bytes):
     """
     Extracts text from pages that likely contain SCPI subsystem commands.
     Only extracts pages where the first 10 words contain the word "subsystem".
     """
     try:
-        doc = fitz.open(stream=file.file.read(), filetype="pdf")
+        doc = fitz.open(stream=file_bytes, filetype="pdf")
         scpi_pages = []
         
         # Extract instrument name
@@ -221,35 +246,31 @@ def merge_scpi_json(json_list):
                 merged[intent] = {}
             for subsystem, details in subsystems.items():
                 merged[intent][subsystem] = details
-
     return merged
+
 def count_scpi_commands(scpi_json):
     """
-    Recursively counts the number of SCPI commands in the merged JSON result,
-    only if the 'command' value matches the SCPI_REGEX.
+    Recursively counts every occurrence of 'command' as a key at any level in the JSON.
     """
     count = 0
     if isinstance(scpi_json, dict):
         for key, value in scpi_json.items():
-            if key == "command" and isinstance(value, str):
-                # Only count if the command string matches SCPI_REGEX
-                if SCPI_REGEX.match(value.strip()):
-                    count += 1
-            else:
-                count += count_scpi_commands(value)
+            if key == "command":
+                count += 1
+            count += count_scpi_commands(value)
     elif isinstance(scpi_json, list):
         for item in scpi_json:
             count += count_scpi_commands(item)
     return count
-
-def extract_scpi_from_pdf(file):
+    
+def extract_scpi_from_pdf(file_bytes):
     """
-    Extracts SCPI commands and metadata from a PDF file by merging all relevant pages
-    and sending them in a single call to the model.
+    Extracts SCPI commands and metadata from a PDF file by merging all relevant pages,
+    sending them in a single call to the model, and calculating extraction accuracy.
     """
     try:
         # Step 1: Extract instrument name and SCPI pages
-        instrument_name, scpi_pages = extract_scpi_pages(file)
+        instrument_name, scpi_pages = extract_scpi_pages(file_bytes)
 
         # Merge all relevant page texts into one big string
         merged_text = "\n\n".join(
@@ -258,49 +279,54 @@ def extract_scpi_from_pdf(file):
 
         # Send the merged text to the model in one call
         result = process_scpi_text(merged_text, page_number="all")
-
         merged_results = merge_scpi_json([result])
 
         # Count the number of SCPI commands extracted
         scpi_command_count = count_scpi_commands(merged_results)
         print(f"Extracted {scpi_command_count} SCPI commands.")
 
-        # Step 3: Return extracted data
+        # Step 2: Extract total SCPI commands from TOC
+        toc_result = extract_scpi_commands_from_toc(file_bytes)
+        total_scpi_commands = toc_result.get("total_scpi_commands", 1)  # avoid division by zero
+        print(f"Total SCPI commands in TOC: {total_scpi_commands}")
+
+        # Step 3: Calculate accuracy
+        accuracy = int((scpi_command_count / total_scpi_commands) * 100) if total_scpi_commands else 0
+        print(f"Accuracy: {accuracy}%")
+
+        # Step 4: Return extracted data with accuracy
         return {
             "instrument_name": instrument_name,
             "scpi_commands": merged_results,
-            "scpi_command_count": scpi_command_count
+            "scpi_command_count": scpi_command_count,
+            "accuracy": accuracy
         }
     except Exception as e:
         raise ValueError(f"Failed to extract SCPI commands from PDF: {str(e)}")
     
-def extract_scpi_from_pdf(file):
+def extract_scpi_commands_from_toc(file_bytes):
     """
-    Extracts SCPI commands and metadata from a PDF file by merging all relevant pages
-    and sending them in a single call to the model.
+    Extracts TOC pages and SCPI commands from those pages in a PDF file.
+    Returns a dict with 'toc_pages' and 'scpi_commands'.
     """
-    try:
-        # Step 1: Extract instrument name and SCPI pages
-        instrument_name, scpi_pages = extract_scpi_pages(file)
-
-        # Merge all relevant page texts into one big string
-        merged_text = "\n\n".join(
-            f"--- Page {page_number} ---\n{text}" for page_number, text in scpi_pages
-        )
-
-        # Send the merged text to the model in one call
-        result = process_scpi_text(merged_text, page_number="all")
-        
-        merged_results = merge_scpi_json([result])
-        
-        # Count the number of SCPI commands extracted
-        scpi_command_count = count_scpi_commands(merged_results)
-        print(f"Extracted {scpi_command_count} SCPI commands.")
-
-        # Step 3: Return extracted data
-        return {
-            "instrument_name": instrument_name,
-            "scpi_commands": merged_results,
-        }
-    except Exception as e:
-        raise ValueError(f"Failed to extract SCPI commands from PDF: {str(e)}")
+    doc = fitz.open(stream=file_bytes, filetype="pdf")
+    toc_pages = []
+    scpi_commands = []
+    for page_number, page in enumerate(doc, start=1):
+        text = page.get_text()
+        lower_text = text.lower()
+        # If any TOC keyword is present, consider this a TOC page
+        if any(kw in lower_text for kw in TOC):
+            toc_pages.append((page_number, text))
+            # Extract SCPI commands from this TOC page
+            for line in text.splitlines():
+                line_no_brackets = line.replace('[', '').replace(']', '')
+                parts = re.split(r"\s*\.+\s*", line_no_brackets, maxsplit=1)
+                if parts:
+                    cmd = parts[0].strip()
+                    if SCPI_TOC_REGEX.match(cmd):
+                        scpi_commands.append(cmd)
+    return {
+        "scpi_commands": scpi_commands,
+        "total_scpi_commands": len(scpi_commands)
+    }
