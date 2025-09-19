@@ -95,56 +95,90 @@ def get_all_instrument(db: Session):
         logger.error(f"Error retrieving all instrument: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to retrieve all instrument")
     
-
-
-
+SIMULATED_INSTRUMENTS = [
+    {
+        "resource": "USB0::0x2A8D::00000001::INSTR",
+        "idn": "Keysight Technologies,33500B,MY00000001,5.0.0.0",
+        "manufacturer": "Keysight Technologies",
+        "model": "33500B",
+        "serial": "MY00000001",
+        "firmware": "5.0.0.0",
+    },
+    {
+        "resource": "USB0::0x2A8D::00000002::INSTR",
+        "idn": "Keysight Technologies,N6705B,MY00000002,1.1.0",
+        "manufacturer": "Keysight Technologies",
+        "model": "N6705B",
+        "serial": "MY00000002",
+        "firmware": "1.1.0",
+    },
+    {
+        "resource": "USB0::0x2A8D::00000003::INSTR",
+        "idn": "Keysight Technologies,MSOX3034T,MY00000003,02.41.2017042600",
+        "manufacturer": "Keysight Technologies",
+        "model": "MSOX3034T",
+        "serial": "MY00000003",
+        "firmware": "02.41.2017042600",
+    },
+    {
+        "resource": "TCPIP0::127.0.0.1::inst0::INSTR",
+        "idn": "Keysight Technologies,E5071C,MY00000004,A.09.33",
+        "manufacturer": "Keysight Technologies",
+        "model": "E5071C",
+        "serial": "MY00000004",
+        "firmware": "A.09.33",
+    },
+]
 
 # --- Scan and update DB in one go ---
 def scan_instruments(db: Session, timeout_ms: int = 800):
     """Scan VISA resources, update DB, and return active instruments."""
 
-    rm = pyvisa.ResourceManager()
-    resources = rm.list_resources()
-    detected = []
+    # rm = pyvisa.ResourceManager()
+    # resources = rm.list_resources()
+    # detected = []
+    
+    detected = SIMULATED_INSTRUMENTS.copy()
 
     # 1. Scan VISA
-    for res in resources:
-        idn = None
-        manufacturer = model = serial = firmware = None
-        inst = None
-        try:
-            inst = rm.open_resource(res, open_timeout=timeout_ms)
-            inst.timeout = timeout_ms
-            idn = inst.query("*IDN?").strip()
-            parts = [p.strip() for p in idn.split(",")]
-            manufacturer = parts[0] if len(parts) > 0 else None
-            model = parts[1] if len(parts) > 1 else None
-            serial = parts[2] if len(parts) > 2 else None
-            firmware = parts[3] if len(parts) > 3 else None
-        except Exception:
-            pass
-        finally:
-            try:
-                inst and inst.close()
-            except Exception:
-                pass
+    # for res in resources:
+    #     idn = None
+    #     manufacturer = model = serial = firmware = None
+    #     inst = None
+    #     try:
+    #         inst = rm.open_resource(res, open_timeout=timeout_ms)
+    #         inst.timeout = timeout_ms
+    #         idn = inst.query("*IDN?").strip()
+    #         parts = [p.strip() for p in idn.split(",")]
+    #         manufacturer = parts[0] if len(parts) > 0 else None
+    #         model = parts[1] if len(parts) > 1 else None
+    #         serial = parts[2] if len(parts) > 2 else None
+    #         firmware = parts[3] if len(parts) > 3 else None
+    #     except Exception:
+    #         pass
+    #     finally:
+    #         try:
+    #             inst and inst.close()
+    #         except Exception:
+    #             pass
 
-        detected.append({
-            "resource": res,
-            "idn": idn,
-            "manufacturer": manufacturer,
-            "model": model,
-            "serial": serial,
-            "firmware": firmware,
-        })
+    #     detected.append({
+    #         "resource": res,
+    #         "idn": idn,
+    #         "manufacturer": manufacturer,
+    #         "model": model,
+    #         "serial": serial,
+    #         "firmware": firmware,
+    #     })
 
-    rm.close()
+    # rm.close()
 
     # 2. Update DB
     try:
         db.query(DetectedInstrument).update({DetectedInstrument.is_active: False})
-
+        resource_strings = []
         for inst in detected:
+            resource_strings.append(inst["resource"])
             existing = db.query(DetectedInstrument).filter_by(resource_string=inst["resource"]).first()
             if existing:
                 existing.idn = inst.get("idn")
@@ -176,7 +210,11 @@ def scan_instruments(db: Session, timeout_ms: int = 800):
         raise
 
     # 3. Return active instruments
-    return db.query(DetectedInstrument).all()
+    return (
+    db.query(DetectedInstrument)
+    .filter(DetectedInstrument.resource_string.in_(resource_strings))
+    .all()
+)
 
 def delete_detected_instrument(db: Session, instrument_id: UUID):
     try:

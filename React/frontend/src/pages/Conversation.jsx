@@ -336,7 +336,8 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     }
   };
 
-  const { data: instrumentData = [], isLoading:isGettingAllInstrument } = useAllInstruments();
+  const { data: instrumentData = [], isLoading:isGettingAllInstrument } = useAllInstruments({ staleTime: 5 * 60 * 1000, // 5 mins
+  cacheTime: 10 * 60 * 1000,});
   const scanMutation = useScanInstrument();
 const selectMutation = useSelectInstrument();
   const deleteInstrumentMutation = useDeleteInstrument();
