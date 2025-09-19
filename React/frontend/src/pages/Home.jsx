@@ -134,6 +134,7 @@ export const Home = ({
   const handlePdfUploadSuccess = () => {
     setRefreshTrigger((prev) => prev + 1);
   };
+  const [selectedInstrument, setSelectedInstrument] = useState(null);
 
   useEffect(() => {
     if (
@@ -258,6 +259,7 @@ export const Home = ({
             onDeleteChat={handleDeleteChat}
             isChatsLoading={isChatsLoading}
             onPdfUploadSuccess={handlePdfUploadSuccess}
+            selectedInstrument={selectedInstrument}
           />
           <MainContent>
             <HeaderWrapper>
@@ -292,6 +294,7 @@ export const Home = ({
                 }}
                 onSendMessage={handleSendMessage}
                 isLoading={isReplyLoading}
+                onInstrumentChange={setSelectedInstrument}
               />
             </ChatWrapper>
           </MainContent>

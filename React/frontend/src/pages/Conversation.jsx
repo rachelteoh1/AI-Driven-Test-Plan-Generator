@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import * as React from "react";
 import Button from "@mui/material/Button";
 import ScanInstrumentModal from "../modal/ScanInstrumentModal";
-import { useAllInstruments,useScanInstrument, useSelectInstrument,useDeleteInstrument, useDeleteAllInstrument } from "../hook/useInstrument";
+import { useAllInstruments, useScanInstrument, useSelectInstrument, useDeleteInstrument, useDeleteAllInstrument } from "../hook/useInstrument";
 import useModal from "../modal/useModal";
 import {
   DropdownMenu,
@@ -248,7 +248,7 @@ const VersionHistoryIndicator = styled.div`
   align-items: center;
 `;
 
-export default function ChatInterface({ chat, onSendMessage, isLoading }) {
+export default function ChatInterface({ chat, onSendMessage, isLoading, onInstrumentChange }) {
   const [inputValue, setInputValue] = useState("");
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editContent, setEditContent] = useState("");
@@ -264,12 +264,6 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   const { showModal, hideModal } = useModal();
   const [isScanning, setIsScanning] = useState(false)
   const [selectedInstrument, setSelectedInstrument] = useState(null);
-  // const [detectedInstruments, setDetectedInstruments] = useState([
-  //   { id: "1", name: "Oscilloscope", model: "DSOX3024T", address: "192.168.1.100" },
-  //   { id: "2", name: "Function Generator", model: "33500B", address: "192.168.1.101" },
-  //   { id: "3", name: "Multimeter", model: "34465A", address: "192.168.1.102" },
-  //   { id: "4", name: "Power Supply", model: "PZ2100A", address: "192.168.1.103" },
-  // ])
 
 
   const {
@@ -286,65 +280,53 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     scrollToBottom();
   }, [chat.messages, isLoading]);
 
+
   useEffect(() => {
-  if (!instrumentsData || instrumentsLoading || !selectedInstrument) return;
+    console.log("useEffect triggered", { instrumentsData, instrumentsLoading, selectedInstrument });
+    if (!selectedInstrument) return;
 
-  // Use the correct key for your instruments array
-  const instruments = instrumentsData.instruments || [];
-
-  const matchedInstrument = instruments.find((instrument) => {
-    if (!instrument.instrument_filename || !selectedInstrument.model) return false;
-    const names = instrument.instrument_filename
-      .split("_")
-      .map((n) => n.toLowerCase());
-    return names.includes(selectedInstrument.model.toLowerCase());
-  });
-
-  if (matchedInstrument && matchedInstrument.json_url_manual) {
-    fetch(matchedInstrument.json_url_manual)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Failed to fetch JSON: ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        console.log("Fetched SCPI JSON data:", data);
-        setScpiSuggestions(data);
-      })
-      .catch((err) => {
-        console.error("Error fetching SCPI JSON:", err);
-      });
-  } else {
-    if (instruments.some(inst => inst.id === selectedInstrument.id)) {
+    // If selectedInstrument has a json_url_manual, fetch it directly
+    if (selectedInstrument.json_url_manual) {
+      fetch(selectedInstrument.json_url_manual)
+        .then((res) => {
+          if (!res.ok) throw new Error(`Failed to fetch JSON: ${res.status}`);
+          return res.json();
+        })
+        .then((data) => {
+          console.log("Fetched SCPI JSON data:", data);
+          setScpiSuggestions(data);
+        })
+        .catch((err) => {
+          console.error("Error fetching SCPI JSON:", err);
+        });
+    } else {
       setScpiSuggestions([]);
       showModal({
         modal: <InstrumentNotFoundModal hideModal={hideModal} />
       });
       console.warn("Instrument not found. Upload a PDF to get started.");
-    } else {
-      // instrument was deleted, just clear state silently
-      setScpiSuggestions([]);
     }
-  }
-  
-}, [instrumentsData, instrumentsLoading, selectedInstrument]);
+  }, [instrumentsData, instrumentsLoading, selectedInstrument]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!isLoading && inputValue.trim()) {
-      onSendMessage(inputValue,selectedInstrument?.id);
+      onSendMessage(inputValue, selectedInstrument?.id);
       setInputValue("");
     }
   };
 
+
   const { data: instrumentData = [], isLoading:isGettingAllInstrument } = useAllInstruments({ staleTime: 5 * 60 * 1000, // 5 mins
   cacheTime: 10 * 60 * 1000,});
+
   const scanMutation = useScanInstrument();
-const selectMutation = useSelectInstrument();
+  const selectMutation = useSelectInstrument();
   const deleteInstrumentMutation = useDeleteInstrument();
   const deleteAllInstrumentMutation = useDeleteAllInstrument();
-  
+
   console.log("Session_ID:", chat.session_id);
-  
+
 
   const handleScanInstrument = () => {
     scanMutation.mutate(undefined, {
@@ -356,12 +338,15 @@ const selectMutation = useSelectInstrument();
                 hideModal={hideModal}
                 detectedInstruments={scannedInstruments}
                 onSelectInstrument={(instrument) => {
+                  console.log("Instrument passed to onSelectInstrument:", instrument);
                   selectMutation.mutate({
                     instrument_id: instrument.id,
-                    session_id: chat.session_id, 
-                  },{
-                    onSuccess: (response) => {setSelectedInstrument(response);
-        hideModal();}
+                    session_id: chat.session_id,
+                  }, {
+                    onSuccess: (response) => {
+                      setSelectedInstrument(response);
+                      hideModal();
+                    }
                   });
                 }}
                 selectedInstrument={selectedInstrument}
@@ -392,22 +377,42 @@ const selectMutation = useSelectInstrument();
   // }
 
 
-const handleSelectInstrument = async (instrument) => {
-  try {
-    const response = await selectMutation.mutateAsync({
-      instrument_id: instrument.id,
-      session_id: chat.session_id,
-    });
-    setSelectedInstrument(response); // response is from API
-  } catch (err) {
-    console.error("Failed to select instrument:", err);
-  }
-};
+  // const handleSelectInstrument = async (instrument) => {
+  //   try {
+  //     const response = await selectMutation.mutateAsync({
+  //       instrument_id: instrument.id,
+  //       session_id: chat.session_id,
+  //     });
+  //     console.log("API select response:", response);
+  //     setSelectedInstrument(response); // response is from API
+  //   } catch (err) {
+  //     console.error("Failed to select instrument:", err);
+  //   }
+  // };
+  const handleSelectInstrument = async (instrument) => {
+    try {
+      const response = await selectMutation.mutateAsync({
+        instrument_id: instrument.id,
+        session_id: chat.session_id,
+      });
+      // Find the full instrument object from instrumentsData
+      const instruments = instrumentsData?.instruments || [];
+      const fullInstrument = instruments.find(inst => inst.id === response.id);
 
+      setSelectedInstrument(fullInstrument || response);
+
+      // Notify parent (Home.jsx) of the change
+      if (onInstrumentChange) {
+        onInstrumentChange(fullInstrument || response);
+      }
+    } catch (err) {
+      console.error("Failed to select instrument:", err);
+    }
+  };
 
   const handleDeleteInstrument = (instrumentId) => {
     if (selectedInstrument?.id === instrumentId) {
-        setSelectedInstrument(null);
+      setSelectedInstrument(null);
     }
     deleteInstrumentMutation.mutate({ instrument_id: instrumentId });
   };
@@ -487,7 +492,7 @@ const handleSelectInstrument = async (instrument) => {
   };
 
   const handleInputChange = (value) => {
-    console.log("Input value:", value);
+
     setInputValue(value);
 
     if (!value.trim()) {
@@ -495,69 +500,80 @@ const handleSelectInstrument = async (instrument) => {
       return;
     }
 
+    // Split by spaces and preserve trailing empty (important for space suggestion)
     const rawParts = value.split(" ");
-
-    // collapse trailing empties into one
     let parts = rawParts.filter((p, idx) => p !== "" || idx < rawParts.length - 1);
 
-    if (value.endsWith(" ")) {
-      if (parts[parts.length - 1] !== "") {
-        parts.push("");
-      }
+    if (value.endsWith(" ") && parts[parts.length - 1] !== "") {
+      parts.push(""); // keep a placeholder for the next suggestion
     }
 
-
-    const currentLevel = parts.length;
     console.log("Parts:", parts);
-    console.log("Current level:", currentLevel);
 
-    if (currentLevel === 1) {
-      const matchingIntents = Object.keys(scpiSuggestions || {}).filter(
-        (intent) => intent.toLowerCase().startsWith(parts[0].toLowerCase())
-      );
-      setGhostText(matchingIntents[0]?.slice(parts[0].length) || "");
-    } else if (currentLevel === 2) {
-      const intent = parts[0];
-      if (scpiSuggestions?.[intent]) {
-        const matchingSubsystems = Object.keys(scpiSuggestions[intent] || {}).filter((subsystem) =>
-          subsystem.toLowerCase().startsWith(parts[1]?.toLowerCase() || "")
+    let node = scpiSuggestions;
+    let ghost = "";
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+
+      if (!node || typeof node !== "object") break;
+
+      const keys = Object.keys(node);
+
+      // --- Handle SCPI hierarchical commands ---
+      if (i < parts.length - 1 || part !== "") {
+        // not the last empty placeholder
+        const match = keys.find((k) =>
+          k.toLowerCase().startsWith(part.toLowerCase())
         );
-        setGhostText(matchingSubsystems[0]?.slice(parts[1]?.length || 0) || "");
+        if (match) {
+          if (match.toLowerCase() !== part.toLowerCase()) {
+            // Partial match → ghost the rest
+            ghost = match.slice(part.length);
+            break;
+          }
+          // Exact match → go deeper
+          node = node[match];
+        } else {
+          break;
+        }
       } else {
-        setGhostText("");
+        // Last part is empty → suggest the "first key" at this level
+        if (keys.length > 0) {
+          ghost = keys[0];
+        }
+      }
+
+      // --- Handle parameters ---
+      if (i === parts.length - 1 && node.parameters) {
+        const paramPart = part;
+        const match = node.parameters.find((p) =>
+          p.toLowerCase().startsWith(paramPart.toLowerCase())
+        );
+        if (match && match.toLowerCase() !== paramPart.toLowerCase()) {
+          ghost = match.slice(paramPart.length);
+        }
+      }
+
+      // --- Handle values ---
+      if (i === parts.length - 1 && node.values) {
+        const prev = parts[parts.length - 2]?.toLowerCase();
+        const values = node.values[prev] || [];
+        const valPart = part;
+        const match = values.find((v) =>
+          v.toLowerCase().startsWith(valPart.toLowerCase())
+        );
+        if (match && match.toLowerCase() !== valPart.toLowerCase()) {
+          ghost = match.slice(valPart.length);
+        }
       }
     }
-    else if (currentLevel === 3) {
-      const [intent, subsystem] = parts;
-      if (scpiSuggestions?.[intent]?.[subsystem]) {
-        const matchingParameters =
-          scpiSuggestions[intent][subsystem]?.parameters
-            ?.map((param) => param.toLowerCase())
-            ?.filter((param) => param.startsWith(parts[2]?.toLowerCase() || ""));
-        setGhostText(matchingParameters?.[0]?.slice(parts[2]?.length || 0) || "");
-      } else {
-        setGhostText("");
-      }
-    }
-    else if (currentLevel === 4) {
-      const [intent, subsystem, parameter] = parts;
-      if (scpiSuggestions?.[intent]?.[subsystem]?.values?.[parameter?.toLowerCase()]) {
-        const matchingValues =
-          scpiSuggestions[intent][subsystem].values[parameter.toLowerCase()]
-            ?.map((val) => val.toLowerCase())
-            ?.filter((val) => val.startsWith(parts[3]?.toLowerCase() || ""));
-        setGhostText(matchingValues?.[0]?.slice(parts[3]?.length || 0) || "");
-      } else {
-        setGhostText("");
-      }
-    }
-    else {
-      setGhostText("");
-    }
+
+    setGhostText(ghost);
   };
 
+
   const handleKeyDown = (e) => {
-    console.log("Key pressed:", e.key);
 
     if (e.key === " ") {
       e.preventDefault();
@@ -967,10 +983,10 @@ function MessageInput({
   ghostText,
   onKeyDown,
   onScan,
-  selectedInstrument,  
-  handleDeleteAllInstruments, 
-  handleDeleteInstrument, 
-  handleSelectInstrument, 
+  selectedInstrument,
+  handleDeleteAllInstruments,
+  handleDeleteInstrument,
+  handleSelectInstrument,
   isScanning,
   instrumentData,
 
@@ -1030,7 +1046,7 @@ function MessageInput({
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="start" className="w-80 bg-white shadow-md">
-            {!Array.isArray(instrumentData) ||instrumentData.length === 0 ? (
+            {!Array.isArray(instrumentData) || instrumentData.length === 0 ? (
               <DropdownMenuItem disabled>No instruments detected</DropdownMenuItem>
             ) : (
               <>
@@ -1042,12 +1058,14 @@ function MessageInput({
                     >
                       <div
                         className="flex-1 cursor-pointer"
-                        onClick={() => handleSelectInstrument(instrument)}
+                        onClick={() => {
+                          console.log("Instrument to select:", instrument);
+                          handleSelectInstrument(instrument);
+                        }}
                       >
-                        <div className="font-medium">{instrument.modal}</div>
+                        <div className="font-medium">{instrument.model}</div>
                         <div className="text-sm text-muted-foreground">
                           {instrument.model} • {instrument.resource_string}
-                          
                         </div>
                       </div>
                       <Button
@@ -1104,9 +1122,6 @@ function MessageInput({
           </SubmitButton>
         </TextAreaWrapper>
       </div>
-
-     
-
     </>
   );
 }

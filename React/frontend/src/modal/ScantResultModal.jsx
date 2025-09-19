@@ -80,7 +80,7 @@ export default function ScanResultsModal({
   const handleSelectInstrument = (instrument) => {
     setLocalSelectedInstrument(instrument);
     console.log("Selected instrument:", instrument)
-console.log("Local state:", localSelectedInstrument)
+    console.log("Local state:", localSelectedInstrument)
   };
 
   const handleConfirmSelection = () => {

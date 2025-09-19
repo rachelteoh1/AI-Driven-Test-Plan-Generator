@@ -3,7 +3,7 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 from ..utils.models.query_intent import query_ollama
 from ..utils.models.llama_intent import query_llama
-from ..utils.models.gemini_intent import query_gemini
+from ..utils.models.gemini_intent import query_gemini, query_gemini_via_helicone
 import re
 import os
 
@@ -15,7 +15,10 @@ SUBSYSTEM_HEADER_REGEX = re.compile(
 EXCLUDE_KEYWORDS = [
     "table of contents",
     "contents",
-    "content"
+    "content",
+    " . . . . . . . . . . . . . . . .",
+    "............",
+    "summary"
 ]
 
 SCPI_REGEX = re.compile(
@@ -116,7 +119,7 @@ def extract_scpi_pages(file):
             #first_10_words = " ".join(text.split()[:10]).lower()
             #print(f"Page {page_number} - First 10 words: {first_10_words}")
             if SUBSYSTEM_HEADER_REGEX.search(text) and SCPI_REGEX.search(text):
-                scpi_pages.append(text)
+                scpi_pages.append((page_number, text))
                 # Uncomment for debugging
                 print(f"Page {page_number} contains 'subsystem'")
 
@@ -124,7 +127,7 @@ def extract_scpi_pages(file):
     except Exception as e:
         raise ValueError(f"Failed to extract SCPI pages from PDF: {str(e)}")
 
-def process_scpi_text(text):
+def process_scpi_text(text, page_number=None):
     """
     Extracts SCPI commands, parameters, and metadata from a PDF file using Llama.
 
@@ -134,6 +137,9 @@ def process_scpi_text(text):
     Returns:
         list: A list of parsed model responses (JSON) from each page.
     """
+    page_info_str = f"{page_number}" if page_number is not None else "merged pages"
+    print(f"Extracting SCPI from page {page_info_str}...")
+    # ...existing prompt code...
     prompt = (
         "You are a SCPI command parser.\n\n"
         "Extract SCPI command documentation into the following *structured JSON* format:\n\n"
@@ -184,10 +190,10 @@ def process_scpi_text(text):
         "}\n\n"
         "Only extract commands that show a SCPI command line starting with ':' or '*'."
         "Do not include generic subsystem headers (e.g., 'FETCh Subsystem', 'FORMat Subsystem') unless they also include at least one explicit SCPI command."
-        f"Now extract from this text:\n{text}\n"
+        f"Now extract from this text (from page {page_number}):\n{text}\n"
     )
-    response = query_gemini(prompt)
-    print(f"Model Response:\n{response}\n{'-' * 40}")
+    response = query_gemini_via_helicone(prompt)
+    print(f"Model Response for page {page_number}:\n{response}\n{'-' * 40}")
     try:
         # Strip Markdown fences if present
         cleaned = response.strip()
@@ -217,20 +223,79 @@ def merge_scpi_json(json_list):
                 merged[intent][subsystem] = details
 
     return merged
+def count_scpi_commands(scpi_json):
+    """
+    Recursively counts the number of SCPI commands in the merged JSON result,
+    only if the 'command' value matches the SCPI_REGEX.
+    """
+    count = 0
+    if isinstance(scpi_json, dict):
+        for key, value in scpi_json.items():
+            if key == "command" and isinstance(value, str):
+                # Only count if the command string matches SCPI_REGEX
+                if SCPI_REGEX.match(value.strip()):
+                    count += 1
+            else:
+                count += count_scpi_commands(value)
+    elif isinstance(scpi_json, list):
+        for item in scpi_json:
+            count += count_scpi_commands(item)
+    return count
 
 def extract_scpi_from_pdf(file):
     """
-    Extracts SCPI commands and metadata from a PDF file.
+    Extracts SCPI commands and metadata from a PDF file by merging all relevant pages
+    and sending them in a single call to the model.
     """
     try:
         # Step 1: Extract instrument name and SCPI pages
         instrument_name, scpi_pages = extract_scpi_pages(file)
 
-        # Step 2: Process SCPI pages
-        with ThreadPoolExecutor() as executor:
-            results = list(executor.map(process_scpi_text, scpi_pages))
-            
-        merged_results = merge_scpi_json(results)
+        # Merge all relevant page texts into one big string
+        merged_text = "\n\n".join(
+            f"--- Page {page_number} ---\n{text}" for page_number, text in scpi_pages
+        )
+
+        # Send the merged text to the model in one call
+        result = process_scpi_text(merged_text, page_number="all")
+
+        merged_results = merge_scpi_json([result])
+
+        # Count the number of SCPI commands extracted
+        scpi_command_count = count_scpi_commands(merged_results)
+        print(f"Extracted {scpi_command_count} SCPI commands.")
+
+        # Step 3: Return extracted data
+        return {
+            "instrument_name": instrument_name,
+            "scpi_commands": merged_results,
+            "scpi_command_count": scpi_command_count
+        }
+    except Exception as e:
+        raise ValueError(f"Failed to extract SCPI commands from PDF: {str(e)}")
+    
+def extract_scpi_from_pdf(file):
+    """
+    Extracts SCPI commands and metadata from a PDF file by merging all relevant pages
+    and sending them in a single call to the model.
+    """
+    try:
+        # Step 1: Extract instrument name and SCPI pages
+        instrument_name, scpi_pages = extract_scpi_pages(file)
+
+        # Merge all relevant page texts into one big string
+        merged_text = "\n\n".join(
+            f"--- Page {page_number} ---\n{text}" for page_number, text in scpi_pages
+        )
+
+        # Send the merged text to the model in one call
+        result = process_scpi_text(merged_text, page_number="all")
+        
+        merged_results = merge_scpi_json([result])
+        
+        # Count the number of SCPI commands extracted
+        scpi_command_count = count_scpi_commands(merged_results)
+        print(f"Extracted {scpi_command_count} SCPI commands.")
 
         # Step 3: Return extracted data
         return {

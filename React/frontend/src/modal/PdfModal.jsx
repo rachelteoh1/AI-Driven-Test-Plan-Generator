@@ -149,13 +149,15 @@ const UploadPdfButton = styled(Button)`
     }
   }
 `;
- 
-export default function PdfModal({ hideModal, onUploadSuccess }) {
+
+export default function PdfModal({ hideModal, onUploadSuccess, selectedInstrument }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const fileInputRef = useRef();
+
+  console.log("selectedInstrument in PdfModal:", selectedInstrument);
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
@@ -250,6 +252,17 @@ export default function PdfModal({ hideModal, onUploadSuccess }) {
               }}
             >
               {selectedFile.name}
+            </div>
+          )}
+          {!selectedFile && selectedInstrument?.instrument_filename && (
+            <div
+              style={{
+                color: "#1976d2",
+                marginTop: "0.5rem",
+                fontSize: "0.95rem",
+              }}
+            >
+              Existing PDF: {selectedInstrument.instrument_filename}
             </div>
           )}
         </DropZone>

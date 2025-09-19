@@ -45,7 +45,8 @@ class AllInstrumentResponse(BaseModel):
     model: str | None = None
     serial: str | None = None
     firmware: str | None = None
-    json_url_manual: str | None = None  # Add this field
+    instrument_filename: str | None = None
+    json_url_manual: str | None = None
    
    
    
