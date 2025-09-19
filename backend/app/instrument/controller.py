@@ -62,7 +62,7 @@ def select_instrument(instrument_id:UUID, session_id:UUID, db: DbSession):
     return service.save_selected_instrument(db, instrument_id, session_id)
 
 #update chatlog id
-@router.post("/update/{id}/{message_id}")
+@router.post("/update/{selected_id}/{message_id}")
 def update_instrument(selected_id:UUID,message_id:UUID, db: DbSession):
     return service.update_selected_instrument(db, selected_id,message_id)
 

@@ -4,7 +4,7 @@ print("Script is running...")
 try:
     import pyvisa
     print("pyvisa imported successfully.")
-    print("Available backends:", pyvisa.highlevel.list_backends())
+
 except Exception as e:
     print("Error importing pyvisa:", e)
 
@@ -20,4 +20,6 @@ try:
     backends = rm.list_backends()
     print("Available backends:", backends)
 except Exception as e:
-    print("Error during ResourceManager or listing backends:", e)
+
+    print("Error during ResourceManager or listing backends:", e)
+
