@@ -52,20 +52,9 @@ SCPI_REGEX = re.compile(
 import re
 
 SCPI_TOC_REGEX = re.compile(r"""
-    ^\s*                             # optional leading spaces
-    ([:\*]                         # must start with :, *, or [
-        (?:\[?[A-Z]{3,4}[a-z]*\]?   # first keyword: 3-4 uppercase, optional lowercase, optional brackets
-            (?:                      
-                :\[?[A-Z]{3,4}[a-z]*\]?   # hierarchy keywords, same pattern
-                |
-                \[[^\]]+\]               # optional brackets content
-                |
-                <[^>]+>                  # optional parameters in <>
-            )*
-        )
-    )
-    \??                               # optional query ?
-    """, re.VERBOSE)
+    (?:[:*])?[A-Z]{3,}[A-Za-z0-9]*
+""", re.VERBOSE)
+
 
 def is_unwanted_page(text):
     """Check if page is likely a TOC or unrelated."""
@@ -87,7 +76,7 @@ def normalize_text(text):
 
 def extract_instrument_name(text):
     instrument_regex = re.compile(
-        r"\b[A-Z]{1,3}\d{3,4}[A-Z]?(?:[/&]\d{2,4}[A-Z]?)*\b"
+        r"\b(?:[A-Z]{1,3}\d{3,4}[A-Z]?|\d{4,5}[A-Z]?)(?:[/&]\d{2,4}[A-Z]?)*\b"
     )
 
     matches = instrument_regex.finditer(text)
@@ -100,8 +89,23 @@ def extract_instrument_name(text):
 
         # Extract base model (letters + digits + optional suffix)
         base_full = pieces[0]
-        base_letters = re.match(r"[A-Z]+", base_full).group(0)
-        base_digits = re.search(r"\d+", base_full).group(0)
+        
+        # Handle cases where the model starts with letters or digits
+        letters_match = re.match(r"[A-Z]+", base_full)
+        digits_match = re.search(r"\d+", base_full)
+        
+        if letters_match and digits_match:
+            # Model like E8257D (starts with letters)
+            base_letters = letters_match.group(0)
+            base_digits = digits_match.group(0)
+        elif digits_match:
+            # Model like 34450A (starts with digits)
+            base_letters = ""  # No letters at the start
+            base_digits = digits_match.group(0)
+        else:
+            # Fallback if no clear pattern
+            base_letters = ""
+            base_digits = ""
 
         for p in pieces:
             p = p.strip()
@@ -109,9 +113,10 @@ def extract_instrument_name(text):
                 continue
             if re.match(r"^\d", p):
                 # If starts with digit, inherit letters and possibly part of digits
-                # Example: base E8257D + "67D" => E8267D
-                # Rule: take base letters + first 2 digits of base + this piece
-                inst = base_letters + base_digits[:2] + p
+                if base_letters:
+                    inst = base_letters + base_digits[:2] + p
+                else:
+                    inst = p  # Just use the piece as-is if no base letters
             else:
                 inst = p
 
@@ -154,7 +159,7 @@ def extract_scpi_pages(file_bytes):
 
 def process_scpi_text(text, page_number=None):
     """
-    Extracts SCPI commands, parameters, and metadata from a PDF file using Llama.
+    Extracts SCPI commands, parameters, and metadata from a PDF file using Gemini.
 
     Args:
         file (UploadFile or file-like object): The uploaded PDF file.
@@ -316,52 +321,98 @@ def extract_scpi_from_pdf(file_bytes):
 
         extracted_commands = collect_extracted_commands(merged_results)
 
-        # Step 4: Calculate how many extracted commands match TOC commands
+        # Step 4: Calculate precision, recall, F1 and TP/FP/FN
         matched_commands = extracted_commands & toc_commands
         scpi_command_matched = len(matched_commands)
-        print(f"Matched SCPI commands: {scpi_command_matched} / {total_scpi_commands}")
+        total_predicted = len(extracted_commands)
+        total_ground_truth = len(toc_commands)
 
+        # Identify FP and FN
+        false_positives = extracted_commands - toc_commands  # predicted but not in TOC
+        false_negatives = toc_commands - extracted_commands  # in TOC but not predicted
+
+        precision = scpi_command_matched / total_predicted if total_predicted > 0 else 0
+        recall = scpi_command_matched / total_ground_truth if total_ground_truth > 0 else 0
+        f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+
+        print(f"Matched SCPI commands (TP): {scpi_command_matched} / {total_ground_truth}")
+        print(f"Precision: {precision:.3f}")
+        print(f"Recall: {recall:.3f}")
+        print(f"F1 Score: {f1:.3f}")
+        print("\n--- True Positives (Matched) ---")
         for cmd in matched_commands:
-            print(f"Matched SCPI command: {cmd}")
-        
+            print(cmd)
+        print("\n--- False Positives (Extra Predictions) ---")
+        for cmd in false_positives:
+            print(cmd)
+        print("\n--- False Negatives (Missed from TOC) ---")
+        for cmd in false_negatives:
+            print(cmd)
+
         # Step 5: Calculate coverage
-        coverage = int((scpi_command_matched / total_scpi_commands) * 100) if total_scpi_commands else 0
+        coverage = int((scpi_command_matched / total_ground_truth) * 100) if total_ground_truth else 0
         print(f"Coverage: {coverage}%")
 
-        # Step 6: Return extracted data with coverage
+        # Step 6: Return extracted data with metrics
         return {
             "instrument_name": instrument_name,
             "scpi_commands": merged_results,
-            "total_scpi_commands_extracted": scpi_command_count,
-            "total_scpi_commands_in_toc": total_scpi_commands,
+            "total_scpi_commands_extracted": total_predicted,
+            "total_scpi_commands_in_toc": total_ground_truth,
             "scpi_command_matched": scpi_command_matched,
-            "coverage": coverage
+            "coverage": coverage,
+            "precision": precision,
+            "recall": recall,
+            "f1_score": f1,
+            "true_positives": len(matched_commands),
+            "false_positives": len(false_positives),
+            "false_negatives": len(false_negatives)
         }
     except Exception as e:
         raise ValueError(f"Failed to extract SCPI commands from PDF: {str(e)}")
     
+def is_toc_line(line: str) -> bool:
+    # Trim whitespace
+    line = line.strip()
+    # Match: some text + spaces/dots + page number at end
+    return bool(re.match(r"^.+\s+(\d+)$", line))
+
 def extract_scpi_commands_from_toc(file_bytes):
     """
     Extracts TOC pages and SCPI commands from those pages in a PDF file.
-    Returns a dict with 'toc_pages' and 'scpi_commands'.
+    A page is considered a TOC page if more than 10 lines end with a digit.
     """
     doc = fitz.open(stream=file_bytes, filetype="pdf")
     toc_pages = []
     scpi_commands = []
+
     for page_number, page in enumerate(doc, start=1):
+        if page_number > 30:
+            break  # stop after checking max_pages
+        
         text = page.get_text()
-        lower_text = text.lower()
-        # If any TOC keyword is present, consider this a TOC page
-        if any(kw in lower_text for kw in TOC):
+        lines = text.splitlines()
+
+        # Count lines that end with a digit
+        digit_end_count = sum(1 for line in lines if re.search(r"\d\s*$", line))
+
+        # If more than 10 such lines exist, consider this a TOC page
+        if digit_end_count > 15:
+            print(f"TOC page detected: {page_number}")
             toc_pages.append((page_number, text))
+
             # Extract SCPI commands from this TOC page
-            for line in text.splitlines():
+            for line in lines:
                 line_no_brackets = line.replace('[', '').replace(']', '')
                 parts = re.split(r"\s*\.+\s*", line_no_brackets, maxsplit=1)
                 if parts:
                     cmd = parts[0].strip()
                     if SCPI_TOC_REGEX.match(cmd):
+                        # Ignore unwanted keywords
+                        if any(word in cmd.upper() for word in ["SUBSYSTEM", "IEEE", "SCPI", "ASCII", "GPIB"]):
+                            continue
                         scpi_commands.append(cmd)
+
     return {
         "scpi_commands": scpi_commands,
         "total_scpi_commands": len(scpi_commands)
