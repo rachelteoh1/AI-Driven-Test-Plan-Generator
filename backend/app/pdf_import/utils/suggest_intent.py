@@ -74,88 +74,69 @@ def normalize_text(text):
     text = re.sub(r"(\S)\s*\n\s*(\S)", r"\1 \2", text)  # Join lines without punctuation
     return text.strip()
 
-def extract_instrument_name(text):
+def extract_instrument_name(file_bytes):
+    """
+    Extracts the instrument name from the first page of a PDF.
+    Returns a normalized instrument name or 'unknown_instrument' if not found.
+    """
     instrument_regex = re.compile(
         r"\b(?:[A-Z]{1,3}\d{3,4}[A-Z]?|\d{4,5}[A-Z]?)(?:[/&]\d{2,4}[A-Z]?)*\b"
     )
 
-    matches = instrument_regex.finditer(text)
-    seen = set()
-    instruments = []
-
-    for match in matches:
-        part = match.group(0)
-        pieces = re.split(r"[/&]", part)
-
-        # Extract base model (letters + digits + optional suffix)
-        base_full = pieces[0]
-        
-        # Handle cases where the model starts with letters or digits
-        letters_match = re.match(r"[A-Z]+", base_full)
-        digits_match = re.search(r"\d+", base_full)
-        
-        if letters_match and digits_match:
-            # Model like E8257D (starts with letters)
-            base_letters = letters_match.group(0)
-            base_digits = digits_match.group(0)
-        elif digits_match:
-            # Model like 34450A (starts with digits)
-            base_letters = ""  # No letters at the start
-            base_digits = digits_match.group(0)
-        else:
-            # Fallback if no clear pattern
-            base_letters = ""
-            base_digits = ""
-
-        for p in pieces:
-            p = p.strip()
-            if not p:
-                continue
-            if re.match(r"^\d", p):
-                # If starts with digit, inherit letters and possibly part of digits
-                if base_letters:
-                    inst = base_letters + base_digits[:2] + p
-                else:
-                    inst = p  # Just use the piece as-is if no base letters
-            else:
-                inst = p
-
-            if inst not in seen:
-                seen.add(inst)
-                instruments.append(inst)
-
-    return "_".join(instruments) if instruments else "unknown_instrument"
-
-def extract_scpi_pages(file_bytes):
-    """
-    Extracts text from pages that likely contain SCPI subsystem commands.
-    Only extracts pages where the first 10 words contain the word "subsystem".
-    """
     try:
         doc = fitz.open(stream=file_bytes, filetype="pdf")
-        scpi_pages = []
-        
-        # Extract instrument name
-        first_page_text = normalize_text(doc[0].get_text()) if len(doc) > 0 else ""
-        instrument_name = extract_instrument_name(first_page_text)
-        print(f"Extracted instrument name: {instrument_name}")
+        if len(doc) == 0:
+            return "unknown_instrument"
 
-        for page_number, page in enumerate(doc, start=1):
-            text = normalize_text(page.get_text())
-            if is_unwanted_page(text):
-                continue
+        # Get first page text
+        first_page_text = doc[0].get_text()
 
-            # Check if the first 10 words contain "subsystem"
-            #first_10_words = " ".join(text.split()[:10]).lower()
-            #print(f"Page {page_number} - First 10 words: {first_10_words}")
-            if SUBSYSTEM_HEADER_REGEX.search(text) and SCPI_REGEX.search(text):
-                scpi_pages.append((page_number, text))
-                # Uncomment for debugging
-                print(f"Page {page_number} contains 'subsystem'")
+        matches = instrument_regex.finditer(first_page_text)
+        seen = set()
+        instruments = []
 
-        return instrument_name, scpi_pages
+        for match in matches:
+            part = match.group(0)
+            pieces = re.split(r"[/&]", part)
+
+            # Base model (letters+digits+optional suffix)
+            base_full = pieces[0]
+            letters_match = re.match(r"[A-Z]+", base_full)
+            digits_match = re.search(r"\d+", base_full)
+
+            if letters_match and digits_match:
+                # Example: E8257D
+                base_letters = letters_match.group(0)
+                base_digits = digits_match.group(0)
+            elif digits_match:
+                # Example: 34450A
+                base_letters = ""
+                base_digits = digits_match.group(0)
+            else:
+                base_letters = ""
+                base_digits = ""
+
+            for p in pieces:
+                p = p.strip()
+                if not p:
+                    continue
+                if re.match(r"^\d", p):
+                    # If starts with digit, inherit letters+digits
+                    if base_letters:
+                        inst = base_letters + base_digits[:2] + p
+                    else:
+                        inst = p
+                else:
+                    inst = p
+
+                if inst not in seen:
+                    seen.add(inst)
+                    instruments.append(inst)
+
+        return "_".join(instruments) if instruments else "unknown_instrument"
+
     except Exception as e:
-        raise ValueError(f"Failed to extract SCPI pages from PDF: {str(e)}")
+        raise ValueError(f"Failed to extract instrument name: {str(e)}")
 
 def process_scpi_text(text, page_number=None):
     """
@@ -193,7 +174,7 @@ def process_scpi_text(text, page_number=None):
         "- Parameters are usually inside syntax blocks like <channel>, <range>, <nplc> or described in nearby lines or tables\n"
         "- Parameter values are examples listed below or near each parameter\n"
         "- Description is usually in the sentence above or below the command\n"
-        "- if the SCPI command doesn't have parameters, values and description, skip that page\n"
+        "- **if the SCPI command doesn't have parameters, values and description, skip that page**\n"
         "---\n\n"
         "Example input block:\n"
         ":SOURce:VOLTage:LEVel:IMMediate:AMPLitude\n"
@@ -220,6 +201,8 @@ def process_scpi_text(text, page_number=None):
         "}\n\n"
         "Only extract commands that show a SCPI command line starting with ':' or '*'."
         "Do not include generic subsystem headers (e.g., 'FETCh Subsystem', 'FORMat Subsystem') unless they also include at least one explicit SCPI command."
+        "Only extract from pages that consist of the description of SCPI commands and their parameters."
+        "Dont extract duplicated SCPI Commands "
         f"Now extract from this text (from page {page_number}):\n{text}\n"
     )
     response = query_gemini_via_helicone(prompt)
@@ -277,19 +260,27 @@ def normalize_scpi_command(cmd):
     cmd = re.sub(r"[^\w:*\?]", "", cmd) # Remove non-word characters except :, *, ?
     return cmd.lower()
     
-def extract_scpi_from_pdf(file_bytes):
+def extract_scpi_from_pdf(file_bytes, max_pages=None):
     """
     Extracts SCPI commands and metadata from a PDF file by merging all relevant pages,
     sending them in a single call to the model, and calculating extraction coverage.
     """
     try:
-        # Step 1: Extract instrument name and SCPI pages
-        instrument_name, scpi_pages = extract_scpi_pages(file_bytes)
+        # Step 1: Extract instrument name
+        instrument_name = extract_instrument_name(file_bytes)
 
-        # Merge all relevant page texts into one big string
-        merged_text = "\n\n".join(
-            f"--- Page {page_number} ---\n{text}" for page_number, text in scpi_pages
-        )
+        # Step 2: Merge all page texts
+        doc = fitz.open(stream=file_bytes, filetype="pdf")
+        merged_texts = []
+        for page_number, page in enumerate(doc, start=1):
+            if max_pages and page_number > max_pages:
+                break
+            text = normalize_text(page.get_text())
+            if not text.strip():
+                continue
+            merged_texts.append(f"--- Page {page_number} ---\n{text}")
+
+        merged_text = "\n\n".join(merged_texts)
 
         # Send the merged text to the model in one call
         result = process_scpi_text(merged_text, page_number="all")
