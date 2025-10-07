@@ -264,6 +264,12 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
   const { showModal, hideModal } = useModal();
   const [isScanning, setIsScanning] = useState(false)
   const [selectedInstrument, setSelectedInstrument] = useState(null);
+  const [availableParameters, setAvailableParameters] = useState([]);
+  const [availableValues, setAvailableValues] = useState([]);
+  const [selectedParameter, setSelectedParameter] = useState(null);
+  const [selectedValue, setSelectedValue] = useState(null);
+  const [showParameterDropdown, setShowParameterDropdown] = useState(false);
+  const [showValueDropdown, setShowValueDropdown] = useState(false);
 
 
   const {
@@ -308,17 +314,27 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
     }
   }, [instrumentsData, instrumentsLoading, selectedInstrument]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!isLoading && inputValue.trim()) {
-      onSendMessage(inputValue, selectedInstrument?.id);
-      setInputValue("");
-    }
-  };
+const handleSubmit = (e) => {
+  e.preventDefault();
+  if (!isLoading && inputValue.trim()) {
+    onSendMessage(inputValue, selectedInstrument?.id);
+    setInputValue("");
+    // Clear all dropdown states after sending
+    setGhostText("");
+    setAvailableParameters([]);
+    setAvailableValues([]);
+    setShowParameterDropdown(false);
+    setShowValueDropdown(false);
+    setSelectedParameter(null);
+    setSelectedValue(null);
+  }
+};
 
 
-  const { data: instrumentData = [], isLoading:isGettingAllInstrument } = useAllInstruments({ staleTime: 5 * 60 * 1000, // 5 mins
-  cacheTime: 10 * 60 * 1000,});
+  const { data: instrumentData = [], isLoading: isGettingAllInstrument } = useAllInstruments({
+    staleTime: 5 * 60 * 1000, // 5 mins
+    cacheTime: 10 * 60 * 1000,
+  });
 
   const scanMutation = useScanInstrument();
   const selectMutation = useSelectInstrument();
@@ -499,6 +515,10 @@ const handleInputChange = (value) => {
 
   if (!value.trim()) {
     setGhostText("");
+    setAvailableParameters([]);
+    setAvailableValues([]);
+    setShowParameterDropdown(false);
+    setShowValueDropdown(false);
     return;
   }
 
@@ -508,8 +528,6 @@ const handleInputChange = (value) => {
   if (value.endsWith(" ") && parts[parts.length - 1] !== "") {
     parts.push(""); // placeholder for suggestion
   }
-
-  console.log("Parts:", parts);
 
   let node = scpiSuggestions;
   let ghost = "";
@@ -536,53 +554,150 @@ const handleInputChange = (value) => {
         if (match.toLowerCase() !== part.toLowerCase()) {
           ghost = match.slice(part.length);
           setGhostText(ghost);
+          // Clear dropdowns when still in hierarchy traversal
+          setShowParameterDropdown(false);
+          setShowValueDropdown(false);
+          setAvailableParameters([]);
+          setAvailableValues([]);
           return;
         }
         node = node[match]; // go deeper
       } else {
+        // Clear everything if no match found
+        setShowParameterDropdown(false);
+        setShowValueDropdown(false);
+        setAvailableParameters([]);
+        setAvailableValues([]);
         break;
       }
     } else {
       if (keys.length > 0) {
         ghost = keys[0];
         setGhostText(ghost);
+        // Clear dropdowns when showing hierarchy suggestions
+        setShowParameterDropdown(false);
+        setShowValueDropdown(false);
+        setAvailableParameters([]);
+        setAvailableValues([]);
         return;
       }
     }
   }
 
-  // --- 2️⃣ Suggest parameters ---
-  if (node.parameters && i === parts.length - 1) {
-    const typed = parts[parts.length - 1].toLowerCase();
-    const match = node.parameters.find((p) =>
-      p.toLowerCase().startsWith(typed)
+  // --- 2️⃣ Show parameters ONLY when user adds space and we're at parameter level ---
+  if (node.parameters && Array.isArray(node.parameters) && node.parameters.length > 0) {
+    const currentPartIndex = i;
+    const typed = parts[currentPartIndex]?.toLowerCase() || "";
+    
+    // Check if we have a complete parameter match and user pressed space
+    const hasCompleteMatch = node.parameters.some(p => 
+      p.toLowerCase() === typed.toLowerCase()
     );
-    if (match && match.toLowerCase() !== typed) {
-      ghost = match.slice(typed.length);
-      setGhostText(ghost);
-      return;
+    
+    // ✅ FIX: If parameter is complete and has no values OR user pressed space after complete parameter
+    if (hasCompleteMatch) {
+      const selectedParam = node.parameters.find(p => 
+        p.toLowerCase() === typed.toLowerCase()
+      );
+      
+      // Check if this parameter has values
+      const hasValues = node.values && node.values[selectedParam] && node.values[selectedParam].length > 0;
+      
+      if (hasValues && parts.length > currentPartIndex + 1) {
+        // Parameter has values and user typed space, show values
+        const valueTyped = parts[currentPartIndex + 1]?.toLowerCase() || "";
+        const matchingValues = node.values[selectedParam].filter((v) =>
+          v.toLowerCase().startsWith(valueTyped)
+        );
+        
+        setAvailableValues(matchingValues);
+        setSelectedParameter(selectedParam);
+        setShowParameterDropdown(false);
+        setShowValueDropdown(true);
+        setAvailableParameters([]);
+        
+        // Set ghost text for values
+        if (matchingValues.length > 0 && valueTyped) {
+          const match = matchingValues[0];
+          if (match.toLowerCase() !== valueTyped) {
+            ghost = match.slice(valueTyped.length);
+            setGhostText(ghost);
+            return;
+          }
+        } else if (matchingValues.length > 0 && !valueTyped) {
+          ghost = matchingValues[0];
+          setGhostText(ghost);
+          return;
+        }
+      } else {
+        setShowParameterDropdown(false);
+        setShowValueDropdown(false);
+        setAvailableParameters([]);
+        setAvailableValues([]);
+        setSelectedParameter(null);
+        setGhostText("");
+        return;
+      }
+    } 
+    else if (value.endsWith(" ") && parts[currentPartIndex] === "") {
+      setAvailableParameters(node.parameters);
+      setShowParameterDropdown(true);
+      setShowValueDropdown(false);
+      setAvailableValues([]);
+      setSelectedParameter(null);
+      
+      // Set ghost text for first parameter
+      if (node.parameters.length > 0) {
+        ghost = node.parameters[0];
+        setGhostText(ghost);
+        return;
+      }
     }
-  }
-
-  // --- 3️⃣ Suggest values for selected parameter ---
-  if (node.parameters && node.values) {
-    const lastWord = parts[parts.length - 2]?.toLowerCase(); // param name
-    const typed = parts[parts.length - 1].toLowerCase();
-
-    const vals = node.values[lastWord] || [];
-
-    const match = vals.find((v) => v.toLowerCase().startsWith(typed));
-    if (match && match.toLowerCase() !== typed) {
-      ghost = match.slice(typed.length);
-    } else {
-      ghost = "";
+    // If user is typing parameter name (but hasn't pressed space yet)
+    else if (typed && !value.endsWith(" ")) {
+      const matchingParams = node.parameters.filter((p) =>
+        p.toLowerCase().startsWith(typed)
+      );
+      
+      if (matchingParams.length > 0) {
+        setAvailableParameters(matchingParams);
+        setShowParameterDropdown(true);
+        setShowValueDropdown(false);
+        setAvailableValues([]);
+        setSelectedParameter(null);
+        
+        // Set ghost text for first matching parameter
+        const match = matchingParams[0];
+        if (match.toLowerCase() !== typed) {
+          ghost = match.slice(typed.length);
+          setGhostText(ghost);
+          return;
+        }
+      } else {
+        // No matching parameters, clear dropdowns
+        setShowParameterDropdown(false);
+        setShowValueDropdown(false);
+        setAvailableParameters([]);
+        setAvailableValues([]);
+      }
     }
+    else {
+      // Clear dropdowns if we're not in the right state
+      setShowParameterDropdown(false);
+      setShowValueDropdown(false);
+      setAvailableParameters([]);
+      setAvailableValues([]);
+    }
+  } else {
+    // Clear dropdowns if no parameters found
+    setShowParameterDropdown(false);
+    setShowValueDropdown(false);
+    setAvailableParameters([]);
+    setAvailableValues([]);
   }
 
   setGhostText(ghost);
 };
-
-
 
   const handleKeyDown = (e) => {
 
@@ -598,6 +713,33 @@ const handleInputChange = (value) => {
       handleSubmit(e);
     }
   };
+const handleParameterSelect = (parameter) => {
+  setSelectedParameter(parameter);
+  setShowParameterDropdown(false);
+  setShowValueDropdown(true);
+  
+  // Auto-complete the input with the selected parameter
+  const words = inputValue.split(" ");
+  words[words.length - 1] = parameter;
+  const newValue = words.join(" ") + " ";
+  setInputValue(newValue);
+  handleInputChange(newValue);
+};
+
+const handleValueSelect = (value) => {
+  setSelectedValue(value);
+  setShowValueDropdown(false);
+  setShowParameterDropdown(false);
+  setAvailableParameters([]);
+  setAvailableValues([]);
+  
+  // Auto-complete the input with the selected value
+  const words = inputValue.split(" ");
+  words[words.length - 1] = value;
+  const newValue = words.join(" ");
+  setInputValue(newValue);
+  setGhostText("");
+};
 
   return (
     <Container>
@@ -661,6 +803,14 @@ const handleInputChange = (value) => {
           handleSelectInstrument={handleSelectInstrument}
           isScanning={isScanning}
           instrumentData={instrumentData}
+          availableParameters={availableParameters}
+          availableValues={availableValues}
+          selectedParameter={selectedParameter}
+          selectedValue={selectedValue}
+          onParameterSelect={handleParameterSelect}
+          onValueSelect={handleValueSelect}
+          showParameterDropdown={showParameterDropdown}
+          showValueDropdown={showValueDropdown}
 
         />
       </InputArea>
@@ -1000,7 +1150,14 @@ function MessageInput({
   handleSelectInstrument,
   isScanning,
   instrumentData,
-
+  availableParameters,
+  availableValues,
+  selectedParameter,
+  selectedValue,
+  onParameterSelect,
+  onValueSelect,
+  showParameterDropdown,
+  showValueDropdown,
 }) {
   const textareaRef = useRef(null);
 
@@ -1012,127 +1169,229 @@ function MessageInput({
   }, [value]);
 
   return (
-    <>
-      <div style={{ display: "flex", alignItems: "center" }}>
+    <MessageForm onSubmit={onSubmit}> 
+    <div style={{ display: "flex", alignItems: "center", position: "relative" }}>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <ScanInstrumentButton
+              type="button"
+              size="icon"
+              $isLoading={isLoading}
+              $hasValue={!!value.trim()}
+              onClick={onScan}
+              disabled={isScanning}
+            >
+              <Radar className={`h-4 w-4 ${isScanning ? "animate-spin" : ""}`} />
+            </ScanInstrumentButton>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Scan instrument</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <div>
+            <Button variant="outline" className="shrink-0 bg-white">
+              {selectedInstrument ? (
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {selectedInstrument.model}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {selectedInstrument.model}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-muted-foreground text-xs"></span>
+              )}
+              <ChevronDown className="h-5 w-5 opacity-50 shrink-0" />
+            </Button>
+          </div>
+        </DropdownMenuTrigger>
 
-              <ScanInstrumentButton
-                type="button"
-                size="icon"
-                $isLoading={isLoading}
-                $hasValue={!!value.trim()}
-                onClick={onScan}
-                disabled={isScanning}
-              >
-                <Radar className={`h-4 w-4 ${isScanning ? "animate-spin" : ""}`} />
-              </ScanInstrumentButton>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Scan instrument</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div>
-              <Button variant="outline" className="shrink-0  bg-white ">
-                {selectedInstrument ? (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {selectedInstrument.model}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {selectedInstrument.model}
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-muted-foreground text-xs"></span>
-                )}
-                <ChevronDown className="h-5 w-5 opacity-50 shrink-0" />
-              </Button>
-            </div>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent align="start" className="w-80 bg-white shadow-md">
-            {!Array.isArray(instrumentData) || instrumentData.length === 0 ? (
-              <DropdownMenuItem disabled>No instruments detected</DropdownMenuItem>
-            ) : (
-              <>
-                {Array.isArray(instrumentData) &&
-                  instrumentData.map((instrument) => (
-                    <DropdownMenuItem
-                      key={instrument.id}
-                      className="flex items-center justify-between p-3"
+        <DropdownMenuContent align="start" className="w-80 bg-white shadow-md">
+          {!Array.isArray(instrumentData) || instrumentData.length === 0 ? (
+            <DropdownMenuItem disabled>No instruments detected</DropdownMenuItem>
+          ) : (
+            <>
+              {Array.isArray(instrumentData) &&
+                instrumentData.map((instrument) => (
+                  <DropdownMenuItem
+                    key={instrument.id}
+                    className="flex items-center justify-between p-3"
+                  >
+                    <div
+                      className="flex-1 cursor-pointer"
+                      onClick={() => {
+                        console.log("Instrument to select:", instrument);
+                        handleSelectInstrument(instrument);
+                      }}
                     >
-                      <div
-                        className="flex-1 cursor-pointer"
-                        onClick={() => {
-                          console.log("Instrument to select:", instrument);
-                          handleSelectInstrument(instrument);
-                        }}
-                      >
-                        <div className="font-medium">{instrument.model}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {instrument.model} • {instrument.resource_string}
-                        </div>
+                      <div className="font-medium">{instrument.model}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {instrument.model} • {instrument.resource_string}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDeleteInstrument(instrument.id)
-                        }}
-                        className="ml-2 h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </DropdownMenuItem>
-                  ))}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteInstrument(instrument.id);
+                      }}
+                      className="ml-2 h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuItem>
+                ))}
 
-                <DropdownMenuSeparator />
+              <DropdownMenuSeparator />
 
-                <DropdownMenuItem
-                  onClick={handleDeleteAllInstruments}
-                  className="text-destructive focus:text-destructive-foreground focus:bg-destructive"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete All Instruments
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <TextAreaWrapper style={{ position: "relative" }}>
-          <MessageTextArea
-            ref={textareaRef}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder="Type your intent (e.g., measure)"
-            rows={1}
-            $isLoading={isLoading}
-            disabled={isLoading}
-          />
-          {ghostText && (
-            <GhostText>
-              {value}<span>{ghostText}</span>
-            </GhostText>
+              <DropdownMenuItem
+                onClick={handleDeleteAllInstruments}
+                className="text-destructive focus:text-destructive-foreground focus:bg-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete All Instruments
+              </DropdownMenuItem>
+            </>
           )}
-          <SubmitButton
-            type="submit"
-            size="icon"
-            disabled={isLoading || !value.trim()}
-            $isLoading={isLoading}
-            $hasValue={!!value.trim()}
-          >
-            {isLoading ? <LoadingIcon /> : <Send size={16} />}
-          </SubmitButton>
-        </TextAreaWrapper>
-      </div>
-    </>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <TextAreaWrapper style={{ position: "relative", flex: 1 }}>
+        {/* Parameter Selection Dropdown */}
+        {availableParameters.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            bottom: '100%',
+            left: 0,
+            right: 0,
+            backgroundColor: 'white',
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            maxHeight: '200px',
+            overflowY: 'auto',
+            zIndex: 1000,
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            marginBottom: '8px'
+          }}>
+            <div style={{ 
+              padding: '8px', 
+              fontWeight: 'bold', 
+              borderBottom: '1px solid #eee',
+              backgroundColor: '#f8f9fa',
+              color: '#333'
+            }}>
+              Available Parameters ({availableParameters.length})
+            </div>
+            {availableParameters.map((param, index) => (
+              <div
+                key={index}
+                style={{
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  backgroundColor: selectedParameter === param ? '#e3f2fd' : 'transparent',
+                  color: '#333',
+                  borderBottom: index < availableParameters.length - 1 ? '1px solid #f0f0f0' : 'none'
+                }}
+                onClick={() => onParameterSelect(param)}
+                onMouseEnter={(e) => {
+                  if (selectedParameter !== param) {
+                    e.target.style.backgroundColor = '#f5f5f5';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = selectedParameter === param ? '#e3f2fd' : 'transparent';
+                }}
+              >
+                {param}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Value Selection Dropdown */}
+        {availableValues.length > 0 && selectedParameter && (
+          <div style={{
+            position: 'absolute',
+            bottom: '100%',
+            left: 0,
+            right: 0,
+            backgroundColor: 'white',
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            maxHeight: '200px',
+            overflowY: 'auto',
+            zIndex: 1001,
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            marginBottom: '8px'
+          }}>
+            <div style={{ 
+              padding: '8px', 
+              fontWeight: 'bold', 
+              borderBottom: '1px solid #eee',
+              backgroundColor: '#e8f5e8',
+              color: '#333'
+            }}>
+              Values for "{selectedParameter}" ({availableValues.length})
+            </div>
+            {availableValues.map((value, index) => (
+              <div
+                key={index}
+                style={{
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  backgroundColor: selectedValue === value ? '#e8f5e8' : 'transparent',
+                  color: '#333',
+                  borderBottom: index < availableValues.length - 1 ? '1px solid #f0f0f0' : 'none'
+                }}
+                onClick={() => onValueSelect(value)}
+                onMouseEnter={(e) => {
+                  if (selectedValue !== value) {
+                    e.target.style.backgroundColor = '#f5f5f5';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = selectedValue === value ? '#e8f5e8' : 'transparent';
+                }}
+              >
+                {value}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <MessageTextArea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder="Type your intent (e.g., measure)"
+          rows={1}
+          $isLoading={isLoading}
+          disabled={isLoading}
+        />
+        {ghostText && (
+          <GhostText>
+            {value}<span>{ghostText}</span>
+          </GhostText>
+        )}
+        <SubmitButton
+          type="submit"
+          size="icon"
+          disabled={isLoading || !value.trim()}
+          $isLoading={isLoading}
+          $hasValue={!!value.trim()}
+        >
+          {isLoading ? <LoadingIcon /> : <Send size={16} />}
+        </SubmitButton>
+      </TextAreaWrapper>
+    </div>
+    </MessageForm>
   );
 }

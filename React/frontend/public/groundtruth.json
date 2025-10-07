@@ -1,0 +1,3945 @@
+{
+    "display": {
+        "digits": {
+            "command": ":DISPlay:DIGits",
+            "parameters": [
+                "digits"
+            ],
+            "values": {
+                "digits": [
+                    "4",
+                    "5",
+                    "6",
+                    "7",
+                    "MINimum",
+                    "MAXimum",
+                    "DEFault"
+                ]
+            },
+            "description": "Sets the display resolution of the data displayed on the front panel display."
+        },
+        "enable": {
+            "command": ":DISPlay:ENABle",
+            "parameters": [
+                "mode"
+            ],
+            "values": {
+                "mode": [
+                    "0",
+                    "OFF",
+                    "1",
+                    "ON"
+                ]
+            },
+            "description": "Enables or disables the front panel display while the instrument is controlled remotely."
+        },
+        "ssaver": {
+            "delay": {
+                "command": ":DISPlay:SSAVer:DELay",
+                "parameters": [
+                    "delay"
+                ],
+                "values": {
+                    "delay": [
+                        "30",
+                        "999",
+                        "MINimum",
+                        "MAXimum",
+                        "DEFault"
+                    ]
+                },
+                "description": "Sets the time that the display turns to the screen saver mode."
+            },
+            "state": {
+                "command": ":DISPlay:SSAVer[:STATe]",
+                "parameters": [
+                    "state"
+                ],
+                "values": {
+                    "state": [
+                        "0",
+                        "OFF",
+                        "1",
+                        "ON"
+                    ]
+                },
+                "description": "Enables or disables the screen saver function of the front panel display."
+            },
+            "wake": {
+                "command": ":DISPlay:SSAVer:WAKE[:IO]",
+                "parameters": [
+                    "state"
+                ],
+                "values": {
+                    "state": [
+                        "0",
+                        "OFF",
+                        "1",
+                        "ON"
+                    ]
+                },
+                "description": "Enables or disables the wake-on IO function."
+            }
+        },
+        "view": {
+            "state": {
+                "command": ":DISPlay:VIEW",
+                "parameters": [
+                    "mode"
+                ],
+                "values": {
+                    "mode": [
+                        "SINGle",
+                        "TW0",
+                        "FOUR",
+                        "SSUMmary",
+                        "MENU"
+                    ]
+                },
+                "description": "Sets the display mode to the single-channel layout, 2-channel layout, 4-channel layout, slot summary, or Menu view"
+            }
+        },
+        "window": {
+            "data": {
+                "state": {
+                    "command": ":DISPlay[:WINDow]:DATA?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the data displayed on the front panel display"
+                }
+            },
+            "text": {
+                "data": {
+                    "command": ":DISPlay[:WINDow]:TEXT:DATA",
+                    "parameters": [
+                        "text"
+                    ],
+                    "values": {
+                        "text": [
+                            "Up to 32 ASCII characters"
+                        ]
+                    },
+                    "description": "Sets the text message displayed on the front panel display."
+                }
+            },
+            "text": {
+                "state": {
+                    "command": ":DISPlay[:WINDow]:TEXT:STATe",
+                    "parameters": [
+                        "mode"
+                    ],
+                    "values": {
+                        "mode": [
+                            "1",
+                            "ON",
+                            "0",
+                            "OFF"
+                        ]
+                    },
+                    "description": "Shows or hides the text message set by the :DISPlay[:WINDow]:TEXT:DATA command"
+                }
+            }
+        }
+    },
+    "fetch": {
+        "array": {
+            "command": ":FETCh:ARRay?",
+            "parameters": [
+                "chanlist"
+            ],
+            "values": {
+                "chanlist": [
+                    "(@1)",
+                    "(@1,2)",
+                    "(@1:4)",
+                    "(@101)",
+                    "(@101,102)",
+                    "(@101:104)",
+                    "(@201)",
+                    "(@201,202)",
+                    "(@201:204)",
+                    "(@301)",
+                    "(@301,302)",
+                    "(@301:304)",
+                    "(@401)",
+                    "(@401,402)",
+                    "(@401:404)",
+                    "(@501)",
+                    "(@501,502)",
+                    "(@501:504)",
+                    "(@601)",
+                    "(@601,602)",
+                    "(@601:604)",
+                    "(@701)",
+                    "(@701,702)",
+                    "(@701:704)",
+                    "(@801)",
+                    "(@801,802)",
+                    "(@801:804)"
+                ]
+            },
+            "description": "Returns the array data which contains all of the voltage measurement data, current measurement data, resistance measurement data, remote transient voltage measurement data (available for PZ2120A and PZ2121A), time data, status data, or source output setting data specified by the :FORMat:ELEMents:SENSe command."
+        },
+        "array_specific": {
+            "command": ":FETCh:ARRay:<CURRent | RESistance | RTVoltage | SOURce | STATus | TIME | VOLTage>",
+            "parameters": [
+                "chanlist"
+            ],
+            "values": {
+                "chanlist": [
+                    "(@1)",
+                    "(@1,2)",
+                    "(@1:4)",
+                    "(@101)",
+                    "(@101,102)",
+                    "(@101:104)",
+                    "(@201)",
+                    "(@201,202)",
+                    "(@201:204)",
+                    "(@301)",
+                    "(@301,302)",
+                    "(@301:304)",
+                    "(@401)",
+                    "(@401,402)",
+                    "(@401:404)",
+                    "(@501)",
+                    "(@501,502)",
+                    "(@501:504)",
+                    "(@601)",
+                    "(@601,602)",
+                    "(@601:604)",
+                    "(@701)",
+                    "(@701,702)",
+                    "(@701:704)",
+                    "(@801)",
+                    "(@801,802)",
+                    "(@801:804)"
+                ]
+            },
+            "description": "Returns the array data that contains all of the current measurement data, resistance measurement data, remote transient voltage measurement data (available for PZ2120A and PZ2121A), source output setting data, status data, time data, or voltage measurement data specified by CURRent, RESistance, SOURce, STATus, TIME, or VOLTage."
+        },
+        "scalar": {
+            "command": ":FETCh[:SCALar]?",
+            "parameters": [
+                "chanlist"
+            ],
+            "values": {
+                "chanlist": [
+                    "(@1)",
+                    "(@1,2)",
+                    "(@1:4)",
+                    "(@101)",
+                    "(@101,102)",
+                    "(@101:104)",
+                    "(@201)",
+                    "(@201,202)",
+                    "(@201:204)",
+                    "(@301)",
+                    "(@301,302)",
+                    "(@301:304)",
+                    "(@401)",
+                    "(@401,402)",
+                    "(@401:404)",
+                    "(@501)",
+                    "(@501,502)",
+                    "(@501:504)",
+                    "(@601)",
+                    "(@601,602)",
+                    "(@601:604)",
+                    "(@701)",
+                    "(@701,702)",
+                    "(@701:704)",
+                    "(@801)",
+                    "(@801,802)",
+                    "(@801:804)"
+                ]
+            },
+            "description": "Returns the latest voltage measurement data, current measurement data, resistance measurement data, remote transient voltage measurement data (available for PZ2120A and PZ2121A), time data, status data, or source output setting data specified by the :FORMat:ELEMents:SENSe command."
+        },
+        "scalar_specific": {
+            "command": ":FETCh[:SCALar]:<CURRent | RESistance | RTVoltage | SOURce | STATus | TIME | VOLTage>?",
+            "parameters": [
+                "chanlist"
+            ],
+            "values": {},
+            "description": "Returns the latest current measurement data, resistance measurement data, remote transient voltage measurement data (available for PZ2120A and PZ2121A), source output setting data, status data, time data, or voltage measurement data specified by CURRent, RESistance, RTVoltage, SOURce, STATus, TIME, or VOLTage."
+        }
+    },
+    "format": {
+        "border": {
+            "command": ":FORMat:BORDer",
+            "parameters": [
+                "byte_order"
+            ],
+            "values": {
+                "byte_order": [
+                    "NORMal",
+                    "SWAPped"
+                ]
+            },
+            "description": "Sets the byte order of binary output data."
+        },
+        "data": {
+            "command": ":FORMat[:DATA]",
+            "parameters": [
+                "format"
+            ],
+            "values": {
+                "format": [
+                    "ASCii",
+                    "REAL,32",
+                    "REAL,64"
+                ]
+            },
+            "description": "Sets the data output format."
+        },
+        "elements": {
+            "sense": {
+                "command": ":FORMat:ELEMents:SENSe",
+                "parameters": [
+                    "type"
+                ],
+                "values": {
+                    "type": [
+                        "VOLTage",
+                        "CURRent",
+                        "RESistance",
+                        "TIME",
+                        "STATus",
+                        "SOURce",
+                        "RTVoltage"
+                    ]
+                },
+                "description": "Specifies the elements included in the sense or measurement result data returned by the :FETCh?, :READ?, :MEASure?, or :TRACe:DATA? command."
+            }
+        },
+        "sregister": {
+            "command": ":FORMat:SREGister",
+            "parameters": [
+                "format"
+            ],
+            "values": {
+                "format": [
+                    "ASCii",
+                    "BINary",
+                    "OCTal",
+                    "HEXadecimal"
+                ]
+            },
+            "description": "Sets the response format of the Status Byte Register."
+        }
+    },
+    "hcopy": {
+        "sdump": {
+            "data": {
+                "command": ":HCOPy:SDUMp:DATA?",
+                "parameters": [],
+                "values": {},
+                "description": "Returns the data of the front panel display image."
+            },
+            "format": {
+                "command": ":HCOPy:SDUMp:FORMat",
+                "parameters": [
+                    "format"
+                ],
+                "values": {
+                    "format": [
+                        "JPG",
+                        "BMP",
+                        "PNG"
+                    ]
+                },
+                "description": "Sets the format of the image data."
+            }
+        }
+    },
+    "lxi": {
+        "identify": {
+            "state": {
+                "command": ":LXI:IDENtify[:STATe]",
+                "parameters": [
+                    "mode"
+                ],
+                "values": {
+                    "mode": [
+                        "0",
+                        "OFF",
+                        "1",
+                        "ON"
+                    ]
+                },
+                "description": "Changes the LXI status indicator state to the device identification."
+            }
+        },
+        "lan": {
+            "fdefault": {
+                "command": ":LXI:LAN:FDEFault",
+                "parameters": [],
+                "values": {},
+                "description": "Restores the factory default LAN setting."
+            },
+            "reset": {
+                "command": ":LXI:LAN:RESet",
+                "parameters": [],
+                "values": {},
+                "description": "Performs LCI (Lan Configuration Initialize. It also called as LAN Reset)."
+            }
+        },
+        "mdns": {
+            "enable": {
+                "command": ":LXI:MDNS:ENABle",
+                "parameters": [
+                    "mode"
+                ],
+                "values": {
+                    "mode": [
+                        "0",
+                        "OFF",
+                        "1",
+                        "ON"
+                    ]
+                },
+                "description": "Enables or disables mDNS (multicast DNS) function."
+            },
+            "hostname": {
+                "resolved": {
+                    "command": ":LXI:MDNS:HNAMe[:RESolved]?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the resolved mDNS hostname."
+                }
+            },
+            "sname": {
+                "desired": {
+                    "command": ":LXI:MDNS:SNAMe:DESired",
+                    "parameters": [
+                        "name"
+                    ],
+                    "values": {},
+                    "description": "Sets the desired mDNS service name."
+                },
+                "resolved": {
+                    "command": ":LXI:MDNS:SNAMe[:RESolved]?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the resolved mDNS service name."
+                }
+            }
+        }
+    },
+    "measure": {
+        "command": ":MEASure?",
+        "parameters": [
+            "chanlist"
+        ],
+        "values": {
+            "chanlist": [
+                "(@1)",
+                "(@1,2)",
+                "(@1:4)",
+                "(@101)",
+                "(@101,102)",
+                "(@101:104)",
+                "(@201)",
+                "(@201,202)",
+                "(@201:204)",
+                "(@301)",
+                "(@301,302)",
+                "(@301:304)",
+                "(@401)",
+                "(@401,402)",
+                "(@401:404)",
+                "(@501)",
+                "(@501,502)",
+                "(@501:504)",
+                "(@601)",
+                "(@601,602)",
+                "(@601:604)",
+                "(@701)",
+                "(@701,702)",
+                "(@701:704)",
+                "(@801)",
+                "(@801,802)",
+                "(@801:804)"
+            ]
+        },
+        "description": "Executes a spot measurement (one-shot measurement) for the parameters specified by the :SENSe:FUNCtion[:ON] command, and returns the measurement result data specified by the :FORMat:ELEMents:SENSe command."
+    },
+    "measure_specific": {
+        "command": ":MEASure:<CURRent | RTVoltage | VOLTage>[:DC]?",
+        "parameters": [
+            "chanlist"
+        ],
+        "values": {
+            "chanlist": [
+                "(@1)",
+                "(@1,2)",
+                "(@1:4)",
+                "(@101)",
+                "(@101,102)",
+                "(@101:104)",
+                "(@201)",
+                "(@201,202)",
+                "(@201:204)",
+                "(@301)",
+                "(@301,302)",
+                "(@301:304)",
+                "(@401)",
+                "(@401,402)",
+                "(@401:404)",
+                "(@501)",
+                "(@501,502)",
+                "(@501:504)",
+                "(@601)",
+                "(@601,602)",
+                "(@601:604)",
+                "(@701)",
+                "(@701,702)",
+                "(@701:704)",
+                "(@801)",
+                "(@801,802)",
+                "(@801:804)"
+            ]
+        },
+        "description": "Executes a spot measurement (one-shot measurement) for the specified parameter and returns the measurement result data."
+    },
+    "memory": {
+        "catalog": {
+            "command": ":MMEMory:CATalog?",
+            "parameters": [
+                "directory"
+            ],
+            "values": {},
+            "description": "Returns the memory usage and availability."
+        },
+        "cdirectory": {
+            "command": ":MMEMory:CDIRectory",
+            "parameters": [
+                "directory"
+            ],
+            "values": {},
+            "description": "Changes the current directory to the specified directory."
+        },
+        "copy": {
+            "command": ":MMEMory:COPY",
+            "parameters": [
+                "source",
+                "destination"
+            ],
+            "values": {},
+            "description": "Makes a copy of an existing file in the current directory."
+        },
+        "data": {
+            "command": ":MMEMory:DATA",
+            "parameters": [
+                "file_name",
+                "data"
+            ],
+            "values": {},
+            "description": "Creates a file and writes the data in it."
+        },
+        "data_append": {
+            "command": ":MMEMory:DATA:APPend",
+            "parameters": [
+                "file_name",
+                "data"
+            ],
+            "values": {},
+            "description": "Appends data to a file."
+        },
+        "delete": {
+            "command": ":MMEMory:DELete",
+            "parameters": [
+                "file_name"
+            ],
+            "values": {},
+            "description": "Deletes a file in the current directory."
+        },
+        "load": {
+            "macro": {
+                "command": ":MMEMory:LOAD:MACRo",
+                "parameters": [
+                    "macro",
+                    "file_name"
+                ],
+                "values": {},
+                "description": "Loads a macro from the specified file in the current directory."
+            },
+            "state": {
+                "command": ":MMEMory:LOAD:STATe",
+                "parameters": [
+                    "file_name"
+                ],
+                "values": {},
+                "description": "Loads an instrument setup from the specified file in the current directory."
+            }
+        },
+        "mdirectory": {
+            "command": ":MMEMory:MDIRectory",
+            "parameters": [
+                "directory"
+            ],
+            "values": {},
+            "description": "Creates a new directory."
+        },
+        "move": {
+            "command": ":MMEMory:MOVE",
+            "parameters": [
+                "source",
+                "destination"
+            ],
+            "values": {},
+            "description": "Moves or renames an existing file in the current directory."
+        },
+        "rdirectory": {
+            "command": ":MMEMory:RDIRectory",
+            "parameters": [
+                "directory"
+            ],
+            "values": {},
+            "description": "Removes the specified empty directory."
+        },
+        "store": {
+            "data": {
+                "sense": {
+                    "command": ":MMEMory:STORe:DATA:SENSe",
+                    "parameters": [
+                        "file_name",
+                        "chanlist"
+                    ],
+                    "values": {},
+                    "description": "Saves the sense data for the specified channel to the specified file in the current directory."
+                }
+            },
+            "macro": {
+                "command": ":MMEMory:STORe:MACRo",
+                "parameters": [
+                    "macro",
+                    "file_name"
+                ],
+                "values": {},
+                "description": "Saves the macro to the specified file in the current directory."
+            },
+            "state": {
+                "command": ":MMEMory:STORe:STATe",
+                "parameters": [
+                    "file_name"
+                ],
+                "values": {},
+                "description": "Saves the instrument setup to the specified file in the current directory."
+            },
+            "trace": {
+                "command": ":MMEMory:STORe:TRACe",
+                "parameters": [
+                    "file_name",
+                    "chanlist"
+                ],
+                "values": {
+                    "chanlist": [
+                        "(@1)",
+                        "(@1,2)",
+                        "(@1:4)",
+                        "(@101)",
+                        "(@101,102)",
+                        "(@101:104)",
+                        "(@201)",
+                        "(@201,202)",
+                        "(@201:204)",
+                        "(@301)",
+                        "(@301,302)",
+                        "(@301:304)",
+                        "(@401)",
+                        "(@401,402)",
+                        "(@401:404)",
+                        "(@501)",
+                        "(@501,502)",
+                        "(@501:504)",
+                        "(@601)",
+                        "(@601,602)",
+                        "(@601:604)",
+                        "(@701)",
+                        "(@701,702)",
+                        "(@701:704)",
+                        "(@801)",
+                        "(@801,802)",
+                        "(@801:804)"
+                    ]
+                },
+                "description": "Saves all data in the trace buffer for the specified channel to the specified file in the current directory."
+            }
+        }
+    },
+    "output": {
+        "filter": {
+            "lpass": {
+                "auto": {
+                    "command": ":OUTPut:FILTer[:LPASs]:AUTO",
+                    "parameters": [
+                        "mode"
+                    ],
+                    "values": {
+                        "mode": [
+                            "1",
+                            "ON",
+                            "0",
+                            "OFF"
+                        ]
+                    },
+                    "description": "Enables or disables the automatic filter function."
+                },
+                "frequency": {
+                    "command": ":OUTPut:FILTer[:LPASs]:FREQuency",
+                    "parameters": [
+                        "frequency"
+                    ],
+                    "values": {
+                        "frequency": [
+                            "MINimum",
+                            "MAXimum",
+                            "DEFault"
+                        ]
+                    },
+                    "description": "Sets the cutoff frequency of the output filter."
+                },
+                "state": {
+                    "command": ":OUTPut:FILTer[:LPASs][:STATe]",
+                    "parameters": [
+                        "mode"
+                    ],
+                    "values": {
+                        "mode": [
+                            "1",
+                            "ON",
+                            "0",
+                            "OFF"
+                        ]
+                    },
+                    "description": "Enables or disables the output filter."
+                },
+                "tconstant": {
+                    "command": ":OUTPut:FILTer[:LPASs]:TCONstant",
+                    "parameters": [
+                        "time_constant"
+                    ],
+                    "values": {
+                        "time_constant": [
+                            "MINimum",
+                            "MAXimum",
+                            "DEFault"
+                        ]
+                    },
+                    "description": "Sets the time constant instead of setting the cutoff frequency of the output filter."
+                }
+            }
+        },
+        "mode": {
+            "command": ":OUTPut:MODE",
+            "parameters": [
+                "mode"
+            ],
+            "values": {
+                "mode": [
+                    "NORMal",
+                    "PSUPply",
+                    "HCAPacitance",
+                    "LDIode"
+                ]
+            },
+            "description": "Selects the output operation mode."
+        },
+        "off": {
+            "auto": {
+                "command": ":OUTPut:OFF:AUTO",
+                "parameters": [
+                    "mode"
+                ],
+                "values": {
+                    "mode": [
+                        "1",
+                        "ON",
+                        "0",
+                        "OFF"
+                    ]
+                },
+                "description": "Enables or disables the automatic output off function."
+            },
+            "mode": {
+                "command": ":OUTPut:OFF:MODE",
+                "parameters": [
+                    "mode"
+                ],
+                "values": {
+                    "mode": [
+                        "ZERO",
+                        "HIZ",
+                        "NORMal"
+                    ]
+                },
+                "description": "Selects the source condition after the output is off."
+            }
+        },
+        "on": {
+            "auto": {
+                "command": ":OUTPut:ON:AUTO",
+                "parameters": [
+                    "mode"
+                ],
+                "values": {
+                    "mode": [
+                        "1",
+                        "ON",
+                        "0",
+                        "OFF"
+                    ]
+                },
+                "description": "Enables or disables the automatic output on function."
+            }
+        },
+        "protection": {
+            "clear": {
+                "command": ":OUTPut:PROTection:CLEar",
+                "parameters": [],
+                "values": {},
+                "description": "Clears the protection state of the mainframe."
+            },
+            "coupling": {
+                "command": ":OUTPut:PROTection:COUPling",
+                "parameters": [
+                    "state"
+                ],
+                "values": {
+                    "state": [
+                        "0",
+                        "OFF",
+                        "1",
+                        "ON"
+                    ]
+                },
+                "description": "Enables or disables the protection coupling."
+            },
+            "tripped": {
+                "command": ":OUTPut:PROTection:TRIPped?",
+                "parameters": [],
+                "values": {},
+                "description": "Returns if the instrument is in protection state or not."
+            }
+        },
+        "resistance": {
+            "filter": {
+                "auto": {
+                    "command": ":OUTPut:RESistance:FILTer[:LPASs]:AUTO",
+                    "parameters": [
+                        "mode"
+                    ],
+                    "values": {
+                        "mode": [
+                            "1",
+                            "ON",
+                            "0",
+                            "OFF"
+                        ]
+                    },
+                    "description": "Enables or disables the function to automatically set the output resistance filter."
+                },
+                "frequency": {
+                    "command": ":OUTPut:RESistance:FILTer[:LPASs]:FREQuency",
+                    "parameters": [
+                        "frequency"
+                    ],
+                    "values": {
+                        "frequency": [
+                            "MINimum",
+                            "MAXimum",
+                            "DEFault"
+                        ]
+                    },
+                    "description": "Sets the cutoff frequency of the output resistance filter."
+                },
+                "state": {
+                    "command": ":OUTPut:RESistance:FILTer[:LPASs][:STATe]",
+                    "parameters": [
+                        "mode"
+                    ],
+                    "values": {
+                        "mode": [
+                            "1",
+                            "ON",
+                            "0",
+                            "OFF"
+                        ]
+                    },
+                    "description": "Enables or disables the output resistance filter."
+                },
+                "tconstant": {
+                    "command": ":OUTPut:RESistance:FILTer[:LPASs]:TCONstant",
+                    "parameters": [
+                        "time_constant"
+                    ],
+                    "values": {
+                        "time_constant": [
+                            "MINimum",
+                            "MAXimum",
+                            "DEFault"
+                        ]
+                    },
+                    "description": "Sets the time constant of the output resistance filter."
+                }
+            },
+            "mode": {
+                "command": ":OUTPut:RESistance:MODE",
+                "parameters": [
+                    "mode"
+                ],
+                "values": {
+                    "mode": [
+                        "FIXed"
+                    ]
+                },
+                "description": "Selects the operation mode of the output resistance."
+            },
+            "series": {
+                "level": {
+                    "command": ":OUTPut:RESistance:SERies[:LEVel]",
+                    "parameters": [
+                        "series"
+                    ],
+                    "values": {
+                        "series": [
+                            "MINimum",
+                            "MAXimum",
+                            "DEFault"
+                        ]
+                    },
+                    "description": "Sets the value of output series resistance."
+                }
+            },
+            "shunt": {
+                "level": {
+                    "command": ":OUTPut:RESistance:SHUNt[:LEVel]",
+                    "parameters": [
+                        "shunt"
+                    ],
+                    "values": {
+                        "shunt": [
+                            "MINimum",
+                            "MAXimum",
+                            "DEFault"
+                        ]
+                    },
+                    "description": "Sets the value of output shunt resistance."
+                }
+            },
+            "state": {
+                "command": ":OUTPut:RESistance[:STATe]",
+                "parameters": [
+                    "mode"
+                ],
+                "values": {
+                    "mode": [
+                        "1",
+                        "ON",
+                        "0",
+                        "OFF"
+                    ]
+                },
+                "description": "Enables or disables the output resistance."
+            }
+        },
+        "state": {
+            "command": ":OUTPut[:STATe]",
+            "parameters": [
+                "mode"
+            ],
+            "values": {
+                "mode": [
+                    "1",
+                    "ON",
+                    "0",
+                    "OFF"
+                ]
+            },
+            "description": "Enables or disables the source output."
+        }
+    },
+    "program": {
+        "catalog": {
+            "command": ":PROGram:CATalog?",
+            "parameters": [],
+            "values": {},
+            "description": "Returns the names of all programs defined in the program memory."
+        },
+        "pon": {
+            "copy": {
+                "command": ":PROGram:PON:COPY",
+                "parameters": [
+                    "name"
+                ],
+                "values": {},
+                "description": "Specifies the power-on program."
+            },
+            "delete": {
+                "command": ":PROGram:PON:DELete",
+                "parameters": [],
+                "values": {},
+                "description": "Clears the power-on program."
+            },
+            "run": {
+                "command": ":PROGram:PON:RUN",
+                "parameters": [
+                    "mode"
+                ],
+                "values": {
+                    "mode": [
+                        "1",
+                        "ON",
+                        "0",
+                        "OFF"
+                    ]
+                },
+                "description": "Enables or disables the power-on program."
+            }
+        },
+        "selected": {
+            "append": {
+                "command": ":PROGram[:SELected]:APPend",
+                "parameters": [
+                    "program_code"
+                ],
+                "values": {},
+                "description": "Adds a program code to the end of a program stored in the program memory."
+            },
+            "define": {
+                "command": ":PROGram[:SELected]:DEFine",
+                "parameters": [
+                    "program_code"
+                ],
+                "values": {},
+                "description": "Defines a program in the program memory by entering the initial program code."
+            },
+            "delete": {
+                "all": {
+                    "command": ":PROGram[:SELected]:DELete:ALL",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Deletes all programs stored in the program memory."
+                },
+                "selected": {
+                    "command": ":PROGram[:SELected]:DELete[:SELected]",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Deletes a program stored in the program memory."
+                }
+            },
+            "execute": {
+                "command": ":PROGram[:SELected]:EXECute",
+                "parameters": [],
+                "values": {},
+                "description": "Executes a program stored in the program memory."
+            },
+            "name": {
+                "command": ":PROGram[:SELected]:NAME",
+                "parameters": [
+                    "name"
+                ],
+                "values": {},
+                "description": "Selects the program for performing the action by the subsequent commands."
+            },
+            "state": {
+                "command": ":PROGram[:SELected]:STATe",
+                "parameters": [
+                    "operation"
+                ],
+                "values": {
+                    "operation": [
+                        "RUN",
+                        "PAUSe",
+                        "STEP",
+                        "STOP",
+                        "CONTinue"
+                    ]
+                },
+                "description": "Changes the execution status of a program stored in the program memory."
+            },
+            "wait": {
+                "command": ":PROGram[:SELected]:WAIT?",
+                "parameters": [
+                    "timeout"
+                ],
+                "values": {},
+                "description": "Blocks other commands until the program execution status changes to Paused or Stopped."
+            }
+        },
+        "variable": {
+            "command": ":PROGram:VARiable",
+            "parameters": [
+                "value"
+            ],
+            "values": {},
+            "description": "Sets a value to the variable specified by h."
+        }
+    },
+    "read": {
+        "array": {
+            "command": ":READ:ARRay?",
+            "parameters": [
+                "chanlist"
+            ],
+            "values": {
+                "chanlist": [
+                    "(@1)",
+                    "(@1,2)",
+                    "(@1:4)",
+                    "(@101)",
+                    "(@101,102)",
+                    "(@101:104)",
+                    "(@201)",
+                    "(@201,202)",
+                    "(@201:204)",
+                    "(@301)",
+                    "(@301,302)",
+                    "(@301:304)",
+                    "(@401)",
+                    "(@401,402)",
+                    "(@401:404)",
+                    "(@501)",
+                    "(@501,502)",
+                    "(@501:504)",
+                    "(@601)",
+                    "(@601,602)",
+                    "(@601:604)",
+                    "(@701)",
+                    "(@701,702)",
+                    "(@701:704)",
+                    "(@801)",
+                    "(@801,802)",
+                    "(@801:804)"
+                ]
+            },
+            "description": "Executes the :INITiate command and the :FETCh:ARRay? command in series, and returns the array data which contains all of the voltage measurement data, current measurement data, resistance measurement data, remote transient voltage measurement data (available for PZ2120A and PZ2121A), time data, status data, or source output setting data specified by the :FORMat:ELEMents:SENSe command."
+        },
+        "array_specific": {
+            "command": ":READ:ARRay:<CURRent | RESistance | RTVoltage | STATus | TIME | VOLTage>?",
+            "parameters": [
+                "chanlist"
+            ],
+            "values": {
+                "chanlist": [
+                    "(@1)",
+                    "(@1,2)",
+                    "(@1:4)",
+                    "(@101)",
+                    "(@101,102)",
+                    "(@101:104)",
+                    "(@201)",
+                    "(@201,202)",
+                    "(@201:204)",
+                    "(@301)",
+                    "(@301,302)",
+                    "(@301:304)",
+                    "(@401)",
+                    "(@401,402)",
+                    "(@401:404)",
+                    "(@501)",
+                    "(@501,502)",
+                    "(@501:504)",
+                    "(@601)",
+                    "(@601,602)",
+                    "(@601:604)",
+                    "(@701)",
+                    "(@701,702)",
+                    "(@701:704)",
+                    "(@801)",
+                    "(@801,802)",
+                    "(@801:804)"
+                ]
+            },
+            "description": "Executes the :INITiate command and the :FETCh:ARRay:<CURRent|RESistance| SOURce|STATus|TIME|VOLTage>? command in series, and returns the array data which contains all of the current measurement data, resistance measurement data, remote transient voltage measurement data (available for PZ2120A and PZ2121A), source output setting data, status data, time data, or voltage measurement data specified by CURRent, RESistance, SOURce, STATus, TIME, or VOLTage."
+        },
+        "scalar": {
+            "command": ":READ[:SCALar]?",
+            "parameters": [
+                "chanlist"
+            ],
+            "values": {
+                "chanlist": [
+                    "(@1)",
+                    "(@1,2)",
+                    "(@1:4)",
+                    "(@101)",
+                    "(@101,102)",
+                    "(@101:104)",
+                    "(@201)",
+                    "(@201,202)",
+                    "(@201:204)",
+                    "(@301)",
+                    "(@301,302)",
+                    "(@301:304)",
+                    "(@401)",
+                    "(@401,402)",
+                    "(@401:404)",
+                    "(@501)",
+                    "(@501,502)",
+                    "(@501:504)",
+                    "(@601)",
+                    "(@601,602)",
+                    "(@601:604)",
+                    "(@701)",
+                    "(@701,702)",
+                    "(@701:704)",
+                    "(@801)",
+                    "(@801,802)",
+                    "(@801:804)"
+                ]
+            },
+            "description": "Executes the :INITiate command and the :FETCh[:SCALar]? command in series, and returns the latest voltage measurement data, current measurement data, resistance measurement data, remote transient voltage measurement data (available for PZ2120A and PZ2121A), time data, or status data specified by the :FORMat:ELEMents:SENSe command."
+        },
+        "scalar_specific": {
+            "command": ":READ[:SCALar]:<CURRent | RESistance | RTVoltage | STATus | TIME | VOLTage>?",
+            "parameters": [
+                "chanlist"
+            ],
+            "values": {
+                "chanlist": [
+                    "(@1)",
+                    "(@1,2)",
+                    "(@1:4)",
+                    "(@101)",
+                    "(@101,102)",
+                    "(@101:104)",
+                    "(@201)",
+                    "(@201,202)",
+                    "(@201:204)",
+                    "(@301)",
+                    "(@301,302)",
+                    "(@301:304)",
+                    "(@401)",
+                    "(@401,402)",
+                    "(@401:404)",
+                    "(@501)",
+                    "(@501,502)",
+                    "(@501:504)",
+                    "(@601)",
+                    "(@601,602)",
+                    "(@601:604)",
+                    "(@701)",
+                    "(@701,702)",
+                    "(@701:704)",
+                    "(@801)",
+                    "(@801,802)",
+                    "(@801:804)"
+                ]
+            },
+            "description": "Executes the :INITiate command and the :FETCh[:SCALar]:<CURRent | RESistance | RTVoltage | STATus | TIME | VOLTage>? command in series, and returns the latest current measurement data, resistance measurement data, remote transient voltage measurement data (available for PZ2120A and PZ2121A), status data, time data, or voltage measurement data specified by CURRent, RESistance, RTVoltage, STATus, TIME, or VOLTage."
+        }
+    },
+    "sense": {
+        "current": {
+            "voltage": {
+                "aperture": {
+                    "command": ":SENSe:<CURRent | VOLTage>[:DC]:APERture",
+                    "parameters": [
+                        "time"
+                    ],
+                    "values": {
+                        "time": [
+                            "MINimum",
+                            "MAXimum",
+                            "DEFault"
+                        ]
+                    },
+                    "description": "Sets the aperture time, or the integration time for one measurement point."
+                },
+                "aperture_auto": {
+                    "command": ":SENSe:<CURRent | VOLTage>[:DC]:APERture:AUTO",
+                    "parameters": [
+                        "mode"
+                    ],
+                    "values": {
+                        "mode": [
+                            "0",
+                            "OFF",
+                            "1",
+                            "ON"
+                        ]
+                    },
+                    "description": "Enables or disables the function to automatically set the aperture time in seconds."
+                },
+                "npulsewidth": {
+                    "command": ":SENSe:<CURRent | VOLTage>[:DC]:NPLCycles",
+                    "parameters": [
+                        "nplc"
+                    ],
+                    "values": {
+                        "nplc": [
+                            "MINimum",
+                            "MAXimum",
+                            "DEFault"
+                        ]
+                    },
+                    "description": "Sets the number of power line cycles (NPLC) value instead of setting the integration time in seconds for one measurement point."
+                },
+                "npulsewidth_auto": {
+                    "command": ":SENSe:<CURRent | VOLTage>[:DC]:NPLCycles:AUTO",
+                    "parameters": [
+                        "mode"
+                    ],
+                    "values": {
+                        "mode": [
+                            "1",
+                            "ON",
+                            "0",
+                            "OFF"
+                        ]
+                    },
+                    "description": "Enables or disables the function to automatically set the NPLC."
+                },
+                "protection": {
+                    "level": {
+                        "both": {
+                            "command": ":SENSe:<CURRent | VOLTage>[:DC]:PROTection[:LEVel][:BOTH]",
+                            "parameters": [
+                                "limit"
+                            ],
+                            "values": {
+                                "limit": [
+                                    "MINimum",
+                                    "MAXimum",
+                                    "DEFault"
+                                ]
+                            },
+                            "description": "Sets the Limit value of the specified channel as an absolute value for positive and negative."
+                        },
+                        "negative": {
+                            "command": ":SENSe:<CURRent | VOLTage>[:DC]:PROTection[:LEVel]:NEGative",
+                            "parameters": [
+                                "limit"
+                            ],
+                            "values": {
+                                "limit": [
+                                    "MINimum",
+                                    "MAXimum",
+                                    "DEFault"
+                                ]
+                            },
+                            "description": "Sets the negative Limit value of the specified channel."
+                        },
+                        "positive": {
+                            "command": ":SENSe:<CURRent | VOLTage>[:DC]:PROTection[:LEVel]:POSitive",
+                            "parameters": [
+                                "limit"
+                            ],
+                            "values": {
+                                "limit": [
+                                    "MINimum",
+                                    "MAXimum",
+                                    "DEFault"
+                                ]
+                            },
+                            "description": "Sets the positive Limit value of the specified channel."
+                        }
+                    },
+                    "range": {
+                        "command": ":SENSe:<CURRent | VOLTage>[:DC]:PROTection:RANGe",
+                        "parameters": [
+                            "range"
+                        ],
+                        "values": {
+                            "range": [
+                                "UP",
+                                "DOWN",
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Specifies the expected Limit value, and sets the measurement range which provides the best resolution."
+                    },
+                    "range_auto": {
+                        "command": ":SENSe:<CURRent | VOLTage>[:DC]:PROTection:RANGe:AUTO",
+                        "parameters": [
+                            "mode"
+                        ],
+                        "values": {
+                            "mode": [
+                                "0",
+                                "OFF",
+                                "1",
+                                "ON"
+                            ]
+                        },
+                        "description": "Enables or disables the function to automatically set the measurement range based on the Limit value."
+                    },
+                    "tripped": {
+                        "command": ":SENSe:<CURRent | VOLTage>[:DC]:PROTection:TRIPped?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Returns whether the measurement value reaches the Limit."
+                    }
+                },
+                "range": {
+                    "auto": {
+                        "command": ":SENSe:<CURRent | VOLTage>[:DC]:RANGe:AUTO",
+                        "parameters": [
+                            "mode"
+                        ],
+                        "values": {
+                            "mode": [
+                                "0",
+                                "OFF",
+                                "1",
+                                "ON"
+                            ]
+                        },
+                        "description": "Enables or disables the automatic ranging function of the specified measurement channel."
+                    },
+                    "auto_llimit": {
+                        "command": ":SENSe:<CURRent | VOLTage>[:DC]:RANGe:AUTO:LLIMit",
+                        "parameters": [
+                            "range"
+                        ],
+                        "values": {
+                            "range": [
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Specifies the lower limit for the automatic ranging measurement and sets the minimum measurement range that provides the best resolution to measure the specified value."
+                    },
+                    "auto_mode": {
+                        "command": ":SENSe:<CURRent | VOLTage>[:DC]:RANGe:AUTO:MODE",
+                        "parameters": [
+                            "mode"
+                        ],
+                        "values": {
+                            "mode": [
+                                "NORMal",
+                                "RESolution",
+                                "SPEed"
+                            ]
+                        },
+                        "description": "Selects the operation mode of the automatic ranging measurement."
+                    },
+                    "auto_threshold": {
+                        "command": ":SENSe:<CURRent | VOLTage>[:DC]:RANGe:AUTO:THReshold",
+                        "parameters": [
+                            "rate"
+                        ],
+                        "values": {
+                            "rate": [
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Sets the threshold rate for the automatic ranging measurement."
+                    },
+                    "auto_ulimit": {
+                        "command": ":SENSe:<CURRent | VOLTage>[:DC]:RANGe:AUTO:ULIMit",
+                        "parameters": [
+                            "range"
+                        ],
+                        "values": {
+                            "range": [
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Specifies the upper limit for the automatic ranging measurement and sets the maximum measurement range that provides the best resolution to measure the specified value."
+                    },
+                    "sless_llimit": {
+                        "command": ":SENSe:CURRent[:DC]:RANGe:SLESs:LLIMit",
+                        "parameters": [
+                            "range"
+                        ],
+                        "values": {
+                            "range": [
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Specifies the lower limit for the seamless current measurement ranging."
+                    },
+                    "sless_state": {
+                        "command": ":SENSe:CURRent[:DC]:RANGe:SLESs[:STATe]",
+                        "parameters": [
+                            "mode"
+                        ],
+                        "values": {
+                            "mode": [
+                                "1",
+                                "ON",
+                                "0",
+                                "OFF"
+                            ]
+                        },
+                        "description": "Enables or disables the seamless current measurement ranging and sets the maximum measurement range which provides the best resolution to measure the specified value."
+                    },
+                    "upper": {
+                        "command": ":SENSe:<CURRent | VOLTage>[:DC]:RANGe[:UPPer]",
+                        "parameters": [
+                            "range"
+                        ],
+                        "values": {
+                            "range": [
+                                "UP",
+                                "DOWN",
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Specifies the expected measurement value and sets the measurement range that provides the best resolution to measure the specified value."
+                    }
+                }
+            }
+        },
+        "data": {
+            "command": ":SENSe:DATA?",
+            "parameters": [
+                "offset",
+                "size"
+            ],
+            "values": {},
+            "description": "Returns the array data which contains all of the current measurement data, voltage measurement data, resistance measurement data, remote transient voltage measurement data (available for PZ2120A and PZ2121A), source output setting data, status data, or time data specified by the :FORMat:ELEMents:SENSe command."
+        },
+        "data_latest": {
+            "command": ":SENSe:DATA:LATest?",
+            "parameters": [],
+            "values": {},
+            "description": "Returns the latest current measurement data, voltage measurement data, resistance measurement data, remote transient voltage measurement data (available for PZ2120A and PZ2121A), source output setting data, status data, or time data specified by the :FORMat:ELEMents:SENSe command."
+        },
+        "function": {
+            "mode": {
+                "command": ":SENSe:FUNCtion:MODE",
+                "parameters": [
+                    "mode"
+                ],
+                "values": {
+                    "mode": [
+                        "NORMal",
+                        "SAMPling"
+                    ]
+                },
+                "description": "Selects the sense function mode from normal or sampling for the specified source channel."
+            },
+            "off": {
+                "command": ":SENSe:FUNCtion:OFF",
+                "parameters": [
+                    "function"
+                ],
+                "values": {
+                    "function": [
+                        "CURRent[:DC]",
+                        "VOLTage[:DC]",
+                        "RESistance"
+                    ]
+                },
+                "description": "Disables the specified measurement functions."
+            },
+            "off_all": {
+                "command": ":SENSe:FUNCtion:OFF:ALL",
+                "parameters": [],
+                "values": {},
+                "description": "Disables all measurement functions."
+            },
+            "off_count": {
+                "command": ":SENSe:FUNCtion:OFF:COUNt?",
+                "parameters": [],
+                "values": {},
+                "description": "Returns the number of measurement functions that are disabled."
+            },
+            "on": {
+                "command": ":SENSe:FUNCtion[:ON]",
+                "parameters": [
+                    "function"
+                ],
+                "values": {
+                    "function": [
+                        "CURRent[:DC]",
+                        "VOLTage[:DC]",
+                        "RESistance"
+                    ]
+                },
+                "description": "Enables the specified measurement functions."
+            },
+            "on_all": {
+                "command": ":SENSe:FUNCtion[:ON]:ALL",
+                "parameters": [],
+                "values": {},
+                "description": "Enables all measurement functions."
+            },
+            "on_count": {
+                "command": ":SENSe:FUNCtion[:ON]:COUNt?",
+                "parameters": [],
+                "values": {},
+                "description": "Returns the number of measurement functions that are enabled."
+            },
+            "state": {
+                "command": ":SENSe:FUNCtion:STATe?",
+                "parameters": [
+                    "function"
+                ],
+                "values": {
+                    "function": [
+                        "CURRent[:DC]",
+                        "VOLTage[:DC]",
+                        "RESistance"
+                    ]
+                },
+                "description": "Returns if the specified measurement function is enabled or disabled."
+            }
+        },
+        "rtvoltage": {
+            "dc": {
+                "state": {
+                    "command": ":SENSe:RTVoltage[:DC][:STATe]",
+                    "parameters": [
+                        "mode"
+                    ],
+                    "values": {
+                        "mode": [
+                            "1",
+                            "ON",
+                            "0",
+                            "OFF"
+                        ]
+                    },
+                    "description": "Enables or disables the remote transient voltage measurement."
+                }
+            }
+        },
+        "sampling": {
+            "points": {
+                "command": ":SENSe:SAMPling:POINts",
+                "parameters": [
+                    "points"
+                ],
+                "values": {
+                    "points": [
+                        "MINimum",
+                        "MAXimum",
+                        "DEFault"
+                    ]
+                },
+                "description": "Sets the number of sampling measurements for the specified channel."
+            },
+            "time": {
+                "command": ":SENSe:SAMPling:TIME",
+                "parameters": [
+                    "duration"
+                ],
+                "values": {
+                    "duration": [
+                        "MINimum",
+                        "MAXimum",
+                        "DEFault"
+                    ]
+                },
+                "description": "Sets the duration of the sampling measurements in the digitizer mode."
+            }
+        },
+        "toutput": {
+            "signal": {
+                "command": ":SENSe:TOUTput:SIGNal",
+                "parameters": [
+                    "output"
+                ],
+                "values": {
+                    "output": [
+                        "INT1",
+                        "INT2",
+                        "INT3",
+                        "INT4",
+                        "INT5",
+                        "INT6",
+                        "MEXT1",
+                        "MEXT2"
+                    ]
+                },
+                "description": "Selects the trigger output for the status change between the trigger layer and the Acquire device action."
+            },
+            "state": {
+                "command": ":SENSe:TOUTput[:STATe]",
+                "parameters": [
+                    "mode"
+                ],
+                "values": {
+                    "mode": [
+                        "1",
+                        "ON",
+                        "0",
+                        "OFF"
+                    ]
+                },
+                "description": "Enables or disables the trigger output for the status change between the trigger layer and the Acquire device action."
+            }
+        },
+        "wait": {
+            "auto": {
+                "command": ":SENSe:WAIT:AUTO",
+                "parameters": [
+                    "mode"
+                ],
+                "values": {
+                    "mode": [
+                        "0",
+                        "OFF",
+                        "1",
+                        "ON"
+                    ]
+                },
+                "description": "Enables or disables the initial wait time used for calculating the measurement wait time for the specified channel."
+            },
+            "gain": {
+                "command": ":SENSe:WAIT:GAIN",
+                "parameters": [
+                    "gain"
+                ],
+                "values": {
+                    "gain": [
+                        "MINimum",
+                        "MAXimum",
+                        "DEFault"
+                    ]
+                },
+                "description": "Sets the gain value used for calculating the measurement wait time for the specified channel."
+            },
+            "offset": {
+                "command": ":SENSe:WAIT:OFFSet",
+                "parameters": [
+                    "offset"
+                ],
+                "values": {
+                    "offset": [
+                        "MINimum",
+                        "MAXimum",
+                        "DEFault"
+                    ]
+                },
+                "description": "Sets the offset value used for calculating the measurement wait time for the specified channel."
+            },
+            "state": {
+                "command": ":SENSe:WAIT[:STATe]",
+                "parameters": [
+                    "mode"
+                ],
+                "values": {
+                    "mode": [
+                        "0",
+                        "OFF",
+                        "1",
+                        "ON"
+                    ]
+                },
+                "description": "Enables or disables the measurement wait time for the specified channel."
+            }
+        }
+    },
+    "source": {
+        "current": {
+            "voltage": {
+                "base": {
+                    "level": {
+                        "command": "[:SOURce]:<CURRent | VOLTage>:BASE:LEVel",
+                        "parameters": [
+                            "level"
+                        ],
+                        "values": {
+                            "level": [
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Changes the pulse base level of the specified source channel immediately by receiving a trigger from the trigger source set by the :TRIGger:<TRANsient|[:ALL]>:SOURce[:SIGNal] command."
+                    },
+                    "type": {
+                        "command": "[:SOURce]:<CURRent | VOLTage>:BASE[:TYPE]",
+                        "parameters": [
+                            "type"
+                        ],
+                        "values": {
+                            "type": [
+                                "MANual",
+                                "IMMediate",
+                                "TRIGgered",
+                                "STARt",
+                                "STOP"
+                            ]
+                        },
+                        "description": "Selects the pulse base level type of the specified source channel."
+                    }
+                },
+                "center_span": {
+                    "command": "[:SOURce]:<CURRent | VOLTage>:<CENTer | SPAN>",
+                    "parameters": [
+                        "data"
+                    ],
+                    "values": {
+                        "data": [
+                            "MINimum",
+                            "MAXimum",
+                            "DEFault"
+                        ]
+                    },
+                    "description": "Sets the center or span value of the current or voltage sweep output."
+                },
+                "level": {
+                    "immediate": {
+                        "amplitude": {
+                            "command": "[:SOURce]:<CURRent | VOLTage>[:LEVel][:IMMediate][:AMPLitude]",
+                            "parameters": [
+                                "level"
+                            ],
+                            "values": {
+                                "level": [
+                                    "MINimum",
+                                    "MAXimum",
+                                    "DEFault"
+                                ]
+                            },
+                            "description": "Changes the output level of the specified source channel immediately."
+                        }
+                    },
+                    "triggered": {
+                        "amplitude": {
+                            "command": "[:SOURce]:<CURRent | VOLTage>[:LEVel]:TRIGgered[:AMPLitu de]",
+                            "parameters": [
+                                "level"
+                            ],
+                            "values": {
+                                "level": [
+                                    "MINimum",
+                                    "MAXimum",
+                                    "DEFault"
+                                ]
+                            },
+                            "description": "Changes the output level of the specified source channel when a trigger from the trigger source is detected and the trigger delay time for the Transient elapses."
+                        }
+                    }
+                },
+                "mode": {
+                    "command": "[:SOURce]:<CURRent | VOLTage>:MODE",
+                    "parameters": [
+                        "mode"
+                    ],
+                    "values": {
+                        "mode": [
+                            "SWEep",
+                            "LIST",
+                            "FIXed"
+                        ]
+                    },
+                    "description": "Selects the source mode of the specified source channel."
+                },
+                "points": {
+                    "command": "[:SOURce]:<CURRent | VOLTage>:POINts",
+                    "parameters": [
+                        "points"
+                    ],
+                    "values": {
+                        "points": [
+                            "MINimum",
+                            "MAXimum",
+                            "DEFault"
+                        ]
+                    },
+                    "description": "Sets the number of sweep steps for the current or voltage sweep output."
+                },
+                "post": {
+                    "level": {
+                        "command": "[:SOURce]:<CURRent | VOLTage>:POST:LEVel",
+                        "parameters": [
+                            "level"
+                        ],
+                        "values": {
+                            "level": [
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Changes the current or voltage level of the specified source channel for the status change from the arm layer to the idle state."
+                    },
+                    "state": {
+                        "command": "[:SOURce]:<CURRent | VOLTage>:POST[:STATe]",
+                        "parameters": [
+                            "mode"
+                        ],
+                        "values": {
+                            "mode": [
+                                "1",
+                                "ON",
+                                "0",
+                                "OFF"
+                            ]
+                        },
+                        "description": "Enables or disables the output level for the status change from the arm layer to the idle state."
+                    },
+                    "type": {
+                        "command": "[:SOURce ]:<CURRent | VOLTage>:POST:TYPE",
+                        "parameters": [
+                            "type"
+                        ],
+                        "values": {
+                            "type": [
+                                "TRIGgered",
+                                "STARt",
+                                "STOP",
+                                "BASE",
+                                "MANual",
+                                "IMMediate"
+                            ]
+                        },
+                        "description": "Selects the type of the output level for the status change from the arm layer to the idle state."
+                    }
+                },
+                "range": {
+                    "command": "[:SOURce]:<CURRent | VOLTage>:RANGe",
+                    "parameters": [
+                        "range"
+                    ],
+                    "values": {
+                        "range": [
+                            "UP",
+                            "DOWN",
+                            "MINimum",
+                            "MAXimum",
+                            "DEFault"
+                        ]
+                    },
+                    "description": "Sets the current or voltage output range of the specified source channel."
+                },
+                "range_auto": {
+                    "command": "[:SOURce]:<CURRent | VOLTage>:RANGe:AUTO",
+                    "parameters": [
+                        "mode"
+                    ],
+                    "values": {
+                        "mode": [
+                            "0",
+                            "OFF",
+                            "1",
+                            "ON"
+                        ]
+                    },
+                    "description": "Enables or disables the automatic ranging function for the specified source channel."
+                },
+                "range_auto_llimit": {
+                    "command": "[:SOURce]:<CURRent | VOLTage>:RANGe:AUTO:LLIMit",
+                    "parameters": [
+                        "range"
+                    ],
+                    "values": {
+                        "range": [
+                            "MINimum",
+                            "MAXimum",
+                            "DEFault"
+                        ]
+                    },
+                    "description": "Specifies the lower limit for the automatic output ranging operation and sets the minimum range which provides the best resolution to apply the specified value."
+                },
+                "start_stop": {
+                    "command": "[:SOURce]:<CURRent | VOLTage>:<STARt | STOP>",
+                    "parameters": [
+                        "data"
+                    ],
+                    "values": {
+                        "data": [
+                            "MINimum",
+                            "MAXimum",
+                            "DEFault"
+                        ]
+                    },
+                    "description": "Sets the start or stop value for the current or voltage sweep output."
+                },
+                "step": {
+                    "command": "[:SOURce]:<CURRent | VOLTage>:STEP",
+                    "parameters": [
+                        "step"
+                    ],
+                    "values": {
+                        "step": [
+                            "MINimum",
+                            "MAXimum",
+                            "DEFault"
+                        ]
+                    },
+                    "description": "Sets the sweep step value of the current or voltage sweep output."
+                },
+                "digital": {
+                    "external": {
+                        "function": {
+                            "command": "[:SOURce]:DIGital:EXTernal[:FUNCtion]",
+                            "parameters": [
+                                "function"
+                            ],
+                            "values": {
+                                "function": [
+                                    "DINPut",
+                                    "DIO",
+                                    "DOUTput",
+                                    "TINPut",
+                                    "TOUTput",
+                                    "FAULt",
+                                    "INHibit",
+                                    "HVOLtage",
+                                    "INTerlock"
+                                ]
+                            },
+                            "description": "Selects the function for the specified digital I/O terminal."
+                        },
+                        "level": {
+                            "command": "[:SOURce]:DIGital:EXTernal:LEVel",
+                            "parameters": [
+                                "level"
+                            ],
+                            "values": {
+                                "level": [
+                                    "HIGH",
+                                    "LOW"
+                                ]
+                            },
+                            "description": "Selects the signal level of the specified digital I/O terminal."
+                        },
+                        "polarity": {
+                            "command": "[:SOURce]:DIGital:EXTernal:POLarity",
+                            "parameters": [
+                                "polarity"
+                            ],
+                            "values": {
+                                "polarity": [
+                                    "POSitive",
+                                    "NEGative"
+                                ]
+                            },
+                            "description": "Selects the polarity of the specified digital I/O terminal."
+                        },
+                        "read": {
+                            "command": "[:SOURce]:DIGital:EXTernal:READ?",
+                            "parameters": [],
+                            "values": {},
+                            "description": "Returns the signal level of the specified digital I/O terminal."
+                        },
+                        "route": {
+                            "command": "[:SOURce]:DIGital:EXTernal:ROUTe",
+                            "parameters": [
+                                "internal"
+                            ],
+                            "values": {
+                                "internal": [
+                                    "INT1",
+                                    "INT2",
+                                    "INT3",
+                                    "INT4",
+                                    "INT5",
+                                    "INT6"
+                                ]
+                            },
+                            "description": "Connects the internal trigger line to the specified digital I/O terminal."
+                        },
+                        "route_state": {
+                            "command": "[:SOURce]:DIGital:EXTernal:ROUTe:STATe",
+                            "parameters": [
+                                "state"
+                            ],
+                            "values": {
+                                "state": [
+                                    "0",
+                                    "OFF",
+                                    "1",
+                                    "ON"
+                                ]
+                            },
+                            "description": "Enables or disables the connection between the specified digital I/O terminal and the internal trigger lines."
+                        },
+                        "wait": {
+                            "command": "[:SOURce]:DIGital:EXTernal:WAIT",
+                            "parameters": [
+                                "timeout"
+                            ],
+                            "values": {},
+                            "description": "Waits the input signal at the specified digital I/O terminal."
+                        }
+                    }
+                },
+                "function": {
+                    "mode": {
+                        "command": "[:SOURce]:FUNCtion:MODE",
+                        "parameters": [
+                            "mode"
+                        ],
+                        "values": {
+                            "mode": [
+                                "CURRent",
+                                "VOLTage"
+                            ]
+                        },
+                        "description": "Selects the source output mode of the specified channel."
+                    },
+                    "shape": {
+                        "command": "[:SOURce]:FUNCtion[:SHAPe]",
+                        "parameters": [
+                            "shape"
+                        ],
+                        "values": {
+                            "shape": [
+                                "PULSe",
+                                "DC"
+                            ]
+                        },
+                        "description": "Selects the source output shape of the specified channel."
+                    },
+                    "triggered": {
+                        "continuous": {
+                            "command": "[:SOURce]:FUNCtion:TRIGgered:CONTinuous",
+                            "parameters": [
+                                "mode"
+                            ],
+                            "values": {
+                                "mode": [
+                                    "0",
+                                    "OFF",
+                                    "1",
+                                    "ON"
+                                ]
+                            },
+                            "description": "Enables or disables the continuous trigger output for the specified channel."
+                        }
+                    }
+                },
+                "list": {
+                    "current": {
+                        "voltage": {
+                            "command": "[:SOURce]:LIST:<CURRent | VOLTage>",
+                            "parameters": [
+                                "list"
+                            ],
+                            "values": {},
+                            "description": "Sets the list sweep output (current or voltage) data for the specified channel."
+                        },
+                        "append": {
+                            "command": "[:SOURce]:LIST:<CURRent | VOLTage>:APPend",
+                            "parameters": [
+                                "append_list"
+                            ],
+                            "values": {},
+                            "description": "Adds the list sweep output (current or voltage) data to the end of the list set by the [:SOURce]:LIST:<CURRent | VOLTage> command."
+                        },
+                        "bostep": {
+                            "command": "[:SOURce]:LIST:<CURRent | VOLTage>:BOSTep",
+                            "parameters": [
+                                "trigger_list"
+                            ],
+                            "values": {
+                                "trigger_list": [
+                                    "DEFault"
+                                ]
+                            },
+                            "description": "Sets the list of the sweep output trigger data for the specified channel."
+                        },
+                        "bostep_append": {
+                            "command": "[:SOURce]:LIST:<CURRent | VOLTage>:BOSTep:APPend",
+                            "parameters": [
+                                "append_trigger_list"
+                            ],
+                            "values": {},
+                            "description": "Adds the list of the sweep output trigger data to the end of the list set by the [:SOURce]:LIST:<CURRent | VOLTage>:BOSTep command."
+                        },
+                        "bostep_points": {
+                            "command": "[:SOURce]:LIST:<CURRent | VOLTage>:BOSTep:POINts?",
+                            "parameters": [],
+                            "values": {},
+                            "description": "Returns the number of trigger data in the list set by the [:SOURce]:LIST:<CURRent | VOLTage>:BOSTep and [:SOURce]:LIST:<CURRent | VOLTage>:BOSTep:APPend commands."
+                        },
+                        "bostep_signal": {
+                            "command": "[:SOURce]:LIST:<CURRent | VOLTage>:BOSTep:SIGNal",
+                            "parameters": [
+                                "output"
+                            ],
+                            "values": {
+                                "output": [
+                                    "INT1",
+                                    "INT2",
+                                    "INT3",
+                                    "INT4",
+                                    "INT5",
+                                    "INT6",
+                                    "MEXT1",
+                                    "MEXT2"
+                                ]
+                            },
+                            "description": "Selects the trigger output port for the list sweep."
+                        },
+                        "bostep_state": {
+                            "command": "[:SOURce]:LIST:<CURRent | VOLTage>:BOSTep:STATe",
+                            "parameters": [
+                                "mode"
+                            ],
+                            "values": {
+                                "mode": [
+                                    "1",
+                                    "ON",
+                                    "0",
+                                    "OFF"
+                                ]
+                            },
+                            "description": "Enables or disables the list sweep trigger output."
+                        },
+                        "points": {
+                            "command": "[:SOURce]:LIST:<CURRent | VOLTage>:POINts?",
+                            "parameters": [],
+                            "values": {},
+                            "description": "Returns the number of data in the list set by the [:SOURce]:LIST:<CURRent | VOLTage> and [:SOURce]:LIST:<CURRent | VOLTage>:APPend commands."
+                        },
+                        "start": {
+                            "command": "[:SOURce]:LIST:<CURRent | VOLTage>:STARt",
+                            "parameters": [
+                                "start"
+                            ],
+                            "values": {
+                                "start": [
+                                    "MINimum",
+                                    "MAXimum",
+                                    "DEFault"
+                                ]
+                            },
+                            "description": "Specifies the list sweep start point with the index of the list."
+                        }
+                    }
+                },
+                "pulse": {
+                    "delay": {
+                        "command": "[:SOURce]:PULSe:DELay",
+                        "parameters": [
+                            "delay"
+                        ],
+                        "values": {
+                            "delay": [
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Sets the pulse delay time for the specified channel."
+                    },
+                    "rpriority": {
+                        "command": "[:SOURce]:PULSe:RPRiority",
+                        "parameters": [
+                            "priority"
+                        ],
+                        "values": {
+                            "priority": [
+                                "NOISe",
+                                "TRANsient",
+                                "POWer"
+                            ]
+                        },
+                        "description": "Selects the pulse range priority for the specified channel."
+                    },
+                    "width": {
+                        "command": "[:SOURce]:PULSe:WIDTh",
+                        "parameters": [
+                            "width"
+                        ],
+                        "values": {
+                            "width": [
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Sets the pulse width for the specified channel."
+                    }
+                },
+                "sweep": {
+                    "direction": {
+                        "command": "[:SOURce]:SWEep:DIRection",
+                        "parameters": [
+                            "direction"
+                        ],
+                        "values": {
+                            "direction": [
+                                "DOWN",
+                                "UP"
+                            ]
+                        },
+                        "description": "Sets the sweep direction for the specified channel."
+                    },
+                    "points": {
+                        "command": "[:SOURce]:SWEep:POINts",
+                        "parameters": [
+                            "points"
+                        ],
+                        "values": {
+                            "points": [
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Sets the number of sweep steps for the specified channel."
+                    },
+                    "ranging": {
+                        "command": "[:SOURce]:SWEep:RANGing",
+                        "parameters": [
+                            "mode"
+                        ],
+                        "values": {
+                            "mode": [
+                                "BEST",
+                                "FIXed",
+                                "AUTO"
+                            ]
+                        },
+                        "description": "Selects the output ranging mode of the sweep output for the specified channel."
+                    },
+                    "spacing": {
+                        "command": "[:SOURce]:SWEep:SPACing",
+                        "parameters": [
+                            "scale"
+                        ],
+                        "values": {
+                            "scale": [
+                                "LOGarithmic",
+                                "LINear"
+                            ]
+                        },
+                        "description": "Selects the scale of the sweep output for the specified channel."
+                    },
+                    "stair": {
+                        "command": "[:SOURce]:SWEep:STAir",
+                        "parameters": [
+                            "mode"
+                        ],
+                        "values": {
+                            "mode": [
+                                "SINGle",
+                                "DOUBle"
+                            ]
+                        },
+                        "description": "Sets the sweep mode for the specified channel."
+                    }
+                },
+                "toutput": {
+                    "signal": {
+                        "command": "[:SOURce]:TOUTput:SIGNal",
+                        "parameters": [
+                            "output"
+                        ],
+                        "values": {
+                            "output": [
+                                "INT1",
+                                "INT2",
+                                "INT3",
+                                "INT4",
+                                "INT5",
+                                "INT6",
+                                "MEXT1",
+                                "MEXT2"
+                            ]
+                        },
+                        "description": "Selects the trigger output for the status change between the trigger layer and the Transient device action."
+                    },
+                    "state": {
+                        "command": "[:SOURce]:TOUTput[:STATe]",
+                        "parameters": [
+                            "mode"
+                        ],
+                        "values": {
+                            "mode": [
+                                "1",
+                                "ON",
+                                "0",
+                                "OFF"
+                            ]
+                        },
+                        "description": "Enables or disables the trigger output for the status change between the trigger layer and the Transient device action."
+                    }
+                },
+                "wait": {
+                    "auto": {
+                        "command": "[:SOURce]:WAIT:AUTO",
+                        "parameters": [
+                            "mode"
+                        ],
+                        "values": {
+                            "mode": [
+                                "0",
+                                "OFF",
+                                "1",
+                                "ON"
+                            ]
+                        },
+                        "description": "Enables or disables the initial wait time used for calculating the source wait time for the specified channel."
+                    },
+                    "gain": {
+                        "command": "[:SOURce]:WAIT:GAIN",
+                        "parameters": [
+                            "gain"
+                        ],
+                        "values": {
+                            "gain": [
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Sets the gain value used for calculating the source wait time for the specified channel."
+                    },
+                    "offset": {
+                        "command": "[:SOURce]:WAIT:OFFSet",
+                        "parameters": [
+                            "offset"
+                        ],
+                        "values": {
+                            "offset": [
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Sets the offset value used for calculating the source wait time for the specified channel."
+                    },
+                    "state": {
+                        "command": "[:SOURce]:WAIT[:STATe]",
+                        "parameters": [
+                            "mode"
+                        ],
+                        "values": {
+                            "mode": [
+                                "0",
+                                "OFF",
+                                "1",
+                                "ON"
+                            ]
+                        },
+                        "description": "Enables or disables the source wait time for the specified channel."
+                    }
+                }
+            }
+        }
+    },
+        "status": {
+            "measurement": {
+                "condition": {
+                    "command": ":STATus:MEASurement:<BAVailable | BFULl | RAVailable | ROVerflow>[:CSUMmary]:CONDition?",
+                    "description": "Returns the value of the channel summary bits in the Measurement Status Condition Register.",
+                    "parameters": [
+                        "BAVailable",
+                        "BFULl",
+                        "RAVailable",
+                        "ROVerflow"
+                    ]
+                },
+                "enable": {
+                    "command": ":STATus:MEASurement:<BAVailable | BFULl | RAVailable | ROVerflow>[:CSUMmary[n]]:ENABle mask",
+                    "description": "Sets the channel summary bits in the Measurement Status Enable Register.",
+                    "parameters": [
+                        "mask"
+                    ]
+                },
+                "event": {
+                    "command": ":STATus:MEASurement:<BAVailable | BFULl | RAVailable | ROVerflow>[:CSUMmary][:EVENt]?",
+                    "description": "Returns the value of the channel summary bits in the Measurement Status Event Register."
+                },
+                "ntransition": {
+                    "command": ":STATus:MEASurement:<BAVailable | BFULl | RAVailable | ROVerflow>[:CSUMmary]:NTRansition filter",
+                    "description": "Sets the negative transition filter in the Measurement Status Register.",
+                    "parameters": [
+                        "filter"
+                    ]
+                },
+                "ptransition": {
+                    "command": ":STATus:MEASurement:<BAVailable | BFULl | RAVailable | ROVerflow>[:CSUMmary]:PTRansition filter",
+                    "description": "Sets the positive transition filter in the Measurement Status Register.",
+                    "parameters": [
+                        "filter"
+                    ]
+                }
+            },
+            "operation": {
+                "condition": {
+                    "command": ":STATus:OPERation:<AAWait | ABUSy | ATWait | CALibration | TAWait | TBUSy | TTWait>[:CSUMmary[n]]:CONDition?",
+                    "description": "Returns the value of the channel summary bits in the Operation Status Condition Register.",
+                    "parameters": [
+                        "AAWait",
+                        "ABUSy",
+                        "ATWait",
+                        "CALibration",
+                        "TAWait",
+                        "TBUSy",
+                        "TTWait"
+                    ]
+                },
+                "enable": {
+                    "command": ":STATus:OPERation:<AAWait | ABUSy | ATWait | CALibration | TAWait | TBUSy | TTWait>[:CSUMmary[n]]:ENABle mask",
+                    "description": "Sets the channel summary bits in the Operation Status Enable Register.",
+                    "parameters": [
+                        "mask"
+                    ]
+                },
+                "event": {
+                    "command": ":STATus:OPERation:<AAWait | ABUSy | ATWait | CALibration | TAWait | TBUSy | TTWait>[:CSUMmary[n]][:EVENt]?",
+                    "description": "Returns the value of the channel summary bits in the Operation Status Event Register."
+                },
+                "ntransition": {
+                    "command": ":STATus:OPERation:<AAWait | ABUSy | ATWait | CALibration | TAWait | TBUSy | TTWait>[:CSUMmary[n]]:NTRansition filter",
+                    "description": "Sets the negative transition filter in the Operation Status Register.",
+                    "parameters": [
+                        "filter"
+                    ]
+                },
+                "ptransition": {
+                    "command": ":STATus:OPERation:<AAWait | ABUSy | ATWait | CALibration | TAWait | TBUSy | TTWait>[:CSUMmary[n]]:PTRansition filter",
+                    "description": "Sets the positive transition filter in the Operation Status Register.",
+                    "parameters": [
+                        "filter"
+                    ]
+                }
+            },
+            "questionable": {
+                "condition": {
+                    "command": ":STATus:QUEStionable:<ABUSe | AEVent | CALibration | CURRent | INTerlock | SDOWn | TEMPerature | TEST | TEVent | VOLTage>[:CSUMmary[n]]:CONDition?",
+                    "description": "Returns the value of the channel summary bits in the Questionable Status Condition Register.",
+                    "parameters": [
+                        "ABUSe",
+                        "AEVent",
+                        "CALibration",
+                        "CURRent",
+                        "INTerlock",
+                        "SDOWn",
+                        "TEMPerature",
+                        "TEST",
+                        "TEVent",
+                        "VOLTage"
+                    ]
+                },
+                "enable": {
+                    "command": ":STATus:QUEStionable:<ABUSe | AEVent | CALibration | CURRent | INTerlock | SDOWn | TEMPerature | TEST | TEVent | VOLTage>[:CSUMmary[n]]:ENABle mask",
+                    "description": "Sets the channel summary bits in the Questionable Status Enable Register.",
+                    "parameters": [
+                        "mask"
+                    ]
+                },
+                "event": {
+                    "command": ":STATus:QUEStionable:<ABUSe | AEVent | CALibration | CURRent | INTerlock | SDOWn | TEMPerature | TEST | TEVent | VOLTage>[:CSUMmary[n]][:EVENt]?",
+                    "description": "Returns the value of the channel summary bits in the Questionable Status Event Register."
+                },
+                "ntransition": {
+                    "command": ":STATus:QUEStionable:<ABUSe | AEVent | CALibration | CURRent | INTerlock | SDOWn | TEMPerature | TEST | TEVent | VOLTage>[:CSUMmary[n]]:NTRansition filter",
+                    "description": "Sets the negative transition filter in the Questionable Status Register.",
+                    "parameters": [
+                        "filter"
+                    ]
+                },
+                "ptransition": {
+                    "command": ":STATus:QUEStionable:<ABUSe | AEVent | CALibration | CURRent | INTerlock | SDOWn | TEMPerature | TEST | TEVent | VOLTage>[:CSUMmary[n]]:PTRansition filter",
+                    "description": "Sets the positive transition filter in the Questionable Status Register.",
+                    "parameters": [
+                        "filter"
+                    ]
+                }
+            },
+            "preset": {
+                "command": ":STATus:PRESet",
+                "description": "Resets all status registers to default, sets all PTRansition registers, clears all NTRansition registers."
+            }
+        },
+        "system": {
+            "beepper": {
+                "immediate": {
+                    "command": ":SYSTem:BEEPer[:IMMediate]",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Generates a key press sound."
+                },
+                "state": {
+                    "command": ":SYSTem:BEEPer:STATe",
+                    "parameters": [
+                        "mode"
+                    ],
+                    "values": {
+                        "mode": [
+                            "0",
+                            "OFF",
+                            "1",
+                            "ON"
+                        ]
+                    },
+                    "description": "Enables or disables the key press sound."
+                }
+            },
+            "channel": {
+                "count": {
+                    "command": ":SYSTem:CHANnel:COUNt?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the total number of channels in the mainframe."
+                },
+                "module": {
+                    "command": ":SYSTem:CHANnel:MODule?",
+                    "parameters": [
+                        "channel"
+                    ],
+                    "values": {},
+                    "description": "Returns the module number of the module to which the specified channel belongs."
+                },
+                "scalibration": {
+                    "command": ":SYSTem:CHANnel:SCALibration?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Performs the self calibration for the module to which the specified channel belongs and returns the result."
+                },
+                "scalibration_date": {
+                    "command": ":SYSTem:CHANnel:SCALibration:DATE?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the latest date of self calibration for the module to which the specified channel belongs."
+                },
+                "scalibration_time": {
+                    "command": ":SYSTem:CHANnel:SCALibration:TIME?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the latest time of self calibration for the module to which the specified channel belongs."
+                }
+            },
+            "communicate": {
+                "enable": {
+                    "command": ":SYSTem:COMMunicate:ENABle",
+                    "parameters": [
+                        "mode",
+                        "interface"
+                    ],
+                    "values": {
+                        "interface": [
+                            "GPIB",
+                            "USB",
+                            "SOCKets",
+                            "TELNet",
+                            "VXI11",
+                            "HISLip",
+                            "WEB"
+                        ],
+                        "mode": [
+                            "1",
+                            "ON",
+                            "0",
+                            "OFF"
+                        ]
+                    },
+                    "description": "Enables or disables the remote interface GPIB, USB, the remote service Sockets, Telnet, VXI-11, HiSLIP, or the built-in Web Interface."
+                },
+                "gpib": {
+                    "self": {
+                        "address": {
+                            "command": ":SYSTem:COMMunicate:GPIB[:SELF]:ADDRess",
+                            "parameters": [
+                                "address"
+                            ],
+                            "values": {
+                                "address": [
+                                    "0",
+                                    "30"
+                                ]
+                            },
+                            "description": "Sets the GPIB address of the instrument."
+                        }
+                    }
+                },
+                "lan": {
+                    "address": {
+                        "command": ":SYSTem:COMMunicate:LAN:ADDRess",
+                        "parameters": [
+                            "address",
+                            "CURRent",
+                            "STATic"
+                        ],
+                        "values": {},
+                        "description": "Sets the static LAN (IP) address of the instrument."
+                    },
+                    "bstatus": {
+                        "command": ":SYSTem:COMMunicate:LAN:BSTatus?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Returns the LAN boot status of the instrument."
+                    },
+                    "control": {
+                        "command": ":SYSTem:COMMunicate:<LAN | TCPip>:CONTrol?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Returns the control connection port number of the specified port."
+                    },
+                    "dhcp": {
+                        "command": ":SYSTem:COMMunicate:LAN:DHCP",
+                        "parameters": [
+                            "mode"
+                        ],
+                        "values": {
+                            "mode": [
+                                "0",
+                                "OFF",
+                                "1",
+                                "ON"
+                            ]
+                        },
+                        "description": "Enables or disables the use of the Dynamic Host Configuration Protocol (DHCP)."
+                    },
+                    "dns": {
+                        "command": ":SYSTem:COMMunicate:LAN:DNS[1|2]",
+                        "parameters": [
+                            "address",
+                            "CURRent",
+                            "STATic"
+                        ],
+                        "values": {},
+                        "description": "Sets the IP address of the DNS server."
+                    },
+                    "domain": {
+                        "command": ":SYSTem:COMMunicate:LAN:DOMain?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Returns the domain name of the network to which the instrument is connected."
+                    },
+                    "gateway": {
+                        "command": ":SYSTem:COMMunicate:LAN:<GATE | GATeway>",
+                        "parameters": [
+                            "address",
+                            "CURRent",
+                            "STATic"
+                        ],
+                        "values": {},
+                        "description": "Sets the IP address of the default gateway."
+                    },
+                    "hostname": {
+                        "command": ":SYSTem:COMMunicate:LAN:HOSTname",
+                        "parameters": [
+                            "hostname",
+                            "CURRent",
+                            "STATic"
+                        ],
+                        "values": {},
+                        "description": "Sets the host name of the instrument."
+                    },
+                    "mac": {
+                        "command": ":SYSTem:COMMunicate:LAN:MAC?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Returns the MAC address of the instrument."
+                    },
+                    "smask": {
+                        "command": ":SYSTem:COMMunicate:LAN:SMASk",
+                        "parameters": [
+                            "subnet_mask",
+                            "CURRent",
+                            "STATic"
+                        ],
+                        "values": {},
+                        "description": "Sets the static subnet mask."
+                    },
+                    "telnet": {
+                        "prompt": {
+                            "command": ":SYSTem:COMMunicate:LAN:TELNet:PROMpt",
+                            "parameters": [
+                                "prompt"
+                            ],
+                            "values": {},
+                            "description": "Sets the command prompt displayed during a Telnet session when establishing communication with the instrument."
+                        },
+                        "wmessage": {
+                            "command": ":SYSTem:COMMunicate:LAN:TELNet:WMESsage",
+                            "parameters": [
+                                "message"
+                            ],
+                            "values": {},
+                            "description": "Sets the welcome message displayed for a Telnet session when starting communication with the instrument."
+                        }
+                    },
+                    "update": {
+                        "command": ":SYSTem:COMMunicate:LAN:UPDate",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Disconnects all active LAN and Web Interface connections, updates the LAN settings, and restarts the LAN interface with the new settings."
+                    }
+                }
+            },
+            "ctype": {
+                "command": ":SYSTem:CTYPe?",
+                "parameters": [
+                    "module"
+                ],
+                "values": {},
+                "description": "Returns the identification for the module specified by the channel, module, or slot number."
+            },
+            "data": {
+                "quantity": {
+                    "command": ":SYSTem:DATA:QUANtity?",
+                    "parameters": [
+                        "chanlist"
+                    ],
+                    "values": {},
+                    "description": "Returns the number of data for the specified channel in the data buffer."
+                }
+            },
+            "date": {
+                "command": ":SYSTem:DATE",
+                "parameters": [
+                    "year",
+                    "month",
+                    "day"
+                ],
+                "values": {},
+                "description": "Sets the date of the internal clock."
+            },
+            "error": {
+                "all": {
+                    "command": ":SYSTem:ERRor:ALL?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Reads and returns all items in the error or event queue, and clears the queue."
+                },
+                "code": {
+                    "all": {
+                        "command": ":SYSTem:ERRor:CODE:ALL?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Reads all items in the error or event queue, returns all codes, and clears the queue."
+                    },
+                    "next": {
+                        "command": ":SYSTem:ERRor:CODE[:NEXT]?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Reads and removes the top item in the error or event queue, and returns the code of the removed item."
+                    }
+                },
+                "count": {
+                    "command": ":SYSTem:ERRor:COUNt?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the number of items in the error or event queue."
+                },
+                "next": {
+                    "command": ":SYSTem:ERRor[:NEXT]?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Reads and removes the top item in the error or event queue, and returns the code and message of the removed item."
+                }
+            },
+            "group": {
+                "define": {
+                    "command": ":SYSTem:GROup[:DEFine]",
+                    "parameters": [
+                        "chanlist1",
+                        "chanlist2"
+                    ],
+                    "values": {},
+                    "description": "Defines the channel groups."
+                },
+                "preset": {
+                    "command": ":SYSTem:GROup:PRESet",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Restores the channel groups to the default settings."
+                },
+                "state": {
+                    "command": ":SYSTem:GROup:STATe",
+                    "parameters": [
+                        "state"
+                    ],
+                    "values": {
+                        "state": [
+                            "0",
+                            "OFF",
+                            "1",
+                            "ON"
+                        ]
+                    },
+                    "description": "Enables or disables channel grouping."
+                }
+            },
+            "interlock": {
+                "frame": {
+                    "tripped": {
+                        "command": ":SYStem:INTerlock:FRAMe:TRIPped?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Returns if the interlock circuit of the mainframe is close or open."
+                    }
+                },
+                "mode": {
+                    "command": ":SYStem:INTerlock:MODE",
+                    "parameters": [
+                        "mode"
+                    ],
+                    "values": {
+                        "mode": [
+                            "DIO",
+                            "MODule"
+                        ]
+                    },
+                    "description": "Selects the mainframe interlock or the module interlock for your mainframe."
+                },
+                "module": {
+                    "tripped": {
+                        "command": ":SYSTem:INTerlock:MODule:TRIPped?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Returns if the interlock circuit of the specified module is close or open."
+                    }
+                },
+                "any": {
+                    "tripped": {
+                        "command": ":SYSTem:INTerlock[:ANY]:TRIPped?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Returns if the interlock circuit is close or open."
+                    }
+                },
+                "voltage": {
+                    "level": {
+                        "command": ":SYSTem:INTerlock:VOLTage[:LEVel]",
+                        "parameters": [
+                            "level"
+                        ],
+                        "values": {
+                            "level": [
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Specifies the interlock threshold voltage level of all channels in the mainframe."
+                    }
+                }
+            },
+            "lfrequence": {
+                "command": ":SYSTem:LFRequency",
+                "parameters": [
+                    "frequency"
+                ],
+                "values": {
+                    "frequency": [
+                        "50",
+                        "60"
+                    ]
+                },
+                "description": "Selects the line frequency."
+            },
+            "lock": {
+                "name": {
+                    "command": ":SYSTem:LOCK:NAME?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the present I/O interface that is in use by the querying computer."
+                },
+                "owner": {
+                    "command": ":SYSTem:LOCK:OWNer?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the I/O interface that currently has a lock."
+                },
+                "release": {
+                    "command": ":SYSTem:LOCK:RELease",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Decrements the lock count by one, and if the lock count reaches 0, release the I/O interface from which the command is executed."
+                },
+                "request": {
+                    "command": ":SYSTem:LOCK:REQuest?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Requests a lock of the present I/O interface."
+                }
+            },
+            "module": {
+                "channel": {
+                    "count": {
+                        "command": ":SYSTem:MODule:CHANnel:COUNt?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Returns the number of channels in the specified module."
+                    },
+                    "list": {
+                        "command": ":SYSTem:MODule:CHANnel:LIST?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Returns the list of channel numbers in the specified module."
+                    }
+                },
+                "count": {
+                    "command": ":SYSTem:MODule:COUNt?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the number of modules."
+                },
+                "external": {
+                    "assert": {
+                        "command": ":SYSTem:MODule:EXTernal:ASSert",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Asserts a signal to the specified external trigger terminal on the module panel."
+                    },
+                    "function": {
+                        "command": ":SYSTem:MODule:EXTernal[:FUNCtion]",
+                        "parameters": [
+                            "function"
+                        ],
+                        "values": {
+                            "function": [
+                                "TOUTput",
+                                "TINPut",
+                                "DOUTput"
+                            ]
+                        },
+                        "description": "Selects the function of the specified external trigger terminal on the module panel."
+                    },
+                    "level": {
+                        "command": ":SYSTem:MODule:EXTernal:LEVel",
+                        "parameters": [
+                            "level"
+                        ],
+                        "values": {
+                            "level": [
+                                "HIGH",
+                                "LOW"
+                            ]
+                        },
+                        "description": "Selects the level of the specified external trigger terminal on the module panel."
+                    },
+                    "polarity": {
+                        "command": ":SYSTem:MODule:EXTernal:POLarity",
+                        "parameters": [
+                            "polarity"
+                        ],
+                        "values": {
+                            "polarity": [
+                                "POSitive",
+                                "NEGative"
+                            ]
+                        },
+                        "description": "Selects the polarity of the specified external trigger terminal on the module panel."
+                    },
+                    "read": {
+                        "command": ":SYSTem:MODule:EXTernal:READ?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Reads the value of the specified external trigger terminal on the module panel."
+                    },
+                    "toutput": {
+                        "edge": {
+                            "position": {
+                                "command": ":SYSTem:MODule:EXTernal:TOUTput[:EDGE]:POSition",
+                                "parameters": [
+                                    "position"
+                                ],
+                                "values": {
+                                    "position": [
+                                        "BEFore",
+                                        "AFTer",
+                                        "BOTH"
+                                    ]
+                                },
+                                "description": "Selects the trigger output edge position of the specified external trigger terminal on the module panel."
+                            },
+                            "width": {
+                                "command": ":SYSTem:MODule:EXTernal:TOUTput[:EDGE]:WIDTh",
+                                "parameters": [
+                                    "width"
+                                ],
+                                "values": {
+                                    "width": [
+                                        "MINimum",
+                                        "MAXimum",
+                                        "DEFault"
+                                    ]
+                                },
+                                "description": "Sets the trigger output edge width of the specified external trigger terminal on the module panel."
+                            }
+                        },
+                        "type": {
+                            "command": ":SYSTem:MODule:EXTernal:TOUTput:TYPE",
+                            "parameters": [
+                                "type"
+                            ],
+                            "values": {
+                                "type": [
+                                    "EDGE",
+                                    "LEVel"
+                                ]
+                            },
+                            "description": "Selects the trigger output type of the specified external trigger terminal on the module panel."
+                        }
+                    }
+                },
+                "filter": {
+                    "external": {
+                        "state": {
+                            "command": ":SYSTem:MODule:FILTer:EXTernal[:STATe]",
+                            "parameters": [
+                                "mode"
+                            ],
+                            "values": {
+                                "mode": [
+                                    "1",
+                                    "ON",
+                                    "0",
+                                    "OFF"
+                                ]
+                            },
+                            "description": "Enables or disables the low noise filter adapter."
+                        }
+                    }
+                },
+                "identify": {
+                    "state": {
+                        "command": ":SYSTem:MODule:IDENtify[:STATe]",
+                        "parameters": [
+                            "state"
+                        ],
+                        "values": {
+                            "state": [
+                                "1",
+                                "ON",
+                                "0",
+                                "OFF"
+                            ]
+                        },
+                        "description": "Enables or disables the module identification state."
+                    }
+                },
+                "internal": {
+                    "assert": {
+                        "command": ":SYSTem:MODule:INTernal:ASSert",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Asserts a signal pulse to the specified internal trigger terminal."
+                    },
+                    "function": {
+                        "command": ":SYSTem:MODule:INTernal[:FUNCtion]",
+                        "parameters": [
+                            "function"
+                        ],
+                        "values": {
+                            "function": [
+                                "TOUTput",
+                                "TINPut",
+                                "DOUTput"
+                            ]
+                        },
+                        "description": "Selects the function for the specified internal trigger terminal of the specified module."
+                    },
+                    "level": {
+                        "command": ":SYSTem:MODule:INTernal:LEVel?",
+                        "parameters": [
+                            "level"
+                        ],
+                        "values": {
+                            "level": [
+                                "HIGH",
+                                "LOW"
+                            ]
+                        },
+                        "description": "Selects the signal level of the specified internal trigger terminal."
+                    },
+                    "read": {
+                        "command": ":SYSTem:MODule:INTernal:READ?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Reads the signal level of the specified internal trigger terminal."
+                    },
+                    "toutput": {
+                        "edge": {
+                            "position": {
+                                "command": ":SYSTem:MODule:INTernal:TOUTput[:EDGE]:POSition",
+                                "parameters": [
+                                    "position"
+                                ],
+                                "values": {
+                                    "position": [
+                                        "BEFore",
+                                        "AFTer",
+                                        "BOTH"
+                                    ]
+                                },
+                                "description": "Selects the trigger output edge position of the specified internal trigger terminal."
+                            },
+                            "width": {
+                                "command": ":SYSTem:MODule:INTernal:TOUTput[:EDGE]:WIDTh",
+                                "parameters": [
+                                    "width"
+                                ],
+                                "values": {
+                                    "width": [
+                                        "MINimum",
+                                        "MAXimum",
+                                        "DEFault"
+                                    ]
+                                },
+                                "description": "Sets the trigger output edge width of the specified internal trigger terminal."
+                            }
+                        },
+                        "type": {
+                            "command": ":SYSTem:MODule:INTernal:TOUTput:TYPE",
+                            "parameters": [
+                                "type"
+                            ],
+                            "values": {
+                                "type": [
+                                    "EDGE",
+                                    "LEVel"
+                                ]
+                            },
+                            "description": "Selects the trigger output type of the specified internal trigger terminal."
+                        }
+                    }
+                },
+                "mnumber": {
+                    "command": ":SYSTem:MODule:MNUMber?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the manufacturing number of the specified module."
+                },
+                "model": {
+                    "command": ":SYSTem:MODule:MODel?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the model number of the specified module."
+                },
+                "nvolatile": {
+                    "anumber": {
+                        "command": ":SYSTem:MODule:NVOLatile:ANUMber",
+                        "parameters": [
+                            "number"
+                        ],
+                        "values": {},
+                        "description": "Sets the asset number of the specified module."
+                    },
+                    "calibration": {
+                        "due": {
+                            "module": {
+                                "command": ":SYSTem:MODule:NVOLatile:CALibration:DUE[:MODule]?",
+                                "parameters": [],
+                                "values": {},
+                                "description": "Returns the module calibration due date for the specified module."
+                            }
+                        },
+                        "interval": {
+                            "module": {
+                                "command": ":SYSTem:MODule:NVOLatile:CALibration:INTerval[:MODule]",
+                                "parameters": [
+                                    "interval"
+                                ],
+                                "values": {},
+                                "description": "Sets the module calibration interval in days for the specified module."
+                            }
+                        },
+                        "periodic": {
+                            "state": {
+                                "command": ":SYSTem:MODule:NVOLatile:CALibration:PERiodic[:STATe]",
+                                "parameters": [
+                                    "state"
+                                ],
+                                "values": {
+                                    "state": [
+                                        "1",
+                                        "ON",
+                                        "0",
+                                        "OFF"
+                                    ]
+                                },
+                                "description": "Enables or disables the periodic calibration."
+                            }
+                        },
+                        "reminder": {
+                            "command": ":SYSTem:MODule:NVOLatile:CALibration:REMinder",
+                            "parameters": [
+                                "reminder"
+                            ],
+                            "values": {},
+                            "description": "Sets the calibration reminder in days for the specified module."
+                        }
+                    },
+                    "clear": {
+                        "command": ":SYSTem:MODule:NVOLatile:CLEar",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Clears or discards any changes to cached values and resets cached values to the present nonvolatile settings of the specified module."
+                    },
+                    "cwarnings": {
+                        "module": {
+                            "state": {
+                                "command": ":SYSTem:MODule:NVOLatile:CWARnings[:MODule][:STATe]",
+                                "parameters": [
+                                    "state"
+                                ],
+                                "values": {
+                                    "state": [
+                                        "1",
+                                        "ON",
+                                        "0",
+                                        "OFF"
+                                    ]
+                                },
+                                "description": "Enables or disables the module calibration checks and warnings."
+                            }
+                        }
+                    },
+                    "passphrase": {
+                        "command": ":SYSTem:MODule:NVOLatile:PASSphrase",
+                        "parameters": [
+                            "phrase"
+                        ],
+                        "values": {},
+                        "description": "Sets the passphrase to protect values in the nonvolatile memory of the specified module."
+                    },
+                    "sid": {
+                        "command": ":SYSTem:MODule:NVOLatile:SID",
+                        "parameters": [
+                            "identification"
+                        ],
+                        "values": {},
+                        "description": "Sets the identification string of the specified module."
+                    },
+                    "store": {
+                        "command": ":SYSTem:MODule:NVOLatile:STORe",
+                        "parameters": [
+                            "phrase"
+                        ],
+                        "values": {},
+                        "description": "Stores all cached values to nonvolatile memory of the specified module."
+                    }
+                },
+                "options": {
+                    "command": ":SYSTem:MODule:OPTions?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the options installed in the module."
+                },
+                "reset": {
+                    "command": ":SYSTem:MODule:RESet",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Resets the volatile memory of the specified module to the initial setting."
+                },
+                "revision": {
+                    "core": {
+                        "command": ":SYSTem:MODule:REVision[:CORE]?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Returns the CORE FPGA revision of the specified module."
+                    },
+                    "smu": {
+                        "command": ":SYSTem:MODule:REVision:SMU?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Returns the SMU FPGA revision of the specified module."
+                    }
+                },
+                "serial": {
+                    "command": ":SYSTem:MODule:SERial?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the serial number of the specified module."
+                },
+                "slot": {
+                    "command": ":SYSTem:MODule:SLOT?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the slot number of the specified module."
+                },
+                "stest": {
+                    "execute": {
+                        "command": ":SYSTem:MODule:STESt:EXECute?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Executes the self test for the specified module and returns its result."
+                    },
+                    "result": {
+                        "command": ":SYSTem:MODule:STESt:RESult?",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Return the latest self-test result for the specified module."
+                    }
+                },
+                "temperature": {
+                    "command": ":SYSTem:MODule:TEMPerature?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the present temperature of the specified module."
+                },
+                "temperature_margin": {
+                    "command": ":SYSTem:MODule:TEMPerature:MARGin?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the margin between the emergency temperature and the present temperature of the specified module."
+                },
+                "temperature_maximum": {
+                    "command": ":SYSTem:MODule:TEMPerature:MAXimum?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the maximum temperature recorded in a session of the specified module."
+                },
+                "uptime": {
+                    "command": ":SYSTem:MODule:UPTime?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the module uptime of the specified module since the last power-on."
+                },
+                "vendor": {
+                    "command": ":SYSTem:MODule:VENDor?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the vendor string of the specified module."
+                }
+            },
+            "ntp": {
+                "state": {
+                    "command": ":SYSTem:NTP[:STATe]",
+                    "parameters": [
+                        "mode"
+                    ],
+                    "values": {
+                        "mode": [
+                            "0",
+                            "OFF",
+                            "1",
+                            "ON"
+                        ]
+                    },
+                    "description": "Enables or disables Network Time Protocol (NTP)."
+                }
+            },
+            "persona": {
+                "manufacturer": {
+                    "command": ":SYSTem:PERSona[:MANufacturer]",
+                    "parameters": [
+                        "maker"
+                    ],
+                    "values": {
+                        "maker": [
+                            "DEFault",
+                            "KEYSight"
+                        ]
+                    },
+                    "description": "Changes the manufacturer name of the *IDN? query response."
+                },
+                "manufacturer_default": {
+                    "command": ":SYSTem:PERSona[:MANufacturer]:DEFault",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Clears the :SYSTem:PERSona[:MANufacturer] command setting and applies the default value \u201cKeysight Technologies.\u201d"
+                },
+                "model": {
+                    "command": ":SYSTem:PERSona:MODel",
+                    "parameters": [
+                        "model"
+                    ],
+                    "values": {},
+                    "description": "Changes the model number of the *IDN? query response."
+                },
+                "model_default": {
+                    "command": ":SYSTem:PERSona:MODel:DEFault",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Clears the :SYSTem:PERSona:MODel command setting and applies the default value (the model number on the front panel)."
+                }
+            },
+            "pon": {
+                "command": ":SYSTtem:PON",
+                "parameters": [
+                    "memory"
+                ],
+                "values": {
+                    "memory": [
+                        "RST",
+                        "RCL0",
+                        "RCL1",
+                        "RCL2",
+                        "RCL3",
+                        "RCL4"
+                    ]
+                },
+                "description": "Specifies the power-on state."
+            },
+            "preset": {
+                "command": ":SYSTem:PRESet",
+                "parameters": [
+                    "resetType"
+                ],
+                "values": {
+                    "resetType": [
+                        "DEFault",
+                        "FACTory"
+                    ]
+                },
+                "description": "Presets the instrument settings."
+            },
+            "set": {
+                "command": ":SYSTem:SET",
+                "parameters": [
+                    "data"
+                ],
+                "values": {},
+                "description": "Sends or loads the instrument setup data."
+            },
+            "time": {
+                "command": ":SYSTem:TIME",
+                "parameters": [
+                    "hour",
+                    "minute",
+                    "second"
+                ],
+                "values": {},
+                "description": "Sets the time of the internal clock."
+            },
+            "time_timer": {
+                "count": {
+                    "command": ":SYSTem:TIME:TIMer:COUNt?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the present count of the timer."
+                },
+                "count_reset": {
+                    "auto": {
+                        "command": ":SYSTem:TIME:TIMer:COUNt:RESet:AUTO",
+                        "parameters": [
+                            "mode"
+                        ],
+                        "values": {
+                            "mode": [
+                                "0",
+                                "OFF",
+                                "1",
+                                "ON"
+                            ]
+                        },
+                        "description": "Enables or disables the function to reset the timer automatically."
+                    },
+                    "immediate": {
+                        "command": ":SYSTem:TIME:TIMer:COUNt:RESet[:IMMediate]",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Resets the timer count immediately."
+                    }
+                }
+            },
+            "tzone": {
+                "command": ":SYSTem:TZONe",
+                "parameters": [
+                    "timezone"
+                ],
+                "values": {},
+                "description": "Sets the time zone of the instrument."
+            },
+            "tzone_catalog": {
+                "command": ":SYSTem:TZONe:CATalog?",
+                "parameters": [],
+                "values": {},
+                "description": "Returns the list of valid strings as the time zone input."
+            },
+            "uptime": {
+                "command": ":SYSTem:UPTime?",
+                "parameters": [],
+                "values": {},
+                "description": "Returns the amount of time that the instrument has been running since the last power-on."
+            },
+            "version": {
+                "command": ":SYSTem:VERSion?",
+                "parameters": [],
+                "values": {},
+                "description": "Returns the version of the SCPI standard."
+            }
+        },
+        "trace": {
+            "clear": {
+                "command": ":TRACe:CLEar",
+                "parameters": [],
+                "values": {},
+                "description": "Clears the trace buffer of the specified channel."
+            },
+            "data": {
+                "command": ":TRACe[ch]:DATA?",
+                "parameters": [
+                    "offset",
+                    "size"
+                ],
+                "values": {},
+                "description": "Returns data in the trace buffer."
+            },
+            "feed": {
+                "command": ":TRACe:FEED",
+                "parameters": [
+                    "type"
+                ],
+                "values": {
+                    "type": [
+                        "SENSe"
+                    ]
+                },
+                "description": "Specifies the data placed in the trace buffer."
+            },
+            "feed_control": {
+                "command": ":TRACe:FEED:CONTrol",
+                "parameters": [
+                    "mode"
+                ],
+                "values": {
+                    "mode": [
+                        "NEXT",
+                        "NEVer"
+                    ]
+                },
+                "description": "Selects the trace buffer control."
+            },
+            "free": {
+                "command": ":TRACe:FREE?",
+                "parameters": [],
+                "values": {},
+                "description": "Returns the available points (available) and the total points (total) of the trace buffer."
+            },
+            "points": {
+                "command": ":TRACe:POINts",
+                "parameters": [
+                    "points"
+                ],
+                "values": {
+                    "points": [
+                        "MINimum",
+                        "MAXimum",
+                        "DEFault"
+                    ]
+                },
+                "description": "Sets the size of the trace buffer."
+            },
+            "points_actual": {
+                "command": ":TRACe:POINts:ACTual?",
+                "parameters": [],
+                "values": {},
+                "description": "Returns the number of data in the trace buffer."
+            },
+            "statistic": {
+                "data": {
+                    "command": ":TRACe[ch]:STATistic:DATA?",
+                    "parameters": [],
+                    "values": {},
+                    "description": "Returns the result of the statistical operation for the data stored in the trace buffer."
+                },
+                "format": {
+                    "command": ":TRACe[ch]:STATistic:FORMat",
+                    "parameters": [
+                        "operation"
+                    ],
+                    "values": {
+                        "operation": [
+                            "MINimum",
+                            "MAXimum",
+                            "SDEViation",
+                            "PKPK",
+                            "MEAN"
+                        ]
+                    },
+                    "description": "Selects the statistical operation performed by the :TRACe:STATistic:DATA? command."
+                }
+            },
+            "tstamp": {
+                "format": {
+                    "command": ":TRACe:TSTamp:FORMat",
+                    "parameters": [
+                        "rule"
+                    ],
+                    "values": {
+                        "rule": [
+                            "DELTa",
+                            "ABSolute"
+                        ]
+                    },
+                    "description": "Selects the rule for reading the timestamp data in the trace buffer."
+                }
+            }
+        },
+        "trigger": {
+            "abort": {
+                "acquire_transient": {
+                    "command": ":ABORt<:ACQuire | :TRANsient | [:ALL]>",
+                    "parameters": [
+                        "chanlist"
+                    ],
+                    "values": {},
+                    "description": "Aborts the specified device action for the specified channel."
+                }
+            },
+            "arm": {
+                "acquire": {
+                    "layer": {
+                        "bypass": {
+                            "command": ":ARM[ch]<:ACQuire | :TRANsient | [:ALL]>[:LAYer]:BYPass",
+                            "parameters": [
+                                "bypass"
+                            ],
+                            "values": {
+                                "bypass": [
+                                    "ONCE",
+                                    "OFF"
+                                ]
+                            },
+                            "description": "Bypasses the arm event detector for the first time in the arm loop for the specified device action or disables the bypass function."
+                        },
+                        "count": {
+                            "command": ":ARM<:ACQuire | :TRANsient | [:ALL]>[:LAYer]:COUNt",
+                            "parameters": [
+                                "arm_count"
+                            ],
+                            "values": {
+                                "arm_count": [
+                                    "MINimum",
+                                    "MAXimum",
+                                    "DEFault"
+                                ]
+                            },
+                            "description": "Sets the arm count for the specified device action and the specified channel."
+                        },
+                        "delay": {
+                            "command": ":ARM<:ACQuire | :TRANsient | [:ALL]>[:LAYer]:DELay",
+                            "parameters": [
+                                "delay"
+                            ],
+                            "values": {
+                                "delay": [
+                                    "MINimum",
+                                    "MAXimum",
+                                    "DEFault"
+                                ]
+                            },
+                            "description": "Sets the arm delay for the specified device action and the specified channel."
+                        },
+                        "immediate": {
+                            "command": ":ARM<:ACQuire | :TRANsient | [:ALL]>[:IMMediate]",
+                            "parameters": [
+                                "chanlist"
+                            ],
+                            "values": {},
+                            "description": "Sends an immediate arm trigger for the specified device action to the specified channel."
+                        },
+                        "source": {
+                            "signal": {
+                                "command": ":ARM<:ACQuire | :TRANsient | [:ALL]>[:LAYer]:SOURce[:SIGNal]",
+                                "parameters": [
+                                    "source"
+                                ],
+                                "values": {
+                                    "source": [
+                                        "AINT",
+                                        "BUS",
+                                        "TIMer",
+                                        "INT1",
+                                        "INT2",
+                                        "INT3",
+                                        "INT4",
+                                        "INT5",
+                                        "INT6",
+                                        "MEXT1",
+                                        "MEXT2"
+                                    ]
+                                },
+                                "description": "Selects the trigger source for the arm event for the specified device action."
+                            }
+                        },
+                        "timer": {
+                            "command": ":ARM<:ACQuire | :TRANsient | [:ALL]>[:LAYer]:TIMer",
+                            "parameters": [
+                                "interval"
+                            ],
+                            "values": {
+                                "interval": [
+                                    "MINimum",
+                                    "MAXimum",
+                                    "DEFault"
+                                ]
+                            },
+                            "description": "Sets the interval of the TIMer trigger source for the arm event for the specified device action and the specified channel."
+                        },
+                        "toutput": {
+                            "signal": {
+                                "command": ":ARM<:ACQuire | :TRANsient | [:ALL]>[:LAYer]:TOUTput:SIGNal",
+                                "parameters": [
+                                    "output"
+                                ],
+                                "values": {
+                                    "output": [
+                                        "INT1",
+                                        "INT2",
+                                        "INT3",
+                                        "INT4",
+                                        "INT5",
+                                        "INT6",
+                                        "MEXT1",
+                                        "MEXT2"
+                                    ]
+                                },
+                                "description": "Selects the trigger output for the status change between the idle state and the arm layer."
+                            },
+                            "state": {
+                                "command": ":ARM<:ACQuire | :TRANsient | [:ALL]>[:LAYer]:TOUTput[:STATe]",
+                                "parameters": [
+                                    "mode"
+                                ],
+                                "values": {
+                                    "mode": [
+                                        "1",
+                                        "ON",
+                                        "0",
+                                        "OFF"
+                                    ]
+                                },
+                                "description": "Enables or disables the trigger output for the status change between the idle state and the arm layer."
+                            }
+                        }
+                    }
+                }
+            },
+                "idle": {
+                    "acquire_transient": {
+                        "command": ":IDLE<:ACQuire | :TRANsient | [:ALL]>? ",
+                        "parameters": [],
+                        "values": {},
+                        "description": "Checks the status of the specified device action for the specified channel, and waits until the status is changed to idle."
+                    }
+                },
+                "initiate": {
+                    "immediate": {
+                        "acquire_transient" : {
+                            "command": ":INITiate[:IMMediate]<:ACQuire | :TRANsient | [:ALL]>",
+                            "parameters": [
+                            "chanlist"
+                            ],
+                            "values": {
+                            },
+                        "description": "Initiates the specified device action for the specified channels."
+                    }
+                },
+                "trigger": {
+                    "acquire_transient": {
+                        "bypass": {
+                            "command": ":TRIGger<:ACQuire | :TRANsient | [:ALL]>?",
+                            "parameters": [],
+                            "values": {},
+                            "description": "Checks the status of the specified device action for the specified channel, and waits until the status is changed to waiting for a trigger."
+                        },
+                    "count": {
+                        "command": ":TRIGger<:ACQuire | :TRANsient | [:ALL]>:COUNt",
+                        "parameters": [
+                            "trigger_count"
+                        ],
+                        "values": {
+                            "trigger_count": [
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Sets the trigger count for the specified device action."
+                    },
+                    "delay": {
+                        "command": ":TRIGger<:ACQuire | :TRANsient | [:ALL]>:DELay",
+                        "parameters": [
+                            "delay"
+                        ],
+                        "values": {
+                            "delay": [
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Sets the trigger delay for the specified device action."
+                    },
+                    "immediate": {
+                        "command": ":TRIGger<:ACQuire | :TRANsient | [:ALL]>[:IMMediate]",
+                        "parameters": [
+                            "chanlist"
+                        ],
+                        "values": {},
+                        "description": "Sends an immediate trigger for the specified device action to the specified channel."
+                    },
+                    "source": {
+                        "signal": {
+                            "command": ":TRIGger<:ACQuire | :TRANsient | [:ALL]>:SOURce[:SIGNal]",
+                            "parameters": [
+                                "source"
+                            ],
+                            "values": {
+                                "source": [
+                                    "AINT",
+                                    "BUS",
+                                    "TIMer",
+                                    "INT1",
+                                    "INT2",
+                                    "INT3",
+                                    "INT4",
+                                    "INT5",
+                                    "INT6",
+                                    "MEXT1",
+                                    "MEXT2"
+                                ]
+                            },
+                            "description": "Selects the trigger source for the trigger event for the specified device action."
+                        }
+                    },
+                    "timer": {
+                        "command": ":TRIGger<:ACQuire | :TRANsient | [:ALL]>:TIMer",
+                        "parameters": [
+                            "interval"
+                        ],
+                        "values": {
+                            "interval": [
+                                "MINimum",
+                                "MAXimum",
+                                "DEFault"
+                            ]
+                        },
+                        "description": "Sets the interval of the TIMer trigger source for the specified device action."
+                    },
+                    "toutput": {
+                        "signal": {
+                            "command": ":TRIGger<:ACQuire | :TRANsient | [:ALL]>:TOUTput:SIGNal",
+                            "parameters": [
+                                "output"
+                            ],
+                            "values": {
+                                "output": [
+                                    "INT1",
+                                    "INT2",
+                                    "INT3",
+                                    "INT4",
+                                    "INT5",
+                                    "INT6",
+                                    "MEXT1",
+                                    "MEXT2"
+                                ]
+                            },
+                            "description": "Selects the trigger output for the status change between the arm layer and the trigger layer."
+                        },
+                        "state": {
+                            "command": ":TRIGger<:ACQuire | :TRANsient | [:ALL]>:TOUTput[:STATe]",
+                            "parameters": [
+                                "mode"
+                            ],
+                            "values": {
+                                "mode": [
+                                    "1",
+                                    "ON",
+                                    "0",
+                                    "OFF"
+                                ]
+                            },
+                            "description": "Enables or disables the trigger output for the status change between the arm layer and the trigger layer."
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
