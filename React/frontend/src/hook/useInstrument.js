@@ -14,10 +14,13 @@ const QUERY_KEYS = {
 // Get all instruments
 export const useAllInstruments = () => {
   return useQuery({
-    queryKey: QUERY_KEYS.all,
+    queryKey: [QUERY_KEYS.all],
     queryFn: service.getAllInstrument,
+    staleTime: 0,         // optional: always refetch
+    refetchOnWindowFocus: false, // optional: prevent auto-refetch
   });
 };
+
 
 // Get session instrument (requires session_id)
 export const useSessionInstrument = (session_id) => {
@@ -39,7 +42,7 @@ export const useScanInstrument = () => {
   return useMutation({
     mutationFn: service.scanInstrument,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.all] });
     },
   });
 };
@@ -85,7 +88,7 @@ export const useDeleteInstrument = () => {
     mutationFn: ({ instrument_id }) =>
       service.deleteInstrument(instrument_id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.all ]});
     },
   });
 };
@@ -97,7 +100,7 @@ export const useDeleteAllInstrument = () => {
   return useMutation({
     mutationFn: service.deleteAllInstrument,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey:[ QUERY_KEYS.all] });
       queryClient.removeQueries(); // clear session cache completely
     },
   });

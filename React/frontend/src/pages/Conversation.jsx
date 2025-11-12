@@ -317,8 +317,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
   };
 
 
-  const { data: instrumentData = [], isLoading:isGettingAllInstrument } = useAllInstruments({ staleTime: 5 * 60 * 1000, // 5 mins
-  cacheTime: 10 * 60 * 1000,});
+  const { data: instrumentData = [], isLoading:isGettingAllInstrument } = useAllInstruments();
 
   const scanMutation = useScanInstrument();
   const selectMutation = useSelectInstrument();
@@ -661,6 +660,7 @@ const handleInputChange = (value) => {
           handleSelectInstrument={handleSelectInstrument}
           isScanning={isScanning}
           instrumentData={instrumentData}
+          isGettingAllInstrument ={isGettingAllInstrument}
 
         />
       </InputArea>
@@ -1000,6 +1000,7 @@ function MessageInput({
   handleSelectInstrument,
   isScanning,
   instrumentData,
+  isGettingAllInstrument 
 
 }) {
   const textareaRef = useRef(null);
@@ -1014,7 +1015,7 @@ function MessageInput({
   return (
     <>
       <div style={{ display: "flex", alignItems: "center" }}>
-
+        <div className="flex items-center gap-2">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -1040,7 +1041,7 @@ function MessageInput({
             <div>
               <Button variant="outline" className="shrink-0  bg-white ">
                 {selectedInstrument ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-40">
                     <Badge variant="secondary" className="text-xs">
                       {selectedInstrument.model}
                     </Badge>
@@ -1056,56 +1057,59 @@ function MessageInput({
             </div>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="start" className="w-80 bg-white shadow-md">
-            {!Array.isArray(instrumentData) || instrumentData.length === 0 ? (
-              <DropdownMenuItem disabled>No instruments detected</DropdownMenuItem>
-            ) : (
-              <>
-                {Array.isArray(instrumentData) &&
-                  instrumentData.map((instrument) => (
-                    <DropdownMenuItem
-                      key={instrument.id}
-                      className="flex items-center justify-between p-3"
-                    >
-                      <div
-                        className="flex-1 cursor-pointer"
-                        onClick={() => {
-                          console.log("Instrument to select:", instrument);
-                          handleSelectInstrument(instrument);
-                        }}
-                      >
-                        <div className="font-medium">{instrument.model}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {instrument.model} • {instrument.resource_string}
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDeleteInstrument(instrument.id)
-                        }}
-                        className="ml-2 h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </DropdownMenuItem>
-                  ))}
+         <DropdownMenuContent align="start" className="w-80 bg-white shadow-md">
+  {isGettingAllInstrument ? (
+    <DropdownMenuItem disabled>
+      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+      Scanning instruments...
+    </DropdownMenuItem>
+  ) : !Array.isArray(instrumentData) || instrumentData.length === 0 ? (
+    <DropdownMenuItem disabled>No instruments detected</DropdownMenuItem>
+  ) : (
+    <>
+      {instrumentData.map((instrument) => (
+        <DropdownMenuItem
+          key={instrument.id}
+          className="flex items-center justify-between p-3"
+        >
+          <div
+            className="flex-1 cursor-pointer"
+            onClick={() => handleSelectInstrument(instrument)}
+          >
+            <div className="font-medium">{instrument.model}</div>
+            <div className="text-sm text-muted-foreground">
+              {instrument.model} • {instrument.resource_string}
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDeleteInstrument(instrument.id)
+            }}
+            className="ml-2 h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        </DropdownMenuItem>
+      ))}
 
-                <DropdownMenuSeparator />
+      <DropdownMenuSeparator />
 
-                <DropdownMenuItem
-                  onClick={handleDeleteAllInstruments}
-                  className="text-destructive focus:text-destructive-foreground focus:bg-destructive"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete All Instruments
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
+      <DropdownMenuItem
+        onClick={handleDeleteAllInstruments}
+        className="text-destructive focus:text-destructive-foreground focus:bg-destructive"
+      >
+        <Trash2 className="h-4 w-4 mr-2" />
+        Delete All Instruments
+      </DropdownMenuItem>
+    </>
+  )}
+</DropdownMenuContent>
+
         </DropdownMenu>
+        </div>
         <TextAreaWrapper style={{ position: "relative" }}>
           <MessageTextArea
             ref={textareaRef}

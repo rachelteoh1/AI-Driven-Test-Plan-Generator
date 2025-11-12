@@ -3,15 +3,19 @@ from typing import Annotated
 from uuid import UUID, uuid4
 from fastapi import Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
-from ..entities.entities import ChatLog, ChatLogVersion
+from ..entities.entities import ChatLog, ChatLogVersion, SelectedInstrument
 import logging
 from ..exceptions import (
     InternalServerError)
-from .models import LogCreate, LogResponse
+from .models import LogCreate, LogResponse, InstrumentResponse
 from ..utils.intent_classifier import classify_intent_ml
 from ..utils.nlp_utils import preprocess_input
 from ..exceptions import ChatCreationError, ChatNotFoundError,ChatRenameError
 from ..pdf_import.utils.suggest_intent import extract_scpi_from_pdf
+from ..instrument import service
+import requests
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -137,41 +141,177 @@ def get_chat_log_by_user(db: Session, session_id):
         logger.error(f"Failed to get chat logs for session {session_id}: {str(e)}")
         raise InternalServerError(str(e))
 
+# def detect_intent(db: Session, request: LogCreate) -> LogResponse:
+#     try:
+#         logger.info(f"Detecting intent for session: {request.session_id}")
+#         lemmatised, scpi_cmds ,conditions,targets = preprocess_input(request.content)
+#         intent = classify_intent_ml(lemmatised)
+
+#         if intent == "unknown":
+#             response_text = "Sorry, we could not identify your intent, please type in your request again."
+            
+#         elif intent =="generate_scpi":
+#          response_text = (
+#             f"Intent: {intent}\n"
+#             f"SCPI Commands: {', '.join(scpi_cmds) or 'None,please specify the SCPI command if available.'}\n"
+#             f"Conditions: {', '.join(conditions) or 'None, please specify the confition if available.'}\n"
+#             f"Target: {', '.join(targets) or 'None, please specify your testing target.'}"
+#          )
+
+#         else:
+#          response_text = (
+#             f"Intent: {intent}\n"
+#             f"SCPI Commands: {', '.join(scpi_cmds) or 'None,please specify the SCPI command.'}\n"
+#          )
+
+#         new_log = LogCreate(
+#             session_id=request.session_id,
+#             role="llm_response",
+#             content=response_text,
+#         )
+
+#         saved_log = create_chat_log(db, new_log)
+#         logger.info(f"Logged LLM response in session {request.session_id}")
+
+#         return saved_log
+
+#     except Exception as e:
+#         logger.exception("Intent detection failed")
+#         raise HTTPException(status_code=500, detail="Failed to detect intent, please enter your request again")
+
+# def detect_intent(db: Session, request: LogCreate) -> LogResponse:
+#     try:
+#         logger.info(f"Detecting intent for session: {request.session_id}")
+#         lemmatised, scpi_cmds, conditions, targets = preprocess_input(request.content)
+#         intent = classify_intent_ml(lemmatised)
+
+#         if intent == "unknown":
+#             response_text = "Sorry, we could not identify your intent, please type in your request again."
+#         elif intent == "generate_scpi":
+#             response_text = (
+#                 f"Intent: {intent}\n"
+#                 f"SCPI Commands: {', '.join(scpi_cmds) or 'None,please specify the SCPI command if available.'}\n"
+#                 f"Conditions: {', '.join(conditions) or 'None, please specify the condition if available.'}\n"
+#                 f"Target: {', '.join(targets) or 'None, please specify your testing target.'}"
+#             )
+#         else:
+#             response_text = (
+#                 f"Intent: {intent}\n"
+#                 f"SCPI Commands: {', '.join(scpi_cmds) or 'None,please specify the SCPI command.'}\n"
+#             )
+
+#         new_log = LogCreate(
+#             session_id=request.session_id,
+#             role="llm_response",
+#             content=response_text,
+#         )
+
+#         saved_log = create_chat_log(db, new_log)
+
+#         #  Query selected instrument for this session
+#         selected_instrument = (
+#             db.query(SelectedInstrument)
+#             .filter(SelectedInstrument.session_id == request.session_id)
+#             .order_by(SelectedInstrument.created_at.desc())  # latest one if multiple
+#             .first()
+#         )
+#         if selected_instrument:
+#             logger.info(
+#                 f"Selected instrument for session {request.session_id}: "
+#                 f"{selected_instrument.manufacturer} {selected_instrument.model} {selected_instrument.serial}"
+#     )
+#         else:
+#          logger.info(f"No instrument selected for session {request.session_id}")
+#         log_response= LogResponse(
+#             message_id=saved_log.message_id,
+#             session_id=saved_log.session_id,
+#             role=saved_log.role,
+#             content=saved_log.content,
+#             timestamp=saved_log.timestamp,
+#             has_been_modified=saved_log.has_been_modified,
+#             selected_instrument=InstrumentResponse(
+#                 manufacturer=selected_instrument.manufacturer,
+#                 model=selected_instrument.model,
+#                 serial=selected_instrument.serial,
+#         ) if selected_instrument else None
+# )
+#         logger.info(f"Returning LogResponse: {log_response.model_dump()}")
+#         return log_response
+#     except Exception as e:
+#         logger.exception("Intent detection failed")
+#         raise HTTPException(status_code=500, detail="Failed to detect intent, please enter your request again")
+
+
+
+
+MISTRAL_API_URL = "https://cofinal-semierectly-mignon.ngrok-free.dev/generate"
+
+
 def detect_intent(db: Session, request: LogCreate) -> LogResponse:
+    """
+    Detect user intent and generate AI response, automatically including
+    selected instrument information in the user message.
+    """
     try:
         logger.info(f"Detecting intent for session: {request.session_id}")
-        lemmatised, scpi_cmds ,conditions,targets = preprocess_input(request.content)
-        intent = classify_intent_ml(lemmatised)
 
-        if intent == "unknown":
-            response_text = "Sorry, we could not identify your intent, please type in your request again."
-            
-        elif intent =="generate_scpi":
-         response_text = (
-            f"Intent: {intent}\n"
-            f"SCPI Commands: {', '.join(scpi_cmds) or 'None,please specify the SCPI command if available.'}\n"
-            f"Conditions: {', '.join(conditions) or 'None, please specify the confition if available.'}\n"
-            f"Target: {', '.join(targets) or 'None, please specify your testing target.'}"
-         )
+        # --- Step 1: Retrieve the selected instrument(s) for this session ---
+        instruments = service.get_selected_instruments(db, request.session_id)
 
+        if instruments:
+            # Use the most recently selected instrument
+            selected_instrument = instruments[-1]
+            instrument_prefix = f"Keysight {selected_instrument.model}: "
         else:
-         response_text = (
-            f"Intent: {intent}\n"
-            f"SCPI Commands: {', '.join(scpi_cmds) or 'None,please specify the SCPI command.'}\n"
-         )
+            selected_instrument = None
+            instrument_prefix = ""
 
+        # --- Step 2: Construct the full user message ---
+        user_msg = f"{instrument_prefix}{request.content.strip()}"
+
+        logger.info(f"Constructed user message: {user_msg}")
+
+        # --- Step 3: Send message to Mistral model ---
+        payload = {
+            "prompt": user_msg,
+            "max_tokens": 512,
+            "temperature": 0.2
+        }
+        response = requests.post(MISTRAL_API_URL, json=payload, timeout=120)
+
+        if response.status_code != 200:
+            logger.error(f"Mistral API Error: {response.text}")
+            raise Exception(f"Mistral API returned {response.status_code}")
+
+        llm_output = response.json().get("response", "").strip()
+        logger.info(f"Mistral output: {llm_output}")
+
+        # --- Step 4: Log and persist LLM response ---
         new_log = LogCreate(
             session_id=request.session_id,
             role="llm_response",
-            content=response_text,
+            content=llm_output,
+        )
+        saved_log = create_chat_log(db, new_log)
+
+        # --- Step 5: Build response payload ---
+        log_response = LogResponse(
+            message_id=saved_log.message_id,
+            session_id=saved_log.session_id,
+            role=saved_log.role,
+            content=saved_log.content,
+            timestamp=saved_log.timestamp,
+            has_been_modified=saved_log.has_been_modified,
+            selected_instrument=InstrumentResponse(
+                manufacturer=selected_instrument.manufacturer,
+                model=selected_instrument.model,
+                serial=selected_instrument.serial,
+            ) if selected_instrument else None,
         )
 
-        saved_log = create_chat_log(db, new_log)
-        logger.info(f"Logged LLM response in session {request.session_id}")
-
-        return saved_log
+        logger.info(f"Returning LogResponse: {log_response.model_dump()}")
+        return log_response
 
     except Exception as e:
         logger.exception("Intent detection failed")
-        raise HTTPException(status_code=500, detail="Failed to detect intent, please enter your request again")
-
+        raise HTTPException(status_code=500, detail=f"Failed to detect intent: {str(e)}")
