@@ -79,12 +79,12 @@ class ChatLogVersion(Base):
 class OptimizedTestSequence(Base):
     __tablename__ = "optimized_test_sequence"
 
-    sequence_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     message_id = Column(UUID(as_uuid=True), ForeignKey("chat_logs.message_id", ondelete="CASCADE"), nullable=False)
-    created_date = Column(DateTime, default=datetime.now(timezone.utc))
-
-    scpi_commands = relationship("ScpiCommand", cascade="all, delete-orphan", backref="sequence")
-    explanations = relationship("OptimizationExplanation", cascade="all, delete-orphan", backref="sequence")
+    optimized_scpi = Column(Text, nullable=False)
+    order_sequence = Column(Integer, nullable=False)
+    type = Column(String, nullable=False)  # 'command' or 'query'
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
 
 # -------------------------------
 # ScpiCommand Model
@@ -93,20 +93,8 @@ class ScpiCommand(Base):
     __tablename__ = "scpi_command"
 
     command_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    sequence_id = Column(UUID(as_uuid=True), ForeignKey("optimized_test_sequence.sequence_id", ondelete="CASCADE"), nullable=False)
-    command_text = Column(Text)
+#    command_text = Column(Text)
     order_index = Column(Integer)
-
-# -------------------------------
-# OptimizationExplanation Model
-# -------------------------------
-class OptimizationExplanation(Base):
-    __tablename__ = "optimization_explanation"
-
-    explanation_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    sequence_id = Column(UUID(as_uuid=True), ForeignKey("optimized_test_sequence.sequence_id", ondelete="CASCADE"), nullable=False)
-    explanation_text = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))
 
 # -------------------------------
 # Dashboard Model

@@ -1,8 +1,6 @@
 import fitz  # PyMuPDF
 import json
 from concurrent.futures import ThreadPoolExecutor
-from ..utils.models.query_intent import query_ollama
-from ..utils.models.llama_intent import query_llama
 from ..utils.models.gemini_intent import query_gemini, query_gemini_via_helicone
 import re
 import os
