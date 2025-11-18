@@ -1,8 +1,6 @@
 import fitz  # PyMuPDF
 import json
 from concurrent.futures import ThreadPoolExecutor
-from ..utils.models.query_intent import query_ollama
-from ..utils.models.llama_intent import query_llama
 from ..utils.models.gemini_intent import query_gemini, query_gemini_via_helicone
 import re
 import os
@@ -205,7 +203,7 @@ def process_scpi_text(text, page_number=None):
         "Dont extract duplicated SCPI Commands "
         f"Now extract from this text (from page {page_number}):\n{text}\n"
     )
-    response = query_gemini_via_helicone(prompt)
+    response = query_gemini(prompt)
     print(f"Model Response for page {page_number}:\n{response}\n{'-' * 40}")
     try:
         # Strip Markdown fences if present

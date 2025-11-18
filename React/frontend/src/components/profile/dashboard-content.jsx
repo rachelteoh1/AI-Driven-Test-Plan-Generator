@@ -1,4 +1,4 @@
-import { BarChart3 } from "lucide-react"
+import { FileText, Zap, Upload } from "lucide-react"
 import styled from "styled-components"
 import { ShadMetricsChart } from "./ShadMetricsChart"
 import { ShadCircularProgress } from "./ShadCircularProgress"
@@ -67,12 +67,6 @@ const StatValue = styled.p`
   color: ${({ theme }) => theme.text};
 `
 
-const InstrumentValue = styled.p`
-  font-size: ${FONTSIZE.lg};
-  font-weight: ${FONTWEIGHT.medium};
-  color: ${({ theme }) => theme.text};
-`
-
 const TextCenter = styled.div`
   text-align: center;
 `
@@ -116,16 +110,23 @@ export function DashboardContent() {
 
   const {
     total_test_plans,
-    total_commands_generated,
-    total_reduced_redundancy,
-    most_used_device,
+    total_explanations,
+    total_manuals_uploaded,
     month,
+    monthly_stats,
+    weekly_stats,
   } = data
 
-  const metricsData = [...data.weekly_stats].reverse().map((item, index) => ({
+  // Weekly data for line chart (SCPI Generated)
+  const scpiGeneratedWeeklyData = [...weekly_stats].reverse().map((item, index) => ({
     week: `Week ${index + 1}`,
-    value: item.reduced_redundancy,
+    value: item.scpi_generated,
   }))
+
+  // Monthly data for circular chart (SCPI Explained)
+  const currentMonthStats = monthly_stats.find(
+    stat => new Date(stat.month_start).getMonth() === new Date(month).getMonth()
+  ) || { scpi_generated: 0, scpi_explained: 0 }
 
   return (
     <Container>
@@ -136,11 +137,11 @@ export function DashboardContent() {
               <FlexColumn>
                 <FlexRow>
                   <StatIcon style={{ backgroundColor: "#DBEAFE" }}>
-                    <BarChart3 style={{ height: 12, width: 12, color: COLORS.secondary }} />
+                    <Zap style={{ height: 12, width: 12, color: COLORS.secondary }} />
                   </StatIcon>
                 </FlexRow>
                 <div>
-                  <StatTitle>Total Test Plan Generated</StatTitle>
+                  <StatTitle>Test Plans Generated</StatTitle>
                   <StatValue>{total_test_plans}</StatValue>
                 </div>
               </FlexColumn>
@@ -152,12 +153,12 @@ export function DashboardContent() {
               <FlexColumn>
                 <FlexRow>
                   <StatIcon style={{ backgroundColor: "#EDE9FE" }}>
-                    <BarChart3 style={{ height: 12, width: 12, color: "#7C3AED" }} />
+                    <FileText style={{ height: 12, width: 12, color: "#7C3AED" }} />
                   </StatIcon>
                 </FlexRow>
                 <div>
-                  <StatTitle>Total SCPI Generated</StatTitle>
-                  <StatValue>{total_commands_generated}</StatValue>
+                  <StatTitle>SCPI Explained</StatTitle>
+                  <StatValue>{total_explanations}</StatValue>
                 </div>
               </FlexColumn>
             </CardContent>
@@ -168,12 +169,12 @@ export function DashboardContent() {
               <FlexColumn>
                 <FlexRow>
                   <StatIcon style={{ backgroundColor: "#D1FAE5" }}>
-                    <BarChart3 style={{ height: 12, width: 12, color: "#16A34A" }} />
+                    <Upload style={{ height: 12, width: 12, color: "#16A34A" }} />
                   </StatIcon>
                 </FlexRow>
                 <div>
-                  <StatTitle>Most Used Instrument</StatTitle>
-                  <InstrumentValue>{most_used_device}</InstrumentValue>
+                  <StatTitle>Manuals Uploaded</StatTitle>
+                  <StatValue>{total_manuals_uploaded}</StatValue>
                 </div>
               </FlexColumn>
             </CardContent>
@@ -186,26 +187,24 @@ export function DashboardContent() {
               <FlexColumn>
                 <MetricHeader>
                   <SmallerIconWrapper>
-                    <BarChart3 />
+                    <Zap />
                   </SmallerIconWrapper>
                   <span>
-                    {new Date(month).toLocaleString("default", { month: "long" })}
+                    {new Date(month).toLocaleString("default", { month: "long" })} - SCPI Generated (Weekly)
                   </span>
                 </MetricHeader>
 
                 <div>
                   <StatValue>
-                    {total_commands_generated === 0
-                      ? "0%"
-                      : `${Math.round((total_reduced_redundancy / total_commands_generated) * 100)}%`}
+                    {weekly_stats.reduce((sum, item) => sum + item.scpi_generated, 0)}
                   </StatValue>
                   <p style={{ fontSize: FONTSIZE.sm, color: COLORS.medium }}>
-                    SCPI Reduced
+                    Last 4 Weeks Total
                   </p>
                 </div>
 
                 <div style={{ marginTop: SPACING.sm }}>
-                  <ShadMetricsChart data={metricsData} />
+                  <ShadMetricsChart data={scpiGeneratedWeeklyData} />
                 </div>
               </FlexColumn>
             </CardContent>
@@ -216,27 +215,25 @@ export function DashboardContent() {
               <FlexColumn>
                 <MetricHeader>
                   <SmallerIconWrapper>
-                    <BarChart3 />
+                    <FileText />
                   </SmallerIconWrapper>
                   <span>
-                    {new Date(month).toLocaleString("default", { month: "long" })}
+                    {new Date(month).toLocaleString("default", { month: "long" })} - SCPI Explained (Monthly)
                   </span>
                 </MetricHeader>
                 <TextCenter>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: SPACING.sm }}>
-                  <StatValue>
-                    {total_reduced_redundancy}
-                  </StatValue>
-                  <p style={{ fontSize: FONTSIZE.sm, color: COLORS.medium }}>
-                    Total SCPI Reduced
-                  </p>
-                <ShadCircularProgress
-                  value={total_reduced_redundancy}
-                  max={Math.max(total_reduced_redundancy, 100)}
-                  size={125}
-                />
-              </div>
-              </TextCenter>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: SPACING.sm }}>
+                    <StatValue>{currentMonthStats.scpi_explained}</StatValue>
+                    <p style={{ fontSize: FONTSIZE.sm, color: COLORS.medium }}>
+                      This Month
+                    </p>
+                    <ShadCircularProgress
+                      value={currentMonthStats.scpi_explained}
+                      max={Math.max(currentMonthStats.scpi_explained, 100)}
+                      size={125}
+                    />
+                  </div>
+                </TextCenter>
               </FlexColumn>
             </CardContent>
           </StyledCard>

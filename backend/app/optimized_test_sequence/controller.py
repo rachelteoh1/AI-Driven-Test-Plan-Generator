@@ -1,90 +1,74 @@
 from typing import List
 from fastapi import APIRouter, HTTPException, status
-from starlette import status
-from . import  models
+from . import models
 from . import service
 from ..database import DbSession
 from uuid import UUID
 
 router = APIRouter(
-    prefix='/sequences',
-    tags=['sequences']
+    prefix='/optimized-sequences',
+    tags=['optimized-sequences']
 )
-#add new sequence, get new sequence
 
-@router.post("/", response_model=models.SequenceResponse, status_code=status.HTTP_201_CREATED)
-async def create_sequence(
-    request: models.SequenceCreateRequest,
-    db:DbSession,
-):
-    sequence = service.create_sequence_with_commands(db, request)
-    # fetch commands to build response
-    data = service.get_sequence_with_commands(db, sequence.sequence_id)
-    if not data:
-        raise HTTPException(status_code=404, detail="Sequence not found after creation")
-    
-    # Build response model including commands
-    response = models.SequenceResponse(
-        sequence_id=data["sequence"].sequence_id,
-        message_id=data["sequence"].message_id,
-        created_date=data["sequence"].created_date,
-        commands=[
-            models.ScpiCommandResponse(
-                command_id=cmd.command_id,
-                command_text=cmd.command_text,
-                order_index=cmd.order_index,
-            )
-            for cmd in data["commands"]
-        ],
-    )
-    return response
-
-@router.post("/{sequence_id}/optimize", response_model=models.OptimizedSequenceResponse)
-async def optimize_sequence(
-    sequence_id: UUID,
-    instrument: str,
+@router.post("/", response_model=List[models.OptimizedScpiResponse], status_code=status.HTTP_201_CREATED)
+async def create_optimized_sequence(
+    request: models.BulkOptimizedScpiCreateRequest,
     db: DbSession,
 ):
-    result = service.optimize_sequence(db, sequence_id, instrument)
-    sequence, commands, explanation = result
+    # Combine commands into text format for parsing
+    optimized_text = "\n".join(request.scpi_commands)
+    
+    sequences = service.save_optimized_sequence(db, request.message_id, optimized_text)
+    
+    return [
+        models.OptimizedScpiResponse(
+            id=seq.id,
+            message_id=seq.message_id,
+            optimized_scpi=seq.optimized_scpi,
+            order_sequence=seq.order_sequence,
+            type=seq.type,
+            created_at=seq.created_at
+        )
+        for seq in sequences
+    ]
 
-    return models.OptimizedSequenceResponse(
-        sequence_id=sequence.sequence_id,
-        message_id=sequence.message_id,
-        created_date=sequence.created_date,
-        # instrument=sequence.instrument,
-        explanation=explanation.explanation_text,
+
+@router.get("/{message_id}", response_model=models.OptimizedSequenceListResponse)
+async def get_optimized_sequence(
+    message_id: UUID,
+    db: DbSession,
+):
+    """Get optimized SCPI sequence for a message."""
+    sequences = service.get_optimized_sequence(db, message_id)
+    
+    if not sequences:
+        raise HTTPException(status_code=404, detail="No optimized sequence found for this message")
+    
+    return models.OptimizedSequenceListResponse(
+        message_id=message_id,
         commands=[
-            models.ScpiCommandResponse(
-                command_id=cmd.command_id,
-                command_text=cmd.command_text,
-                order_index=cmd.order_index,
-            ) for cmd in commands
+            models.OptimizedScpiResponse(
+                id=seq.id,
+                message_id=seq.message_id,
+                optimized_scpi=seq.optimized_scpi,
+                order_sequence=seq.order_sequence,
+                type=seq.type,
+                created_at=seq.created_at
+            )
+            for seq in sequences
         ]
     )
 
-@router.get("/{sequence_id}", response_model=models.SequenceResponse)
-async def read_sequence(
-    sequence_id: UUID,
+
+@router.delete("/{message_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_optimized_sequence(
+    message_id: UUID,
     db: DbSession,
 ):
-    data = service.get_sequence_with_commands(db, sequence_id)
-    if not data:
-        raise HTTPException(status_code=404, detail="Sequence not found")
+    """Delete optimized SCPI sequence for a message."""
+    deleted_count = service.delete_optimized_sequence(db, message_id)
     
-    response = models.SequenceResponse(
-        sequence_id=data["sequence"].sequence_id,
-        message_id=data["sequence"].message_id,
-        created_date=data["sequence"].created_date,
-        commands=[
-            models.ScpiCommandResponse(
-                command_id=cmd.command_id,
-                command_text=cmd.command_text,
-                order_index=cmd.order_index,
-            )
-            for cmd in data["commands"]
-        ],
-    )
-    return response
-
-
+    if deleted_count == 0:
+        raise HTTPException(status_code=404, detail="No optimized sequence found for this message")
+    
+    return None
