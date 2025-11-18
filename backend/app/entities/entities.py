@@ -105,9 +105,8 @@ class Dashboard(Base):
     dashboard_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     total_test_plans = Column(Integer, default=0)
-    total_commands_generated = Column(Integer, default=0)
-    total_reduced_redundancy = Column(Integer, default=0)
-    most_used_device = Column(String)
+    total_explanations = Column(Integer, default=0)
+    total_manuals_uploaded = Column(Integer, default=0)
     month = Column(Date)
 
 # -------------------------------

@@ -1,26 +1,24 @@
 from sqlalchemy.orm import Session
-from ..entities.entities import Dashboard
+from ..entities.entities import Dashboard, ChatLog, ChatSession, SelectedInstrument, OptimizedTestSequence
 from .models import DashboardCreate
 from uuid import UUID, uuid4
-from app.entities.entities import OptimizedTestSequence, ChatLog, ChatSession, ScpiCommand
-from datetime import timedelta
+from datetime import date, timedelta
+import calendar
 
 def create_dashboard(db: Session, data: DashboardCreate):
-    print("📌 Creating dashboard with data:", data.dict())
+    print("Creating dashboard with data:", data.dict())
 
-    # Check if a dashboard already exists for this user
     existing_dashboard = db.query(Dashboard).filter_by(user_id=data.user_id).first()
     if existing_dashboard:
-        print("⚠️ Dashboard already exists for this user. Skipping creation.")
-        return existing_dashboard  # Or raise an exception if preferred
+        print("Dashboard already exists for this user. Skipping creation.")
+        return existing_dashboard
 
     dashboard_entry = Dashboard(
         dashboard_id=uuid4(),
         user_id=data.user_id,
         total_test_plans=data.total_test_plans,
-        total_commands_generated=data.total_commands_generated,
-        total_reduced_redundancy=data.total_reduced_redundancy,
-        most_used_device=data.most_used_device,
+        total_explanations=data.total_explanations,
+        total_manuals_uploaded=data.total_manuals_uploaded,
         month=data.month
     )
     db.add(dashboard_entry)
@@ -32,66 +30,103 @@ def get_dashboard_by_user(db: Session, user_id: UUID):
     return db.query(Dashboard).filter_by(user_id=user_id).all()
 
 def calculate_dashboard_metrics(db: Session, user_id: UUID):
-    total_test_plans = db.query(OptimizedTestSequence) \
-                         .join(ChatLog, ChatLog.message_id == OptimizedTestSequence.message_id) \
-                         .join(ChatSession, ChatSession.session_id == ChatLog.session_id) \
-                         .filter(ChatSession.id == user_id) \
-                         .count()
-
-    total_commands_generated = db.query(ScpiCommand) \
-                                 .join(OptimizedTestSequence, OptimizedTestSequence.sequence_id == ScpiCommand.sequence_id) \
-                                 .join(ChatLog, ChatLog.message_id == OptimizedTestSequence.message_id) \
-                                 .join(ChatSession, ChatSession.session_id == ChatLog.session_id) \
-                                 .filter(ChatSession.id == user_id) \
-                                 .count()
-
-    # Estimate time saved (e.g. assume 0.5 minutes saved per command)
-    estimated_reduced_redundancy = int(total_commands_generated * 0.5)
-
-    # Get most used device — requires a device column in ScpiCommand or a Device table
-    most_used_device = "Unknown"  # Placeholder if you haven’t stored device info yet
-
+    """Calculate user-specific dashboard metrics based on chat logs and instruments."""
+    
+    user_sessions = db.query(ChatSession.session_id).filter_by(id=user_id).all()
+    session_ids = [s.session_id for s in user_sessions]
+    
+    total_test_plans = db.query(ChatLog).filter(
+        ChatLog.session_id.in_(session_ids),
+        ChatLog.role == "llm_response",
+        ChatLog.is_active == True,
+        ChatLog.content.ilike("Raw Sequence:%")
+    ).count()
+    
+    total_explanations = db.query(ChatLog).filter(
+        ChatLog.session_id.in_(session_ids),
+        ChatLog.role == "llm_response",
+        ChatLog.is_active == True,
+        ChatLog.content.ilike("Syntax:%")
+    ).count()
+    
+    total_manuals_uploaded = db.query(SelectedInstrument).filter(
+        SelectedInstrument.session_id.in_(session_ids),
+        SelectedInstrument.json_url_manual.isnot(None)
+    ).distinct(SelectedInstrument.instrument_filename).count()
+    
     return {
         "total_test_plans": total_test_plans,
-        "total_commands_generated": total_commands_generated,
-        "total_reduced_redundancy": estimated_reduced_redundancy,
-        "most_used_device": most_used_device,
+        "total_explanations": total_explanations,
+        "total_manuals_uploaded": total_manuals_uploaded,
     }
+
+def get_weekly_scpi_stats(db: Session, user_id: UUID):
+    """Get SCPI generated per week for the last 4 weeks."""
     
-def get_weekly_stats(db: Session, user_id: UUID):
+    user_sessions = db.query(ChatSession.session_id).filter_by(id=user_id).all()
+    session_ids = [s.session_id for s in user_sessions]
+    
     today = date.today()
-    monday_this_week = today - timedelta(days=today.weekday())
-    
     stats = []
-
-    for i in range(4):  # Last 4 weeks
-        week_start = monday_this_week - timedelta(weeks=i)
-        week_end = week_start + timedelta(days=6)
-
-        test_plans = db.query(OptimizedTestSequence) \
-            .join(ChatLog, ChatLog.message_id == OptimizedTestSequence.message_id) \
-            .join(ChatSession, ChatSession.session_id == ChatLog.session_id) \
-            .filter(ChatSession.id == user_id) \
-            .filter(OptimizedTestSequence.created_date >= week_start) \
-            .filter(OptimizedTestSequence.created_date <= week_end) \
-            .all()
-
-        test_plan_count = len(test_plans)
-
-        command_count = db.query(ScpiCommand) \
-            .join(OptimizedTestSequence, OptimizedTestSequence.sequence_id == ScpiCommand.sequence_id) \
-            .join(ChatLog, ChatLog.message_id == OptimizedTestSequence.message_id) \
-            .join(ChatSession, ChatSession.session_id == ChatLog.session_id) \
-            .filter(ChatSession.id == user_id) \
-            .filter(OptimizedTestSequence.created_date >= week_start) \
-            .filter(OptimizedTestSequence.created_date <= week_end) \
-            .count()
-
+    
+    for i in range(4):
+        week_end = today - timedelta(days=i * 7)
+        week_start = week_end - timedelta(days=6)
+        
+        scpi_generated = db.query(ChatLog).filter(
+            ChatLog.session_id.in_(session_ids),
+            ChatLog.role == "llm_response",
+            ChatLog.is_active == True,
+            ChatLog.content.ilike("Raw Sequence:%"),
+            ChatLog.timestamp >= week_start,
+            ChatLog.timestamp <= week_end
+        ).count()
+        
         stats.append({
             "week_start": week_start,
-            "test_plans_created": test_plan_count,
-            "commands_generated": command_count,
-            "reduced_redundancy": int(command_count * 0.5)
+            "week_end": week_end,
+            "scpi_generated": scpi_generated,
         })
+    
+    return stats
 
+def get_monthly_scpi_stats(db: Session, user_id: UUID):
+    """Get SCPI explained per month for the last 4 months."""
+    
+    user_sessions = db.query(ChatSession.session_id).filter_by(id=user_id).all()
+    session_ids = [s.session_id for s in user_sessions]
+    
+    today = date.today()
+    stats = []
+    
+    for i in range(4):
+        target_date = today.replace(day=1) - timedelta(days=i * 30)
+        month_start = target_date.replace(day=1)
+        last_day = calendar.monthrange(target_date.year, target_date.month)[1]
+        month_end = target_date.replace(day=last_day)
+        
+        scpi_generated = db.query(ChatLog).filter(
+            ChatLog.session_id.in_(session_ids),
+            ChatLog.role == "llm_response",
+            ChatLog.is_active == True,
+            ChatLog.content.ilike("Raw Sequence:%"),
+            ChatLog.timestamp >= month_start,
+            ChatLog.timestamp <= month_end
+        ).count()
+        
+        scpi_explained = db.query(ChatLog).filter(
+            ChatLog.session_id.in_(session_ids),
+            ChatLog.role == "llm_response",
+            ChatLog.is_active == True,
+            ChatLog.content.ilike("Syntax:%"),
+            ChatLog.timestamp >= month_start,
+            ChatLog.timestamp <= month_end
+        ).count()
+        
+        stats.append({
+            "month_start": month_start,
+            "scpi_generated": scpi_generated,
+            "scpi_explained": scpi_explained
+        })
+    
     return stats

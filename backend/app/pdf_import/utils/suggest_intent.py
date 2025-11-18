@@ -203,7 +203,7 @@ def process_scpi_text(text, page_number=None):
         "Dont extract duplicated SCPI Commands "
         f"Now extract from this text (from page {page_number}):\n{text}\n"
     )
-    response = query_gemini_via_helicone(prompt)
+    response = query_gemini(prompt)
     print(f"Model Response for page {page_number}:\n{response}\n{'-' * 40}")
     try:
         # Strip Markdown fences if present
