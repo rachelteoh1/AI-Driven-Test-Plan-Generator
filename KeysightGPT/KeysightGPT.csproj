@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net472</TargetFramework>
+		<TargetFramework>net48</TargetFramework>
 		<UseWPF>true</UseWPF>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -34,9 +34,16 @@
 
 	<ItemGroup>
 		<Reference Include="Keysight.OpenTap.Wpf">
-			<HintPath>..\..\..\..\..\..\..\..\Program Files\OpenTAP\Packages\WPF Controls\Keysight.OpenTap.Wpf.dll</HintPath>
+			<HintPath>C:\Program Files\OpenTAP\Packages\WPF Controls\Keysight.OpenTap.Wpf.dll</HintPath>
 		</Reference>
 	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="OpenTap.Plugins.BasicSteps">
+			<HintPath>C:\Program Files\OpenTAP\Packages\OpenTAP\OpenTap.Plugins.BasicSteps.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
 
 	<!-- Post-build step to copy DLLs into OpenTAP plugin folder -->
 	<Target Name="CopyToOpenTap" AfterTargets="Build">
