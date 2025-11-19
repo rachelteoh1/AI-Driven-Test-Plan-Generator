@@ -1,7 +1,7 @@
 from uuid import UUID
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from typing import Optional
 
@@ -12,14 +12,11 @@ class LogCreate(BaseModel):  #save message
     role: str
     content: str
 
-
-
 class InstrumentResponse(BaseModel):
     manufacturer: Optional[str]
     model: Optional[str]
     serial: Optional[str]
-
-
+    
 class LogResponse(BaseModel):
     message_id: UUID
     session_id: UUID
@@ -27,6 +24,7 @@ class LogResponse(BaseModel):
     content: str
     timestamp: datetime
     has_been_modified: bool
+    has_optimization: bool = False
     selected_instrument: Optional[InstrumentResponse] = None
     
 class ModifyLog(BaseModel):
@@ -43,7 +41,6 @@ class ChatLogVersionResponse(BaseModel):
     old_content: str
     edited_at: datetime
     responses: List[LogResponse] = []
-
 
 
 

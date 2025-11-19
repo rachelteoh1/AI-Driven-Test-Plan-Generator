@@ -16,9 +16,7 @@ try:
     print("VISA lib path:", rm.visalib.library_path)
     print("Resources:", rm.list_resources())
     print("ResourceManager created.")
-    print("Listing available backends...")
-    backends = rm.list_backends()
-    print("Available backends:", backends)
+
 except Exception as e:
 
     print("Error during ResourceManager or listing backends:", e)
