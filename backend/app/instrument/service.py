@@ -114,9 +114,9 @@ def get_all_instrument(db: Session):
 SIMULATED_INSTRUMENTS = [
     {
         "resource": "USB0::0x2A8D::00000001::INSTR",
-        "idn": "Keysight Technologies,33500B,MY00000001,5.0.0.0",
+        "idn": "Keysight Technologies,34450A,MY00000001,5.0.0.0",
         "manufacturer": "Keysight Technologies",
-        "model": "33500B",
+        "model": "34450A",
         "serial": "MY00000001",
         "firmware": "5.0.0.0",
     },
@@ -162,7 +162,7 @@ SIMULATED_INSTRUMENTS = [
     },
 ]
 
-# --- Scan and update DB in one go ---
+# --- Scan and update DB 
 def scan_instruments(db: Session, timeout_ms: int = 800):
     """Scan VISA resources, update DB, and return active instruments."""
 
