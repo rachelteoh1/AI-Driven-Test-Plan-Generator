@@ -1,20 +1,24 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Web.WebView2.Wpf;
 using Newtonsoft.Json;
-using System.Text;
+using OpenTap.Plugins.BasicSteps;
+using Keysight.OpenTap.Wpf;
+using Keysight.OpenTap.Gui;
+
 
 namespace KeysightGPT
 {
     public class KeysightGPTPanel : UserControl
     {
+        private readonly ITapDockContext _context;
         private WebView2 webView;
 
-        public KeysightGPTPanel()
+        public KeysightGPTPanel(ITapDockContext context)
         {
+            _context = context;
             InitializeWebView();
         }
 
@@ -35,7 +39,7 @@ namespace KeysightGPT
 
             webView.WebMessageReceived += OnWebMessageReceived;
 
-            Debug.WriteLine("[WebView] Initialized and listening for messages");
+            Debug.WriteLine("[KeysightGPTPanel] WebView ready and listening.");
         }
 
         private void OnWebMessageReceived(object sender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs e)
@@ -43,89 +47,77 @@ namespace KeysightGPT
             try
             {
                 var rawJson = e.WebMessageAsJson;
-                var unwrappedJson = Newtonsoft.Json.JsonConvert.DeserializeObject<string>(rawJson);
+                var unwrappedJson = JsonConvert.DeserializeObject<string>(rawJson);
 
-                Debug.WriteLine("[WebView] Received JSON: " + unwrappedJson);
+                Debug.WriteLine("[Panel] Received JSON (unwrap): " + unwrappedJson);
 
-                SaveJsonAsTapPlan(unwrappedJson);
+                var block = JsonConvert.DeserializeObject<ScpiCommandBlock>(unwrappedJson);
+
+                if (block == null)
+                {
+                    Debug.WriteLine("[Panel] ERROR: Cannot parse SCPI block.");
+                    return;
+                }
+
+                GuiHelpers.GuiInvoke(() =>
+                {
+                    ApplyCommandsToTestPlan(block);
+                });
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("[WebView] Error parsing JSON: " + ex.Message);
+                Debug.WriteLine("[Panel] WebMessage error: " + ex.Message);
             }
         }
 
-        public static void SaveJsonAsTapPlan(string json)
+        public void ApplyCommandsToTestPlan(ScpiCommandBlock block)
         {
-            if (string.IsNullOrWhiteSpace(json)) return;
-
             try
             {
-                var block = Newtonsoft.Json.JsonConvert.DeserializeObject<ScpiCommandBlock>(json);
-                if (block?.commands == null || block.commands.Count == 0) return;
+                if (block?.commands == null || block.commands.Count == 0)
+                {
+                    Debug.WriteLine("[Panel] No SCPI commands in block.");
+                    return;
+                }
 
-                string folder = @"C:\Program Files\OpenTAP\tapplan";
-                if (!System.IO.Directory.Exists(folder))
-                    System.IO.Directory.CreateDirectory(folder);
+                var plan = _context.Plan;
 
-                string path = System.IO.Path.Combine(folder, "WebViewTestPlan.tap");
+                if (plan == null)
+                {
+                    Debug.WriteLine("[Panel] No active TestPlan found in context!");
+                    return;
+                }
 
-                var sb = new System.Text.StringBuilder();
-                sb.AppendLine(@"<?xml version=""1.0"" encoding=""utf-8""?>");
-                sb.AppendLine(@"<TestPlan type=""OpenTap.TestPlan"">");
-                sb.AppendLine("  <Steps>");
+                Debug.WriteLine("[Panel] Clearing existing steps...");
+                plan.Steps.Clear();
 
                 foreach (var cmd in block.commands)
                 {
-                    string action = cmd.command.EndsWith("?") ? "Query" : "Command";
+                    bool isQuery = cmd.command.Trim().EndsWith("?");
 
-                    sb.AppendLine(@"    <TestStep type=""OpenTap.Plugins.BasicSteps.SCPIRegexStep"" Id=""" + Guid.NewGuid().ToString() + @""">");
-                    sb.AppendLine(@"      <Instrument Source=""OpenTap.InstrumentSettings"">SCPI</Instrument>");
-                    sb.AppendLine(@"      <Action>" + action + @"</Action>");
-                    sb.AppendLine(@"      <Query>" + cmd.command + @"</Query>");
-                    sb.AppendLine(@"      <AddToLog>true</AddToLog>");
-                    sb.AppendLine(@"      <LogHeader />");
-                    sb.AppendLine(@"      <RegularExpressionPattern>");
-                    sb.AppendLine(@"        <Value>(.*)</Value>");
-                    sb.AppendLine(@"        <IsEnabled>false</IsEnabled>");
-                    sb.AppendLine(@"      </RegularExpressionPattern>");
-                    sb.AppendLine(@"      <VerdictOnMatch>Pass</VerdictOnMatch>");
-                    sb.AppendLine(@"      <VerdictOnNoMatch>Fail</VerdictOnNoMatch>");
-                    sb.AppendLine(@"      <ResultRegularExpressionPattern>");
-                    sb.AppendLine(@"        <Value>(.*)</Value>");
-                    sb.AppendLine(@"        <IsEnabled>false</IsEnabled>");
-                    sb.AppendLine(@"      </ResultRegularExpressionPattern>");
-                    sb.AppendLine(@"      <ResultName>Regex Result</ResultName>");
-                    sb.AppendLine(@"      <Behavior>GroupsAsDimensions</Behavior>");
-                    sb.AppendLine(@"      <DimensionTitles></DimensionTitles>");
-                    sb.AppendLine(@"      <Name Metadata=""Step Name"">" + cmd.command + @"</Name>");
-                    sb.AppendLine(@"      <ChildTestSteps />");
-                    sb.AppendLine(@"    </TestStep>");
+                    var step = new SCPIRegexStep
+                    {
+                        Action = isQuery ? SCPIAction.Query : SCPIAction.Command,
+                        Query = cmd.command,
+                        AddToLog = true,
+                        Name = cmd.command
+                    };
+
+                    plan.Steps.Add(step);
+
+                    Debug.WriteLine($"[Panel] Added Step: {cmd.command}");
                 }
 
-                sb.AppendLine("  </Steps>");
-                sb.AppendLine(@"  <Package.Dependencies>");
-                sb.AppendLine(@"    <Package Name=""OpenTAP"" Version=""^9.28.2+504225fd"" />");
-                sb.AppendLine(@"  </Package.Dependencies>");
-                sb.AppendLine("</TestPlan>");
-
-                string xmlContent = sb.ToString();
-
-                System.Diagnostics.Debug.WriteLine("[KeysightGPTPanel] Saving TAP Plan content:");
-                System.Diagnostics.Debug.WriteLine(xmlContent);
-
-                System.IO.File.WriteAllText(path, xmlContent);
-                System.Diagnostics.Debug.WriteLine($"[KeysightGPTPanel] TestPlan saved: {path}");
+                Debug.WriteLine("[Panel] TestPlan updated successfully.");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[KeysightGPTPanel] Failed to save TestPlan: {ex.Message}");
+                Debug.WriteLine("[Panel] ApplyCommandsToTestPlan ERROR: " + ex.Message);
             }
         }
     }
 
-        // SCPI model
-        public class ScpiCommand
+    public class ScpiCommand
     {
         public string command { get; set; }
         public string type { get; set; }

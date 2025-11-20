@@ -17,7 +17,7 @@ namespace KeysightGPT
 
         public FrameworkElement CreateElement(ITapDockContext context)
         {
-            return new KeysightGPTPanel(); // no arguments
+            return new KeysightGPTPanel(context); // no arguments
         }
     }
 }

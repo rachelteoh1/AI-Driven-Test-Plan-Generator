@@ -1,0 +1,31 @@
+2025-11-19 21:21:25.330492 ; Session        ; Debug       ; Session log loaded as 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Debug\SessionLogs\MSBuild.29140 2025-11-19 21-21-23.txt'. [4.07 ms]
+2025-11-19 21:21:25.415496 ; Session        ; Debug       ; Running '"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe" /nologo /nodemode:1 /nodeReuse:true /low:false' in 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT'.
+2025-11-19 21:21:25.546494 ; AssemblyFinder ; Debug       ; Found 5/26 assembly files. [10.9 ms]
+2025-11-19 21:21:25.703497 ; Searcher       ; Debug       ; Ordered 5 assemblies according to references. [149 ms]
+2025-11-19 21:21:25.778497 ; PluginManager  ; Debug       ; Found 3 plugin assemblies containing 176 plugin types. [225 ms]
+2025-11-19 21:21:25.781496 ; PluginManager  ; Debug       ; Found version 9.28.2+504225fd  of OpenTap.dll from C:\Users\Rachel\.nuget\packages\opentap\9.28.2\build\payload\OpenTap.dll
+2025-11-19 21:21:25.781496 ; PluginManager  ; Debug       ; Found version 9.28.2+504225fd  of OpenTap.Package.dll from C:\Users\Rachel\.nuget\packages\opentap\9.28.2\build\payload\OpenTap.Package.dll
+2025-11-19 21:21:25.781496 ; PluginManager  ; Debug       ; Found version 9.28.2+504225fd  of OpenTap.Plugins.BasicSteps.dll from C:\Users\Rachel\.nuget\packages\opentap\9.28.2\build\payload\Packages\OpenTAP\OpenTap.Plugins.BasicSteps.dll
+2025-11-19 21:21:25.781496 ; PluginManager  ; Debug       ; Searched 5 Assemblies. [230 ms]
+2025-11-19 21:21:25.810497 ; AssemblyData   ; Debug       ; Loaded OpenTap. [855 us]
+2025-11-19 21:21:25.810497 ; AssemblyData   ; Debug       ; Loaded OpenTap. [439 us]
+2025-11-19 21:21:25.811496 ; AssemblyData   ; Debug       ; Loaded OpenTap.Package. [989 us]
+2025-11-19 21:21:25.818838 ; AssemblyData   ; Debug       ; Loaded OpenTap.Plugins.BasicSteps. [7.92 ms]
+2025-11-19 21:21:25.875898 ; SystemInfo     ; Debug       ; Microsoft Windows 10.0.19045 X64
+2025-11-19 21:21:25.875898 ; SystemInfo     ; Debug       ; .NET Framework 4.8.9310.0
+2025-11-19 21:21:25.876893 ; SystemInfo     ; Debug       ; OpenTAP Engine 9.28.2+504225fd X64
+2025-11-19 21:21:25.932898 ; AssemblyData   ; Debug       ; Loaded mscorlib. [300 ns]
+2025-11-19 21:21:26.184775 ; Installation   ; Debug       ; OpenTAP                        - 9.28.2+504225fd
+2025-11-19 21:21:26.184775 ; Installation   ; Debug       ; TUI                            - 1.1.1+507fd903
+2025-11-19 21:21:26.184775 ; Installation   ; Debug       ; Keysight Fixed License Manager - 1.6.2+d58f8a89
+2025-11-19 21:21:26.184775 ; Installation   ; Debug       ; Keysight IO Libraries Suite    - 18.4.30319-beta.2.5+a2799c9d
+2025-11-19 21:21:26.184775 ; Installation   ; Debug       ; PathWave License Manager       - 7.4.1+efeba870
+2025-11-19 21:21:26.225779 ; Resolver       ; Debug       ; Found match for OpenTap.Repository.Client, Version=4.17.0.0, Culture=neutral, PublicKeyToken=null in C:\Users\Rachel\.nuget\packages\opentap\9.28.2\build\payload\Dependencies\OpenTap.Repository.Client.4.17.0.0\OpenTap.Repository.Client.dll
+2025-11-19 21:21:26.271780 ; Settings       ; Debug       ; No settings file exists for AuthenticationSettings. A new instance with default values has been created. [481 us]
+2025-11-19 21:21:26.286776 ; Settings       ; Debug       ; No settings file exists for PackageManagerSettings. A new instance with default values has been created. [1.55 ms]
+2025-11-19 21:21:26.620778 ; FilePackageRepository ; Debug       ; Rebuilding cache: .PackageCache.C83F5A61.17.xml [297 ms]
+2025-11-19 21:21:26.632779 ; Package Query  ; Debug       ; Read 17 packages from [FilePackageRepository: file:///C:/Users/Rachel/AppData/Local/OpenTap/PackageCache] [331 ms]
+2025-11-19 21:21:28.703813 ; HttpPackageRepository ; Debug       ; {"type":"TapPackage","directory":"/Packages/","version":"","architecture":"x64","os":"Windows"} -> found 1825 packages. [2.06 s]
+2025-11-19 21:21:29.636768 ; HttpPackageRepository ; Debug       ; {"type":"TapPackage","directory":"/Packages/","name":"Keysight IO Libraries Suite","version":"beta","architecture":"x64","os":"Windows"} -> found 0 packages. [838 ms]
+2025-11-19 21:21:29.680771 ; image          ; Debug       ; Resolved image: TUI:1, OpenTAP:9.28.2+504225fd, Keysight Fixed License Manager:^1.6.2+d58f8a89, Keysight IO Libraries Suite:^18.4.30319-beta.2.5+a2799c9d, PathWave License Manager:^7.4.1+efeba870 [962 ms]
+2025-11-19 21:21:31.452876 ; OpenTAP        ; Information ; Target installation is already up to date.
