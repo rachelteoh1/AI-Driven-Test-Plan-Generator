@@ -4,7 +4,6 @@ export const scanInstrument = ()=>{ return api.get(`/instruments/scan`);}
 
 export const selectInstrument = (instrument_id, session_id)=>{return api.post(`/instruments/select/${instrument_id}/${session_id}`)};
 
-
 export const updateSelectedInstrument = (id,message_id)=>{return api.post(`/instruments/update/${id}/${message_id}`)};
 
 export const getAllInstrument = ()=>{return api.get(`/instruments/all_instrument`)};

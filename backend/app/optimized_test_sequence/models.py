@@ -3,33 +3,26 @@ from pydantic import BaseModel
 from uuid import UUID
 from typing import List
 
-#data validation
-
-class ScpiCommandCreateRequest(BaseModel):
-    command_text: str
-    order_index: int
-
-class SequenceCreateRequest(BaseModel):
-    message_id: UUID   
-    commands: List[ScpiCommandCreateRequest]
-
-
-
-class ScpiCommandResponse(BaseModel):
-    command_id: UUID
-    command_text: str
-    order_index: int
-
-class SequenceResponse(BaseModel):
-    sequence_id: UUID
+# Request model for creating optimized sequences
+class OptimizedScpiCreateRequest(BaseModel):
     message_id: UUID
-    created_date: datetime
-    commands: List[ScpiCommandResponse]
+    optimized_scpi: str
+    order_sequence: int
+    type: str  # 'command' or 'query'
 
-class OptimizedSequenceResponse(BaseModel):
-    sequence_id: UUID
+class BulkOptimizedScpiCreateRequest(BaseModel):
     message_id: UUID
-    created_date: datetime
-    instrument: str
-    explanation: str
-    commands: List[ScpiCommandResponse]
+    scpi_commands: List[str]  # Parse from optimized sequence text
+
+# Response model
+class OptimizedScpiResponse(BaseModel):
+    id: UUID
+    message_id: UUID
+    optimized_scpi: str
+    order_sequence: int
+    type: str
+    created_at: datetime
+
+class OptimizedSequenceListResponse(BaseModel):
+    message_id: UUID
+    commands: List[OptimizedScpiResponse]

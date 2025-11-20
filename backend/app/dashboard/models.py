@@ -4,29 +4,33 @@ from typing import Optional, List
 from datetime import date
 
 
-class WeeklyTestPlanStat(BaseModel):
+class WeeklyScpiStat(BaseModel):
     week_start: date
-    test_plans_created: int
-    commands_generated: int
-    reduced_redundancy: int
+    week_end: date
+    scpi_generated: int
+
+class MonthlyScpiStat(BaseModel):
+    month_start: date
+    scpi_generated: int
+    scpi_explained: int
     
 class DashboardCreate(BaseModel):
     dashboard_id: UUID
     user_id: UUID
     total_test_plans: int
-    total_commands_generated: int
-    total_reduced_redundancy: int
-    most_used_device: Optional[str]
+    total_explanations: int
+    total_manuals_uploaded: int
     month: Optional[date]
     
 class DashboardResponse(BaseModel):
     dashboard_id: UUID
     user_id: UUID
     total_test_plans: int
-    total_commands_generated: int
-    total_reduced_redundancy: int
-    most_used_device: Optional[str]
+    total_explanations: int
+    total_manuals_uploaded: int
     month: Optional[date]
-    weekly_stats: List[WeeklyTestPlanStat]
+    weekly_stats: List[WeeklyScpiStat]
+    monthly_stats: List[MonthlyScpiStat]
+    
     class Config:
-        orm_mode = True 
+        orm_mode = True

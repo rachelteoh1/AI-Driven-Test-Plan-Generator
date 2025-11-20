@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from uuid import UUID, uuid4
-from app.dashboard.models import DashboardResponse, WeeklyTestPlanStat, DashboardCreate
+from app.dashboard.models import DashboardResponse, WeeklyScpiStat, MonthlyScpiStat, DashboardCreate
 from app.database import get_db
-from app.dashboard.service import calculate_dashboard_metrics, get_weekly_stats, create_dashboard
+from app.dashboard.service import calculate_dashboard_metrics, get_weekly_scpi_stats, get_monthly_scpi_stats, create_dashboard
 from app.entities.entities import Dashboard
 from ..auth.service import CurrentUser
-from datetime import date, timedelta
+from datetime import date
 
 router = APIRouter(
     prefix="/dashboard",
@@ -17,38 +17,44 @@ router = APIRouter(
 def get_user_dashboard(current_user: CurrentUser, db: Session = Depends(get_db)):
     user_id = current_user.get_uuid()
     today = date.today()
-    monday_this_week = today - timedelta(days=today.weekday())
-
-    # Simulate last 4 weeks
+    
+    metrics = calculate_dashboard_metrics(db, user_id)
+    weekly_stats_data = get_weekly_scpi_stats(db, user_id)
+    monthly_stats_data = get_monthly_scpi_stats(db, user_id)
+    
     weekly_stats = [
-        WeeklyTestPlanStat(
-            week_start=monday_this_week - timedelta(weeks=i),
-            test_plans_created=10 - i,
-            commands_generated=20 - i * 2,
-            reduced_redundancy=5 - i
+        WeeklyScpiStat(
+            week_start=stat["week_start"],
+            week_end=stat["week_end"],
+            scpi_generated=stat["scpi_generated"]
         )
-        for i in range(4)
+        for stat in weekly_stats_data
     ]
-
-    # Calculate total from weekly
-    total_reduced_redundancy = sum(stat.reduced_redundancy for stat in weekly_stats)
-
-    dummy_data = {
+    
+    monthly_stats = [
+        MonthlyScpiStat(
+            month_start=stat["month_start"],
+            scpi_generated=stat["scpi_generated"],
+            scpi_explained=stat["scpi_explained"]
+        )
+        for stat in monthly_stats_data
+    ]
+    
+    dashboard_data = {
         "dashboard_id": uuid4(),
         "user_id": user_id,
-        "total_test_plans": sum(stat.test_plans_created for stat in weekly_stats),
-        "total_commands_generated": sum(stat.commands_generated for stat in weekly_stats),
-        "total_reduced_redundancy": sum(stat.reduced_redundancy for stat in weekly_stats),
-        "most_used_device": "Keysight 34465A",
+        "total_test_plans": metrics["total_test_plans"],
+        "total_explanations": metrics["total_explanations"],
+        "total_manuals_uploaded": metrics["total_manuals_uploaded"],
         "month": today,
     }
-
-    # Check if user already has a dashboard record for this month
+    
     existing = db.query(Dashboard).filter_by(user_id=user_id, month=today.replace(day=1)).first()
     if not existing:
-        create_dashboard(db, DashboardCreate(**dummy_data))
-
+        create_dashboard(db, DashboardCreate(**dashboard_data))
+    
     return {
-        **dummy_data,
-        "weekly_stats": weekly_stats
+        **dashboard_data,
+        "weekly_stats": weekly_stats,
+        "monthly_stats": monthly_stats
     }

@@ -11,14 +11,18 @@ logger = logging.getLogger(__name__)
 
 def process_pdf_upload(db: Session, file: UploadFile):
     try:
+        file_bytes = file.file.read()
         # Extract instrument name(s) and SCPI commands from PDF
-        extracted_data = extract_scpi_from_pdf(file)
+        extracted_data = extract_scpi_from_pdf(file_bytes)
         instrument_name = extracted_data["instrument_name"]
         extracted_models = [m.lower() for m in instrument_name.split("_")]
         scpi_commands = extracted_data["scpi_commands"]
-
+        
         # Query all SelectedInstrument entries
         all_entries = db.query(SelectedInstrument).all()
+        
+        print("Extracted models:", extracted_models)
+        print("Database models:", [entry.model for entry in all_entries])
 
         # Find the entry whose model matches any extracted model
         matched_entry = None

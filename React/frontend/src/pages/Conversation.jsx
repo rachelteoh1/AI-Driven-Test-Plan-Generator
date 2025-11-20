@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import * as React from "react";
 import Button from "@mui/material/Button";
 import ScanInstrumentModal from "../modal/ScanInstrumentModal";
+import { useAllInstruments, useScanInstrument, useSelectInstrument, useDeleteInstrument, useDeleteAllInstrument } from "../hook/useInstrument";
 import useModal from "../modal/useModal";
 import {
   DropdownMenu,
@@ -46,6 +47,7 @@ import { useGetAllInstruments } from "../hook/usePdf";
 import ScanResultsModal from "../modal/ScantResultModal";
 import CrossedModal from "../modal/CrossedModal";
 import InstrumentNotFoundModal from "../modal/InstrumentNotFoundModal";
+import * as sequenceService from "../services/sequenceServices";
 
 // Animation
 const spin = keyframes`
@@ -247,7 +249,7 @@ const VersionHistoryIndicator = styled.div`
   align-items: center;
 `;
 
-export default function ChatInterface({ chat, onSendMessage, isLoading }) {
+export default function ChatInterface({ chat, onSendMessage, isLoading, onInstrumentChange }) {
   const [inputValue, setInputValue] = useState("");
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editContent, setEditContent] = useState("");
@@ -262,14 +264,15 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   const [ghostText, setGhostText] = useState("");
   const { showModal, hideModal } = useModal();
   const [isScanning, setIsScanning] = useState(false)
-  const [detectedInstruments, setDetectedInstruments] = useState([
-    { id: "1", name: "Oscilloscope", model: "DSOX3024T", address: "192.168.1.100" },
-    { id: "2", name: "Function Generator", model: "33500B", address: "192.168.1.101" },
-    { id: "3", name: "Multimeter", model: "34465A", address: "192.168.1.102" },
-    { id: "4", name: "Power Supply", model: "PZ2100A", address: "192.168.1.103" },
-  ])
+  const [selectedInstrument, setSelectedInstrument] = useState(null);
+  const [availableParameters, setAvailableParameters] = useState([]);
+  const [availableValues, setAvailableValues] = useState([]);
+  const [selectedParameter, setSelectedParameter] = useState(null);
+  const [selectedValue, setSelectedValue] = useState(null);
+  const [showParameterDropdown, setShowParameterDropdown] = useState(false);
+  const [showValueDropdown, setShowValueDropdown] = useState(false);
+  const [uploadingMessageId, setUploadingMessageId] = useState(null);
 
-  const [selectedInstrument, setSelectedInstrument] = useState(null)
 
   const {
     data: instrumentsData,
@@ -285,118 +288,138 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     scrollToBottom();
   }, [chat.messages, isLoading]);
 
+
   useEffect(() => {
-  if (!instrumentsData || instrumentsLoading || !selectedInstrument) return;
+    console.log("useEffect triggered", { instrumentsData, instrumentsLoading, selectedInstrument });
+    if (!selectedInstrument) return;
 
-  // Use the correct key for your instruments array
-  const instruments = instrumentsData.instruments || [];
-
-  const matchedInstrument = instruments.find((instrument) => {
-    if (!instrument.instrument_filename || !selectedInstrument.model) return false;
-    const names = instrument.instrument_filename
-      .split("_")
-      .map((n) => n.toLowerCase());
-    return names.includes(selectedInstrument.model.toLowerCase());
-  });
-
-  if (matchedInstrument && matchedInstrument.json_url_manual) {
-    fetch(matchedInstrument.json_url_manual)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Failed to fetch JSON: ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        console.log("Fetched SCPI JSON data:", data);
-        setScpiSuggestions(data);
-      })
-      .catch((err) => {
-        console.error("Error fetching SCPI JSON:", err);
+    // If selectedInstrument has a json_url_manual, fetch it directly
+    if (selectedInstrument.json_url_manual) {
+      fetch(selectedInstrument.json_url_manual)
+        .then((res) => {
+          if (!res.ok) throw new Error(`Failed to fetch JSON: ${res.status}`);
+          return res.json();
+        })
+        .then((data) => {
+          console.log("Fetched SCPI JSON data:", data);
+          setScpiSuggestions(data);
+        })
+        .catch((err) => {
+          console.error("Error fetching SCPI JSON:", err);
+        });
+    } else {
+      setScpiSuggestions([]);
+      showModal({
+        modal: <InstrumentNotFoundModal hideModal={hideModal} />
       });
-  } else {
-    setScpiSuggestions([]);    
-    showModal({
-      modal: <InstrumentNotFoundModal hideModal={hideModal} />
-    });
-    console.warn("Instrument not found. Upload a PDF to get started.");
-  }
-}, [instrumentsData, instrumentsLoading, selectedInstrument]);
+      console.warn("Instrument not found. Upload a PDF to get started.");
+    }
+  }, [instrumentsData, instrumentsLoading, selectedInstrument]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!isLoading && inputValue.trim()) {
-      onSendMessage(inputValue);
+      onSendMessage(inputValue, selectedInstrument?.id);
       setInputValue("");
+      // Clear all dropdown states after sending
+      setGhostText("");
+      setAvailableParameters([]);
+      setAvailableValues([]);
+      setShowParameterDropdown(false);
+      setShowValueDropdown(false);
+      setSelectedParameter(null);
+      setSelectedValue(null);
     }
   };
 
-  const [showScanResults, setShowScanResults] = useState(false);
 
-  const handleScanInstrument = async () => {
-    setIsScanning(true);
+  const { data: instrumentData = [], isLoading: isGettingAllInstrument } = useAllInstruments({
+    staleTime: 5 * 60 * 1000, // 5 mins
+    cacheTime: 10 * 60 * 1000,
+  });
 
-    setTimeout(() => {
+  const scanMutation = useScanInstrument();
+  const selectMutation = useSelectInstrument();
+  const deleteInstrumentMutation = useDeleteInstrument();
+  const deleteAllInstrumentMutation = useDeleteAllInstrument();
 
-      const data = [{ id: "1", name: "Oscilloscope", model: "DSOX3024T", address: "192.168.1.100" },
-      { id: "2", name: "Function Generator", model: "33500B", address: "192.168.1.101" },
-      { id: "3", name: "Multimeter", model: "34465A", address: "192.168.1.102" }, // try [ { id: 1, name: "Instrument A" } ] to test ScanResultModal
-      { id: "4", name: "Power Supply", model: "PZ2100A", address: "192.168.1.102" }]
-      if (data.length > 0) {
-        showModal({
-          modal: (
-            <ScanResultsModal
-              // results={data}
-              hideModal={hideModal}
-              // detectedInstruments={detectedInstruments}
-              detectedInstruments={data}
-              onSelectInstrument={setSelectedInstrument}
-              selectedInstrument={selectedInstrument}
-            />
-          ),
-        });
-      } else {
-        showModal({
-          modal: (
-            <CrossedModal
-              title="No instruments detected"
-              description="Make sure instrument is connected."
-              hideModal={hideModal}
-            />
-          ),
-        });
+  // console.log("Session_ID:", chat.session_id);
+
+
+  const handleScanInstrument = () => {
+    scanMutation.mutate(undefined, {
+      onSuccess: (scannedInstruments) => {
+        if (scannedInstruments.length > 0) {
+          showModal({
+            modal: (
+              <ScanResultsModal
+                hideModal={hideModal}
+                detectedInstruments={scannedInstruments}
+                onSelectInstrument={(instrument) => {
+                  console.log("Instrument passed to onSelectInstrument:", instrument);
+                  selectMutation.mutate({
+                    instrument_id: instrument.id,
+                    session_id: chat.session_id,
+                  }, {
+                    onSuccess: (response) => {
+                      setSelectedInstrument(response);
+                      if (onInstrumentChange) {
+                        onInstrumentChange(response);
+                      }
+                      hideModal();
+                    }
+                  });
+                }}
+                selectedInstrument={selectedInstrument}
+              />
+            ),
+          });
+        } else {
+          showModal({
+            modal: (
+              <CrossedModal
+                title="No instruments detected"
+                description="Make sure instrument is connected."
+                hideModal={hideModal}
+              />
+            ),
+          });
+        }
+      },
+    });
+  };
+  const handleSelectInstrument = async (instrument) => {
+    try {
+      const response = await selectMutation.mutateAsync({
+        instrument_id: instrument.id,
+        session_id: chat.session_id,
+      });
+      // Find the full instrument object from instrumentsData
+      const instruments = instrumentsData?.instruments || [];
+      const fullInstrument = instruments.find(inst => inst.id === response.id);
+
+      setSelectedInstrument(fullInstrument || response);
+
+      // Notify parent (Home.jsx) of the change
+      if (onInstrumentChange) {
+        onInstrumentChange(fullInstrument || response);
       }
-      setIsScanning(false);
-    }, 1000);
-  };
-
-
-
-
-
-  const handleSubmitInstrument = (e) => {
-    e.preventDefault()
-    if (inputValue.trim()) {
-      console.log("Submitting:", inputValue, "with instrument:", selectedInstrument)
-      setInputValue("")
+    } catch (err) {
+      console.error("Failed to select instrument:", err);
     }
-  }
-
-
-
-
-  const handleSelectInstrument = (instrument) => {
-    setSelectedInstrument(instrument)
-  }
+  };
 
   const handleDeleteInstrument = (instrumentId) => {
-    setDetectedInstruments((prev) => prev.filter((inst) => inst.id !== instrumentId))
     if (selectedInstrument?.id === instrumentId) {
-      setSelectedInstrument(null)
+      setSelectedInstrument(null);
     }
-  }
+    deleteInstrumentMutation.mutate({ instrument_id: instrumentId });
+  };
 
   const handleDeleteAllInstruments = () => {
-    setDetectedInstruments([])
-    setSelectedInstrument(null)
-  }
+    setSelectedInstrument(null);
+    deleteAllInstrumentMutation.mutate();
+  };
 
 
   const copyToClipboard = async (text, messageId) => {
@@ -468,77 +491,192 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
   };
 
   const handleInputChange = (value) => {
-    console.log("Input value:", value);
     setInputValue(value);
 
     if (!value.trim()) {
       setGhostText("");
+      setAvailableParameters([]);
+      setAvailableValues([]);
+      setShowParameterDropdown(false);
+      setShowValueDropdown(false);
       return;
     }
 
     const rawParts = value.split(" ");
-
-    // collapse trailing empties into one
     let parts = rawParts.filter((p, idx) => p !== "" || idx < rawParts.length - 1);
 
-    if (value.endsWith(" ")) {
-      if (parts[parts.length - 1] !== "") {
-        parts.push("");
-      }
+    if (value.endsWith(" ") && parts[parts.length - 1] !== "") {
+      parts.push(""); // placeholder for suggestion
     }
 
+    let node = scpiSuggestions;
+    let ghost = "";
 
-    const currentLevel = parts.length;
-    console.log("Parts:", parts);
-    console.log("Current level:", currentLevel);
+    const metaKeys = ["command", "description", "parameters", "values"];
 
-    if (currentLevel === 1) {
-      const matchingIntents = Object.keys(scpiSuggestions || {}).filter(
-        (intent) => intent.toLowerCase().startsWith(parts[0].toLowerCase())
-      );
-      setGhostText(matchingIntents[0]?.slice(parts[0].length) || "");
-    } else if (currentLevel === 2) {
-      const intent = parts[0];
-      if (scpiSuggestions?.[intent]) {
-        const matchingSubsystems = Object.keys(scpiSuggestions[intent] || {}).filter((subsystem) =>
-          subsystem.toLowerCase().startsWith(parts[1]?.toLowerCase() || "")
+    let i = 0;
+    for (; i < parts.length; i++) {
+      const part = parts[i];
+      if (!node || typeof node !== "object") break;
+
+      // ignore metadata keys
+      const keys = Object.keys(node).filter((k) => !metaKeys.includes(k));
+
+      // stop hierarchy traversal once parameters exist
+      if (node.parameters) break;
+
+      if (i < parts.length - 1 || part !== "") {
+        const match = keys.find((k) =>
+          k.toLowerCase().startsWith(part.toLowerCase())
         );
-        setGhostText(matchingSubsystems[0]?.slice(parts[1]?.length || 0) || "");
+        if (match) {
+          if (match.toLowerCase() !== part.toLowerCase()) {
+            ghost = match.slice(part.length);
+            setGhostText(ghost);
+            // Clear dropdowns when still in hierarchy traversal
+            setShowParameterDropdown(false);
+            setShowValueDropdown(false);
+            setAvailableParameters([]);
+            setAvailableValues([]);
+            return;
+          }
+          node = node[match]; // go deeper
+        } else {
+          // Clear everything if no match found
+          setShowParameterDropdown(false);
+          setShowValueDropdown(false);
+          setAvailableParameters([]);
+          setAvailableValues([]);
+          break;
+        }
       } else {
-        setGhostText("");
+        if (keys.length > 0) {
+          ghost = keys[0];
+          setGhostText(ghost);
+          // Clear dropdowns when showing hierarchy suggestions
+          setShowParameterDropdown(false);
+          setShowValueDropdown(false);
+          setAvailableParameters([]);
+          setAvailableValues([]);
+          return;
+        }
       }
     }
-    else if (currentLevel === 3) {
-      const [intent, subsystem] = parts;
-      if (scpiSuggestions?.[intent]?.[subsystem]) {
-        const matchingParameters =
-          scpiSuggestions[intent][subsystem]?.parameters
-            ?.map((param) => param.toLowerCase())
-            ?.filter((param) => param.startsWith(parts[2]?.toLowerCase() || ""));
-        setGhostText(matchingParameters?.[0]?.slice(parts[2]?.length || 0) || "");
-      } else {
-        setGhostText("");
+
+    if (node.parameters && Array.isArray(node.parameters) && node.parameters.length > 0) {
+      const currentPartIndex = i;
+      const typed = parts[currentPartIndex]?.toLowerCase() || "";
+
+      // Check if we have a complete parameter match and user pressed space
+      const hasCompleteMatch = node.parameters.some(p =>
+        p.toLowerCase() === typed.toLowerCase()
+      );
+
+      if (hasCompleteMatch) {
+        const selectedParam = node.parameters.find(p =>
+          p.toLowerCase() === typed.toLowerCase()
+        );
+
+        // Check if this parameter has values
+        const hasValues = node.values && node.values[selectedParam] && node.values[selectedParam].length > 0;
+
+        if (hasValues && parts.length > currentPartIndex + 1) {
+          // Parameter has values and user typed space, show values
+          const valueTyped = parts[currentPartIndex + 1]?.toLowerCase() || "";
+          const matchingValues = node.values[selectedParam].filter((v) =>
+            v.toLowerCase().startsWith(valueTyped)
+          );
+
+          setAvailableValues(matchingValues);
+          setSelectedParameter(selectedParam);
+          setShowParameterDropdown(false);
+          setShowValueDropdown(true);
+          setAvailableParameters([]);
+
+          // Set ghost text for values
+          if (matchingValues.length > 0 && valueTyped) {
+            const match = matchingValues[0];
+            if (match.toLowerCase() !== valueTyped) {
+              ghost = match.slice(valueTyped.length);
+              setGhostText(ghost);
+              return;
+            }
+          } else if (matchingValues.length > 0 && !valueTyped) {
+            ghost = matchingValues[0];
+            setGhostText(ghost);
+            return;
+          }
+        } else {
+          setShowParameterDropdown(false);
+          setShowValueDropdown(false);
+          setAvailableParameters([]);
+          setAvailableValues([]);
+          setSelectedParameter(null);
+          setGhostText("");
+          return;
+        }
       }
-    }
-    else if (currentLevel === 4) {
-      const [intent, subsystem, parameter] = parts;
-      if (scpiSuggestions?.[intent]?.[subsystem]?.values?.[parameter?.toLowerCase()]) {
-        const matchingValues =
-          scpiSuggestions[intent][subsystem].values[parameter.toLowerCase()]
-            ?.map((val) => val.toLowerCase())
-            ?.filter((val) => val.startsWith(parts[3]?.toLowerCase() || ""));
-        setGhostText(matchingValues?.[0]?.slice(parts[3]?.length || 0) || "");
-      } else {
-        setGhostText("");
+      else if (value.endsWith(" ") && parts[currentPartIndex] === "") {
+        setAvailableParameters(node.parameters);
+        setShowParameterDropdown(true);
+        setShowValueDropdown(false);
+        setAvailableValues([]);
+        setSelectedParameter(null);
+
+        // Set ghost text for first parameter
+        if (node.parameters.length > 0) {
+          ghost = node.parameters[0];
+          setGhostText(ghost);
+          return;
+        }
       }
+      // If user is typing parameter name (but hasn't pressed space yet)
+      else if (typed && !value.endsWith(" ")) {
+        const matchingParams = node.parameters.filter((p) =>
+          p.toLowerCase().startsWith(typed)
+        );
+
+        if (matchingParams.length > 0) {
+          setAvailableParameters(matchingParams);
+          setShowParameterDropdown(true);
+          setShowValueDropdown(false);
+          setAvailableValues([]);
+          setSelectedParameter(null);
+
+          // Set ghost text for first matching parameter
+          const match = matchingParams[0];
+          if (match.toLowerCase() !== typed) {
+            ghost = match.slice(typed.length);
+            setGhostText(ghost);
+            return;
+          }
+        } else {
+          // No matching parameters, clear dropdowns
+          setShowParameterDropdown(false);
+          setShowValueDropdown(false);
+          setAvailableParameters([]);
+          setAvailableValues([]);
+        }
+      }
+      else {
+        // Clear dropdowns if we're not in the right state
+        setShowParameterDropdown(false);
+        setShowValueDropdown(false);
+        setAvailableParameters([]);
+        setAvailableValues([]);
+      }
+    } else {
+      // Clear dropdowns if no parameters found
+      setShowParameterDropdown(false);
+      setShowValueDropdown(false);
+      setAvailableParameters([]);
+      setAvailableValues([]);
     }
-    else {
-      setGhostText("");
-    }
+
+    setGhostText(ghost);
   };
 
   const handleKeyDown = (e) => {
-    console.log("Key pressed:", e.key);
 
     if (e.key === " ") {
       e.preventDefault();
@@ -550,6 +688,71 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
     } else if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
+    }
+  };
+  const handleParameterSelect = (parameter) => {
+    setSelectedParameter(parameter);
+    setShowParameterDropdown(false);
+    setShowValueDropdown(true);
+
+    const words = inputValue.split(" ");
+    words[words.length - 1] = parameter;
+    const newValue = words.join(" ") + " ";
+    setInputValue(newValue);
+    handleInputChange(newValue);
+  };
+
+  const handleValueSelect = (value) => {
+    setSelectedValue(value);
+    setShowValueDropdown(false);
+    setShowParameterDropdown(false);
+    setAvailableParameters([]);
+    setAvailableValues([]);
+
+    const words = inputValue.split(" ");
+    words[words.length - 1] = value;
+    const newValue = words.join(" ");
+    setInputValue(newValue);
+    setGhostText("");
+  };
+
+  const onUpload = async (message) => {
+    try {
+      setUploadingMessageId(message.message_id);
+      const data = await sequenceService.getSequence(message.message_id);
+
+      if (!data) {
+        alert("No optimized sequence found for this message.");
+        return;
+      }
+      const scpiCommands = data.commands
+        .sort((a, b) => a.order_sequence - b.order_sequence)
+        .map(cmd => ({
+          command: cmd.optimized_scpi,
+          type: cmd.type,
+          order: cmd.order_sequence
+        }));
+
+      const payload = {
+        commands: scpiCommands
+      };
+
+      console.log("Sending to PTEM:", payload);
+
+      // Send to PTEM via WebView2
+      if (window.chrome?.webview) {
+        window.chrome.webview.postMessage(JSON.stringify(payload));
+        alert(`Successfully loaded ${scpiCommands.length} SCPI commands to PTEM!`);
+      } else {
+        console.warn("WebView2 not available. Would send:", payload);
+        alert("PTEM integration not available in browser mode.");
+      }
+
+    } catch (error) {
+      console.error("Failed to upload to PTEM:", error);
+      alert(`Failed to upload: ${error.message}`);
+    } finally {
+      setUploadingMessageId(null);
     }
   };
 
@@ -592,7 +795,8 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
               onBackToCurrent={handleBackToCurrent}
               getMessageContent={getMessageContent}
               copiedMessageId={copiedMessageId}
-
+              onUpload={onUpload}
+              isUploading={uploadingMessageId === message.message_id}
             />
           ))}
 
@@ -610,12 +814,19 @@ export default function ChatInterface({ chat, onSendMessage, isLoading }) {
           onKeyDown={handleKeyDown}
           onScan={handleScanInstrument}
           selectedInstrument={selectedInstrument}
-          detectedInstruments={detectedInstruments}
           handleDeleteAllInstruments={handleDeleteAllInstruments}
           handleDeleteInstrument={handleDeleteInstrument}
           handleSelectInstrument={handleSelectInstrument}
           isScanning={isScanning}
-          handleSubmitInstrument={handleSubmitInstrument}
+          instrumentData={instrumentData}
+          availableParameters={availableParameters}
+          availableValues={availableValues}
+          selectedParameter={selectedParameter}
+          selectedValue={selectedValue}
+          onParameterSelect={handleParameterSelect}
+          onValueSelect={handleValueSelect}
+          showParameterDropdown={showParameterDropdown}
+          showValueDropdown={showValueDropdown}
 
         />
       </InputArea>
@@ -682,7 +893,9 @@ function Message({
   onBackToCurrent,
   getMessageContent,
   copiedMessageId,
-  onScan
+  onScan,
+  onUpload,
+  isUploading,
 }) {
   return message.role === "user" ? (
     <UserMessage
@@ -714,6 +927,8 @@ function Message({
       onViewVersion={onViewVersion}
       onBackToCurrent={onBackToCurrent}
       getMessageContent={getMessageContent}
+      onUpload={onUpload}
+      isUploading={isUploading}
     />
   );
 }
@@ -853,6 +1068,7 @@ function BotMessage({
   onCopy,
   onStar,
   onUpload,
+  isUploading,
   isStarred,
   versions,
   copiedMessageId = { copiedMessageId },
@@ -863,7 +1079,7 @@ function BotMessage({
   getMessageContent,
 }) {
   const messageContent = getMessageContent(message);
-
+  const hasOptimization = message.has_optimization;
   return (
     <BotMessageContainer>
       <BotMessageContent>{messageContent}</BotMessageContent>
@@ -895,17 +1111,21 @@ function BotMessage({
               <p>Copy message</p>
             </TooltipContent>
           </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <ActionButton onClick={() => onUpload(messageContent)}>
-                <Upload size={16} />
-              </ActionButton>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Save response</p>
-            </TooltipContent>
-          </Tooltip>
-
+          {hasOptimization && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <ActionButton
+                  onClick={() => onUpload(message)}
+                  disabled={isUploading}
+                >
+                  {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                </ActionButton>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Load to PTEM</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
           {versions.length > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -949,10 +1169,20 @@ function MessageInput({
   ghostText,
   onKeyDown,
   onScan,
-  handleSubmitInstrument,
-  selectedInstrument, detectedInstruments, handleDeleteAllInstruments, handleDeleteInstrument, handleSelectInstrument, isScanning
-
-
+  selectedInstrument,
+  handleDeleteAllInstruments,
+  handleDeleteInstrument,
+  handleSelectInstrument,
+  isScanning,
+  instrumentData,
+  availableParameters,
+  availableValues,
+  selectedParameter,
+  selectedValue,
+  onParameterSelect,
+  onValueSelect,
+  showParameterDropdown,
+  showValueDropdown,
 }) {
   const textareaRef = useRef(null);
 
@@ -964,13 +1194,11 @@ function MessageInput({
   }, [value]);
 
   return (
-    <>
-      <div style={{ display: "flex", alignItems: "center" }}>
-
+    <MessageForm onSubmit={onSubmit}>
+      <div style={{ display: "flex", alignItems: "center", position: "relative" }}>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-
               <ScanInstrumentButton
                 type="button"
                 size="icon"
@@ -987,14 +1215,15 @@ function MessageInput({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <div>
-              <Button variant="outline" className="shrink-0  bg-white ">
+              <Button variant="outline" className="shrink-0 bg-white">
                 {selectedInstrument ? (
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="text-xs">
-                      {selectedInstrument.name}
+                      {selectedInstrument.model}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
                       {selectedInstrument.model}
@@ -1009,31 +1238,34 @@ function MessageInput({
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="start" className="w-80 bg-white shadow-md">
-            {detectedInstruments.length === 0 ? (
+            {!Array.isArray(instrumentData) || instrumentData.length === 0 ? (
               <DropdownMenuItem disabled>No instruments detected</DropdownMenuItem>
             ) : (
               <>
-                {Array.isArray(detectedInstruments) &&
-                  detectedInstruments.map((instrument) => (
+                {Array.isArray(instrumentData) &&
+                  instrumentData.map((instrument) => (
                     <DropdownMenuItem
                       key={instrument.id}
                       className="flex items-center justify-between p-3"
                     >
                       <div
                         className="flex-1 cursor-pointer"
-                        onClick={() => handleSelectInstrument(instrument)}
+                        onClick={() => {
+                          console.log("Instrument to select:", instrument);
+                          handleSelectInstrument(instrument);
+                        }}
                       >
-                        <div className="font-medium">{instrument.name}</div>
+                        <div className="font-medium">{instrument.model}</div>
                         <div className="text-sm text-muted-foreground">
-                          {instrument.model} • {instrument.address}
+                          {instrument.model} • {instrument.resource_string}
                         </div>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={(e) => {
-                          e.stopPropagation()
-                          handleDeleteInstrument(instrument.id)
+                          e.stopPropagation();
+                          handleDeleteInstrument(instrument.id);
                         }}
                         className="ml-2 h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
                       >
@@ -1055,7 +1287,110 @@ function MessageInput({
             )}
           </DropdownMenuContent>
         </DropdownMenu>
-        <TextAreaWrapper style={{ position: "relative" }}>
+
+        <TextAreaWrapper style={{ position: "relative", flex: 1 }}>
+          {/* Parameter Selection Dropdown */}
+          {availableParameters.length > 0 && (
+            <div style={{
+              position: 'absolute',
+              bottom: '100%',
+              left: 0,
+              right: 0,
+              backgroundColor: 'white',
+              border: '1px solid #ccc',
+              borderRadius: '8px',
+              maxHeight: '200px',
+              overflowY: 'auto',
+              zIndex: 1000,
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              marginBottom: '8px'
+            }}>
+              <div style={{
+                padding: '8px',
+                fontWeight: 'bold',
+                borderBottom: '1px solid #eee',
+                backgroundColor: '#f8f9fa',
+                color: '#333'
+              }}>
+                Available Parameters ({availableParameters.length})
+              </div>
+              {availableParameters.map((param, index) => (
+                <div
+                  key={index}
+                  style={{
+                    padding: '8px 12px',
+                    cursor: 'pointer',
+                    backgroundColor: selectedParameter === param ? '#e3f2fd' : 'transparent',
+                    color: '#333',
+                    borderBottom: index < availableParameters.length - 1 ? '1px solid #f0f0f0' : 'none'
+                  }}
+                  onClick={() => onParameterSelect(param)}
+                  onMouseEnter={(e) => {
+                    if (selectedParameter !== param) {
+                      e.target.style.backgroundColor = '#f5f5f5';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = selectedParameter === param ? '#e3f2fd' : 'transparent';
+                  }}
+                >
+                  {param}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Value Selection Dropdown */}
+          {availableValues.length > 0 && selectedParameter && (
+            <div style={{
+              position: 'absolute',
+              bottom: '100%',
+              left: 0,
+              right: 0,
+              backgroundColor: 'white',
+              border: '1px solid #ccc',
+              borderRadius: '8px',
+              maxHeight: '200px',
+              overflowY: 'auto',
+              zIndex: 1001,
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              marginBottom: '8px'
+            }}>
+              <div style={{
+                padding: '8px',
+                fontWeight: 'bold',
+                borderBottom: '1px solid #eee',
+                backgroundColor: '#e8f5e8',
+                color: '#333'
+              }}>
+                Values for "{selectedParameter}" ({availableValues.length})
+              </div>
+              {availableValues.map((value, index) => (
+                <div
+                  key={index}
+                  style={{
+                    padding: '8px 12px',
+                    cursor: 'pointer',
+                    backgroundColor: selectedValue === value ? '#e8f5e8' : 'transparent',
+                    color: '#333',
+                    borderBottom: index < availableValues.length - 1 ? '1px solid #f0f0f0' : 'none'
+                  }}
+                  onClick={() => onValueSelect(value)}
+                  onMouseEnter={(e) => {
+                    if (selectedValue !== value) {
+                      e.target.style.backgroundColor = '#f5f5f5';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = selectedValue === value ? '#e8f5e8' : 'transparent';
+                  }}
+                >
+                  {value}
+                </div>
+              ))}
+            </div>
+          )}
+
           <MessageTextArea
             ref={textareaRef}
             value={value}
@@ -1082,16 +1417,6 @@ function MessageInput({
           </SubmitButton>
         </TextAreaWrapper>
       </div>
-
-      {selectedInstrument && (
-        <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Selected:</span>
-          <Badge variant="outline">
-            {selectedInstrument.name} ({selectedInstrument.model})
-          </Badge>
-        </div>
-      )}
-
-    </>
+    </MessageForm>
   );
 }

@@ -10,6 +10,7 @@ from typing import List
 router = APIRouter(prefix="/instruments", tags=["instruments"])
 
 class InstrumentInfo(BaseModel):
+    id: UUID | None = None
     resource_string: str
     idn: str | None = None
     manufacturer: str | None = None
@@ -44,7 +45,8 @@ class AllInstrumentResponse(BaseModel):
     model: str | None = None
     serial: str | None = None
     firmware: str | None = None
-    json_url_manual: str | None = None  # Add this field
+    instrument_filename: str | None = None
+    json_url_manual: str | None = None
    
    
    
@@ -60,7 +62,7 @@ def select_instrument(instrument_id:UUID, session_id:UUID, db: DbSession):
     return service.save_selected_instrument(db, instrument_id, session_id)
 
 #update chatlog id
-@router.post("/update/{id}/{message_id}")
+@router.post("/update/{selected_id}/{message_id}")
 def update_instrument(selected_id:UUID,message_id:UUID, db: DbSession):
     return service.update_selected_instrument(db, selected_id,message_id)
 

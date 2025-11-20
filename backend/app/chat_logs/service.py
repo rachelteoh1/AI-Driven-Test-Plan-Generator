@@ -7,11 +7,15 @@ from ..entities.entities import ChatLog, ChatLogVersion
 import logging
 from ..exceptions import (
     InternalServerError)
-from .models import LogCreate, LogResponse
+from .models import LogCreate, LogResponse, InstrumentResponse
 from ..utils.intent_classifier import classify_intent_ml
 from ..utils.nlp_utils import preprocess_input
 from ..exceptions import ChatCreationError, ChatNotFoundError,ChatRenameError
 from ..pdf_import.utils.suggest_intent import extract_scpi_from_pdf
+from ..instrument import service
+import requests
+import json
+from ..optimized_test_sequence import service as opt_service
 
 logger = logging.getLogger(__name__)
 
@@ -132,46 +136,119 @@ def get_chat_log_by_user(db: Session, session_id):
     try:
         logs = db.query(ChatLog).filter_by(session_id=session_id, is_active=True).order_by(ChatLog.timestamp).all()
         logger.info(f"Retrieved {len(logs)} chat logs for session: {session_id}")
-        return logs
+        
+        enhanced_logs = []
+        for log in logs:
+            # Check if this message has optimization
+            has_opt = opt_service.has_optimized_sequence(db, log.message_id) if log.role == "llm_response" else False
+            
+            # Convert to dict and add has_optimization
+            log_dict = {
+                "message_id": log.message_id,
+                "session_id": log.session_id,
+                "role": log.role,
+                "content": log.content,
+                "timestamp": log.timestamp,
+                "has_been_modified": log.has_been_modified,
+                "has_optimization": has_opt,
+                "parent_id": log.parent_id
+            }
+            enhanced_logs.append(log_dict)
+        
+        return enhanced_logs
     except Exception as e:
         logger.error(f"Failed to get chat logs for session {session_id}: {str(e)}")
         raise InternalServerError(str(e))
 
+
+MISTRAL_API_URL = "https://cofinal-semierectly-mignon.ngrok-free.dev/generate"
+
+
 def detect_intent(db: Session, request: LogCreate) -> LogResponse:
     try:
         logger.info(f"Detecting intent for session: {request.session_id}")
-        lemmatised, scpi_cmds ,conditions,targets = preprocess_input(request.content)
-        intent = classify_intent_ml(lemmatised)
 
-        if intent == "unknown":
-            response_text = "Sorry, we could not identify your intent, please type in your request again."
-            
-        elif intent =="generate_scpi":
-         response_text = (
-            f"Intent: {intent}\n"
-            f"SCPI Commands: {', '.join(scpi_cmds) or 'None,please specify the SCPI command if available.'}\n"
-            f"Conditions: {', '.join(conditions) or 'None, please specify the confition if available.'}\n"
-            f"Target: {', '.join(targets) or 'None, please specify your testing target.'}"
-         )
-
+        # --- Step 1: Retrieve the selected instrument(s) for this session ---
+        instruments = service.get_selected_instruments(db, request.session_id)
+        if instruments:
+            selected_instrument = instruments[-1]
+            instrument_prefix = f"Keysight {selected_instrument.model}: "
         else:
-         response_text = (
-            f"Intent: {intent}\n"
-            f"SCPI Commands: {', '.join(scpi_cmds) or 'None,please specify the SCPI command.'}\n"
-         )
+            selected_instrument = None
+            instrument_prefix = ""
 
+        # --- Step 2: Construct full user message ---
+        user_msg = f"{instrument_prefix}{request.content.strip()}"
+        logger.info(f"Constructed user message: {user_msg}")
+
+        # --- Step 3: Send message to Flask API ---
+        payload = {
+            "prompt": user_msg,
+            "max_tokens": 512,
+            "temperature": 0.2
+        }
+        response = requests.post(MISTRAL_API_URL, json=payload, timeout=120)
+
+        if response.status_code != 200:
+            logger.error(f"Flask API Error: {response.text}")
+            raise Exception(f"Flask API returned {response.status_code}")
+
+        data = response.json()
+        logger.info(f"Flask API response: {json.dumps(data, indent=2)}")
+
+        # --- Step 4: Extract response directly from Flask ---
+        formatted_output = data.get("response", "")
+        opt_sequence = data.get("opt_sequence", "")
+        is_explanation = data.get("is_explanation", False)
+        
+        if not formatted_output:
+            raise Exception("Flask API returned empty response")
+
+        logger.info(f"Formatted output length: {len(formatted_output)}")
+        logger.info(f"Is explanation: {is_explanation}")
+        logger.info(f"Optimized sequence: {opt_sequence}")
+
+        # --- Step 5: Save chat log ---
         new_log = LogCreate(
             session_id=request.session_id,
             role="llm_response",
-            content=response_text,
+            content=formatted_output,
+        )
+        saved_log = create_chat_log(db, new_log)
+
+        # --- Step 6: Save optimized sequence ONLY if NOT explanation ---
+        if not is_explanation and opt_sequence and opt_sequence.strip():
+            try:
+                opt_service.save_optimized_sequence(db, saved_log.message_id, opt_sequence)
+                logger.info(f"Saved optimized sequence for message {saved_log.message_id}")
+            except Exception as e:
+                logger.exception(f"Failed to save optimized sequence: {str(e)}")
+        elif is_explanation:
+            logger.info(f"Skipping optimization save - this is an explanation response")
+        else:
+            logger.info(f"Skipping optimization save - empty sequence")
+
+        has_optimization = opt_service.has_optimized_sequence(db, saved_log.message_id)
+        
+        # --- Step 7: Build LogResponse object ---
+        log_response = LogResponse(
+            message_id=saved_log.message_id,
+            session_id=saved_log.session_id,
+            role=saved_log.role,
+            content=saved_log.content,
+            timestamp=saved_log.timestamp,
+            has_been_modified=saved_log.has_been_modified,
+            has_optimization=has_optimization,
+            selected_instrument=InstrumentResponse(
+                manufacturer=selected_instrument.manufacturer,
+                model=selected_instrument.model,
+                serial=selected_instrument.serial,
+            ) if selected_instrument else None,
         )
 
-        saved_log = create_chat_log(db, new_log)
-        logger.info(f"Logged LLM response in session {request.session_id}")
-
-        return saved_log
+        logger.info(f"Returning LogResponse")
+        return log_response
 
     except Exception as e:
         logger.exception("Intent detection failed")
-        raise HTTPException(status_code=500, detail="Failed to detect intent, please enter your request again")
-
+        raise HTTPException(status_code=500, detail=f"Failed to detect intent: {str(e)}")

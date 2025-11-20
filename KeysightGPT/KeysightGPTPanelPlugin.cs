@@ -1,8 +1,8 @@
 ﻿using OpenTap;
 using Keysight.OpenTap.Wpf;
-using System.Windows;              // FrameworkElement
+using System.Windows;
 
-[assembly: Display("KeysightGPT Panel", Group: "KeysightGPT", Description: "Custom UI Panel")]
+[assembly: Display("KeysightGPT Panel", Group: "KeysightGPT")]
 
 namespace KeysightGPT
 {
@@ -10,19 +10,14 @@ namespace KeysightGPT
     public class KeysightGPTPanelPlugin : ITapDockMultiPanel
     {
         public string Title => "KeysightGPT Panel";
+        public double? DesiredWidth => null;
+        public double? DesiredHeight => null;
 
-        // nullable doubles, per ITapDockPanel definition
-        public double? DesiredWidth => null;   // null = auto-size
-        public double? DesiredHeight => null;  // null = auto-size
-
-        public void Dispose()
-        {
-            // cleanup if needed
-        }
+        public void Dispose() { }
 
         public FrameworkElement CreateElement(ITapDockContext context)
         {
-            return new KeysightGPTPanel(); // Your custom WPF panel
+            return new KeysightGPTPanel(context); // no arguments
         }
     }
 }

@@ -2,7 +2,7 @@ import { SidebarProvider } from "../components/ui/sidebar";
 import { AppSidebar } from "../components/app-sidebar";
 import { Header } from "../components/header";
 import ChatInterface from "./Conversation";
-import { useState, useEffect, useContext,useRef } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import styled, { ThemeProvider } from "styled-components";
 import { FONTSIZE, FONTWEIGHT, SPACING } from "../lib/styles";
 import {
@@ -14,6 +14,7 @@ import {
   useDetectIntent,
 } from "../hook/useChat";
 import UserStatusContext from "../lib/UserStatusContext";
+import { useUpdateSelectedInstrument } from "../hook/useInstrument";
 
 // Styled components
 const PageContainer = styled.div`
@@ -114,23 +115,35 @@ const ExampleButton = styled.button`
   }
 `;
 
-export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => {
-  const { user, isLoading} = useContext(UserStatusContext); 
+export const Home = ({
+  chats,
+  activeChatId,
+  setActiveChatId,
+  isChatsLoading,
+}) => {
+  const { user, isLoading } = useContext(UserStatusContext);
   const { data: activeChatLogs = [] } = useChatLogs(activeChatId);
   const newChatMutation = useNewChat();
   const renameChatMutation = useRenameChat();
   const deleteChatMutation = useDeleteChat();
   const addChatLogMutation = useAddChatLog();
-  const detectIntentMutation  = useDetectIntent();
+  const detectIntentMutation = useDetectIntent();
   const hasCreatedChatRef = useRef(false); //prevent duplicate call
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
+  const updateMessageIdInstrumentMutation = useUpdateSelectedInstrument();
   const handlePdfUploadSuccess = () => {
-    setRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger((prev) => prev + 1);
   };
+  const [selectedInstrument, setSelectedInstrument] = useState(null);
 
   useEffect(() => {
-    if (!isChatsLoading && !isLoading && user && chats.length === 0 && !hasCreatedChatRef.current) {
+    if (
+      !isChatsLoading &&
+      !isLoading &&
+      user &&
+      chats.length === 0 &&
+      !hasCreatedChatRef.current
+    ) {
       console.log(isChatsLoading);
       hasCreatedChatRef.current = true;
       handleNewChat();
@@ -139,7 +152,7 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
 
   const handleNewChat = async () => {
     try {
-      const loginSessionId = localStorage.getItem('login_session_id');
+      const loginSessionId = localStorage.getItem("login_session_id");
       const newSession = await newChatMutation.mutateAsync({
         id: user.id,
         title: `Chat ${chats.length + 1}`,
@@ -154,7 +167,6 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
   const handleSelectChat = (id) => {
     setActiveChatId(id);
   };
-
 
   const handleRenameChat = async (session_id, newName) => {
     try {
@@ -186,31 +198,44 @@ export const Home = ({chats, activeChatId, setActiveChatId, isChatsLoading}) => 
   };
   const [isReplyLoading, setIsReplyLoading] = useState(false);
 
-const handleSendMessage = async (message) => {
-  console.log("handleSendMessage called with:", { message });
-  setIsReplyLoading(true);
-  try {
-    if (message) {
-      // Handle text message
-      await addChatLogMutation.mutateAsync({
-        session_id: activeChatId,
-        role: "user",
-        content: message,
-      });
+  const handleSendMessage = async (message, selectedInstrumentId) => {
+    console.log("handleSendMessage called with:", { message });
+    setIsReplyLoading(true);
+    try {
+      let response = null;
+      if (message) {
+        // Handle text message
+        await addChatLogMutation.mutateAsync({
+          session_id: activeChatId,
+          role: "user",
+          content: message,
+        });
 
-      console.log("Sending LLM response via detectIntent...");
-      await detectIntentMutation.mutateAsync({
-        session_id: activeChatId,
-        role: "user",
-        content: message,
-      });
+        console.log("Sending LLM response via detectIntent...");
+        response = await detectIntentMutation.mutateAsync({
+          session_id: activeChatId,
+          role: "user",
+          content: message,
+        });
+
+        console.log("Detect intent response:", response);
+
+        // 3. Update selected instrument with new message_id
+        if (selectedInstrumentId && response?.message_id) {
+          updateMessageIdInstrumentMutation.mutate({
+            id: selectedInstrumentId,
+            message_id: response.message_id,
+          });
+        }
+      }
+
+     
+    } catch (err) {
+      console.error("Message submission failed:", err);
+    } finally {
+      setIsReplyLoading(false);
     }
-  } catch (err) {
-    console.error("Message submission failed:", err);
-  } finally {
-    setIsReplyLoading(false);
-  }
-};
+  };
 
   const activeChat = chats.find((chat) => chat.session_id === activeChatId);
   const hasConversation = activeChatLogs.length > 0;
@@ -234,6 +259,7 @@ const handleSendMessage = async (message) => {
             onDeleteChat={handleDeleteChat}
             isChatsLoading={isChatsLoading}
             onPdfUploadSuccess={handlePdfUploadSuccess}
+            selectedInstrument={selectedInstrument}
           />
           <MainContent>
             <HeaderWrapper>
@@ -268,6 +294,7 @@ const handleSendMessage = async (message) => {
                 }}
                 onSendMessage={handleSendMessage}
                 isLoading={isReplyLoading}
+                onInstrumentChange={setSelectedInstrument}
               />
             </ChatWrapper>
           </MainContent>
