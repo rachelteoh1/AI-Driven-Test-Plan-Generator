@@ -58,7 +58,7 @@ export default function InstrumentNotFoundModal({ hideModal }) {
         <CloseButton onClick={hideModal}>
           <X className="h-5 w-5" />
         </CloseButton>
-        <Title>Instrument Not Found</Title>
+        <Title>Manual not uploaded.</Title>
         <Message>
           Import a user manual to get started.
         </Message>

@@ -343,7 +343,7 @@ export function Profile() {
             </SwitchWrapper>
           </ToggleRow>
 
-          <ToggleRow>
+          {/* <ToggleRow>
             <StyledLabel>Auto Save Test History</StyledLabel>
             <SwitchWrapper>
               <input
@@ -358,7 +358,7 @@ export function Profile() {
                 <SwitchThumb $active={autoSave} />
               </label>
             </SwitchWrapper>
-          </ToggleRow>
+          </ToggleRow> */}
         </ToggleWrapper>
         <SaveButtonWrapper>
           <StyledButton
