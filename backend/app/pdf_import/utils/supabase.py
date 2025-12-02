@@ -42,3 +42,20 @@ def upload_to_supabase(bucket_name: str, json_data: list, file_name: str) -> str
     except Exception as e:
         raise Exception(f"Error uploading JSON to Supabase: {str(e)}")
 
+def delete_from_supabase(bucket_name: str, file_name: str) -> bool:
+    """Delete a file from Supabase Storage."""
+    try:
+        response = supabase.storage.from_(bucket_name).remove([file_name])
+        return True
+        
+    except Exception as e:
+        raise
+
+
+def file_exists_in_supabase(bucket_name: str, file_name: str) -> bool:
+    """Check if a file exists in Supabase Storage."""
+    try:
+        files = supabase.storage.from_(bucket_name).list()
+        return any(f['name'] == file_name for f in files)
+    except Exception as e:
+        return False

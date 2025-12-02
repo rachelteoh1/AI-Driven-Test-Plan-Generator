@@ -12,7 +12,7 @@
 
 # How to run app. Using Docker with PostgreSQL.
 - Install Docker Desktop
-- Run `docker compose up --build`
+- Run `docker compose up -d --build`
 - Run `docker compose down` to stop all services
 
 # How to run locally without postgres or docker.

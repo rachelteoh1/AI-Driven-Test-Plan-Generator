@@ -12,6 +12,7 @@ from ..exceptions import ChatCreationError, ChatNotFoundError,ChatRenameError
 from ..entities.entities import DetectedInstrument,SelectedInstrument
 import pyvisa
 from sqlalchemy.exc import SQLAlchemyError
+from ..pdf_import.utils.supabase import delete_from_supabase
 
 logger = logging.getLogger(__name__)
 
@@ -84,8 +85,6 @@ def update_selected_instrument(db: Session, selected_id: UUID, message_id: UUID)
         db.rollback()
         logger.error(f"Error updating selected instrument: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to update selected instrument")
-
-
 
 
 # --- Get all selected instruments for session ---
@@ -254,6 +253,27 @@ def delete_detected_instrument(db: Session, instrument_id: UUID):
         if not instrument:
             logger.warning(f"Instrument {instrument_id} not found for deletion")
             return False
+        
+        selected_instruments = db.query(SelectedInstrument).filter_by(
+            instrument_id=instrument_id
+        ).all()
+        
+        logger.info(f"Found {len(selected_instruments)} selected instruments to delete")
+        
+        # Delete Supabase files for each selected instrument
+        bucket_name = "scpi-json"
+        for selected in selected_instruments:
+            if selected.instrument_filename:
+                try:
+                    delete_from_supabase(bucket_name, selected.instrument_filename)
+                    logger.info(f"Deleted Supabase file: {selected.instrument_filename}")
+                except Exception as e:
+                    logger.warning(f"Failed to delete Supabase file {selected.instrument_filename}: {e}")
+            
+            # Delete the selected instrument record
+            db.delete(selected)
+            logger.info(f"Deleted selected instrument: {selected.id}")
+        
         db.delete(instrument)
         db.commit()
         logger.info(f"Instrument {instrument_id} deleted")
@@ -266,8 +286,19 @@ def delete_detected_instrument(db: Session, instrument_id: UUID):
 def delete_all_detected_instruments(db: Session):
     try:
         count = db.query(DetectedInstrument).delete()
+        all_selected = db.query(SelectedInstrument).all()
+        selected_count = db.query(SelectedInstrument).delete()
+        bucket_name = "scpi-json"
+        for selected in all_selected:
+            if selected.instrument_filename:
+                try:
+                    delete_from_supabase(bucket_name, selected.instrument_filename)
+                    logger.info(f"Deleted Supabase file: {selected.instrument_filename}")
+                except Exception as e:
+                    logger.warning(f"Failed to delete Supabase file {selected.instrument_filename}: {e}")
+                    
         db.commit()
-        logger.info(f"Deleted {count} detected instruments")
+        logger.info(f"Deleted {count} detected instruments, {selected_count} selected instruments")
         return count
     except Exception as e:
         logger.error(f"Failed to delete all detected instruments: {e}")

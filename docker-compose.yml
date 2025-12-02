@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+
+  # FastAPI Backend
+  backend:
+    build: 
+      context: ./backend 
+      dockerfile: Dockerfile
+    container_name: keysight_backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Database
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@192.168.100.183:5432/${DB_NAME}
+      
+      # Security
+      SECRET_KEY: ${SECRET_KEY}
+      RESET_SECRET_KEY: ${RESET_SECRET_KEY}
+      
+      # EmailJS
+      EMAILJS_SERVICE_ID: ${EMAILJS_SERVICE_ID}
+      EMAILJS_TEMPLATE_ID: ${EMAILJS_TEMPLATE_ID}
+      EMAILJS_PUBLIC_KEY: ${EMAILJS_PUBLIC_KEY}
+      EMAILJS_PRIVATE_KEY: ${EMAILJS_PRIVATE_KEY}
+      
+      # Supabase
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_KEY: ${SUPABASE_KEY}
+      SUPABASE_BUCKET: ${SUPABASE_BUCKET}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      
+      # APIs
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      HELICONE_API_KEY: ${HELICONE_API_KEY}
+      MISTRAL_API_URL: ${MISTRAL_API_URL}
+      
+      # Environment
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - ./backend:/app
+      - backend_logs:/app/logs
+    networks:
+      - keysight_network
+    restart: unless-stopped
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./React/frontend
+      dockerfile: Dockerfile
+    container_name: keysight_frontend
+    environment:
+      REACT_APP_API_URL: ${REACT_APP_API_URL}
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+      NODE_ENV: ${NODE_ENV}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./React/frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - keysight_network
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+volumes:
+  backend_logs:
+    driver: local
+
+networks:
+  keysight_network:
+    driver: bridge
