@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Optional
 
+from typing import Optional
+
 #pydantic modal for data validation purposes
 
 class LogCreate(BaseModel):  #save message
