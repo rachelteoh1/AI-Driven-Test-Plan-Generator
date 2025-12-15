@@ -8,13 +8,17 @@ import { CheckCircle2, Wifi, X } from "lucide-react";
 import { COLORS } from "../lib/styles";
 
 const ModalWrapper = styled.div`
-  background-color: ${({ theme }) => theme.background};
+  position: fixed;
+  inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  position: fixed;
-  inset: 0;
   z-index: 50;
+
+  /* Semi-transparent background with blur effect */
+  background-color: rgba(255, 255, 255, 0.2); /* adjust transparency */
+  backdrop-filter: blur(8px); /* blur strength */
+  -webkit-backdrop-filter: blur(8px); /* for Safari */
 `;
 
 const CenteredDiv = styled.div`
