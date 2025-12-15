@@ -110,56 +110,56 @@ def get_all_instrument(db: Session):
         logger.error(f"Error retrieving all instrument: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to retrieve all instrument")
     
-SIMULATED_INSTRUMENTS = [
-    {
-        "resource": "USB0::0x2A8D::00000001::INSTR",
-        "idn": "Keysight Technologies,33500B,MY00000001,5.0.0.0",
-        "manufacturer": "Keysight Technologies",
-        "model": "33500B",
-        "serial": "MY00000001",
-        "firmware": "5.0.0.0",
-    },
-    {
-        "resource": "USB0::0x2A8D::00000002::INSTR",
-        "idn": "Keysight Technologies,N6705B,MY00000002,1.1.0",
-        "manufacturer": "Keysight Technologies",
-        "model": "N6705B",
-        "serial": "MY00000002",
-        "firmware": "1.1.0",
-    },
-    {
-        "resource": "USB0::0x2A8D::00000003::INSTR",
-        "idn": "Keysight Technologies,MSOX3034T,MY00000003,02.41.2017042600",
-        "manufacturer": "Keysight Technologies",
-        "model": "MSOX3034T",
-        "serial": "MY00000003",
-        "firmware": "02.41.2017042600",
-    },
-    {
-        "resource": "TCPIP0::127.0.0.1::inst0::INSTR",
-        "idn": "Keysight Technologies,E5071C,MY00000004,A.09.33",
-        "manufacturer": "Keysight Technologies",
-        "model": "E5071C",
-        "serial": "MY00000004",
-        "firmware": "A.09.33",
-    },
-    {
-        "resource": "USB0::0x2A8D::00000004::INSTR",
-        "idn": "Keysight Technologies,E5071C,MY00000005,A.09.33",
-        "manufacturer": "Keysight Technologies",
-        "model": "PZ2100A",
-        "serial": "MY00000005",
-        "firmware": "0.16.29.0",
-    },
-    {
-        "resource": "USB0::0x2A8D::00000005::INSTR",
-        "idn": "Keysight Technologies,E5071C,MY00000006,A.09.34",
-        "manufacturer": "Keysight Technologies",
-        "model": "53220A",
-        "serial": "MY00000006",
-        "firmware": "0.16.29.1",
-    },
-]
+# SIMULATED_INSTRUMENTS = [
+#     {
+#         "resource": "USB0::0x2A8D::00000001::INSTR",
+#         "idn": "Keysight Technologies,33500B,MY00000001,5.0.0.0",
+#         "manufacturer": "Keysight Technologies",
+#         "model": "33500B",
+#         "serial": "MY00000001",
+#         "firmware": "5.0.0.0",
+#     },
+#     {
+#         "resource": "USB0::0x2A8D::00000002::INSTR",
+#         "idn": "Keysight Technologies,N6705B,MY00000002,1.1.0",
+#         "manufacturer": "Keysight Technologies",
+#         "model": "N6705B",
+#         "serial": "MY00000002",
+#         "firmware": "1.1.0",
+#     },
+#     {
+#         "resource": "USB0::0x2A8D::00000003::INSTR",
+#         "idn": "Keysight Technologies,MSOX3034T,MY00000003,02.41.2017042600",
+#         "manufacturer": "Keysight Technologies",
+#         "model": "MSOX3034T",
+#         "serial": "MY00000003",
+#         "firmware": "02.41.2017042600",
+#     },
+#     {
+#         "resource": "TCPIP0::127.0.0.1::inst0::INSTR",
+#         "idn": "Keysight Technologies,E5071C,MY00000004,A.09.33",
+#         "manufacturer": "Keysight Technologies",
+#         "model": "E5071C",
+#         "serial": "MY00000004",
+#         "firmware": "A.09.33",
+#     },
+#     {
+#         "resource": "USB0::0x2A8D::00000004::INSTR",
+#         "idn": "Keysight Technologies,E5071C,MY00000005,A.09.33",
+#         "manufacturer": "Keysight Technologies",
+#         "model": "PZ2100A",
+#         "serial": "MY00000005",
+#         "firmware": "0.16.29.0",
+#     },
+#     {
+#         "resource": "USB0::0x2A8D::00000005::INSTR",
+#         "idn": "Keysight Technologies,E5071C,MY00000006,A.09.34",
+#         "manufacturer": "Keysight Technologies",
+#         "model": "53220A",
+#         "serial": "MY00000006",
+#         "firmware": "0.16.29.1",
+#     },
+# ]
 
 # --- Scan and update DB in one go ---
 def scan_instruments(db: Session, timeout_ms: int = 800):

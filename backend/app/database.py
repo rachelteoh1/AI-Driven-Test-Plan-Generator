@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 # llm_key = os.getenv("LLM_API_KEY")
 DATABASE_URL = os.getenv("DATABASE_URL")
+print(DATABASE_URL)
+
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

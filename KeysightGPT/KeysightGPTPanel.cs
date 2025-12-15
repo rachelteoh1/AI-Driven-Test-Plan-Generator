@@ -1,68 +1,146 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using Microsoft.Web.WebView2.Wpf;
 using Newtonsoft.Json;
 using OpenTap.Plugins.BasicSteps;
 using Keysight.OpenTap.Wpf;
 using Keysight.OpenTap.Gui;
 
-
 namespace KeysightGPT
 {
-    public class KeysightGPTPanel : UserControl
-    {
-        private readonly ITapDockContext _context;
-        private WebView2 webView;
-
-        public KeysightGPTPanel(ITapDockContext context)
+        public class KeysightGPTPanel : UserControl, IDisposable
         {
-            _context = context;
-            InitializeWebView();
-        }
+            private readonly ITapDockContext _context;
+            private WebView2 webView;
+            private readonly List<Process> _managedProcesses = new List<Process>();
 
-        private async void InitializeWebView()
-        {
-            webView = new WebView2
+            public KeysightGPTPanel(ITapDockContext context)
             {
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch
-            };
+                _context = context;
+                InitializeWebView();
+                // Note: StartWebServices is called inside InitializeWebView to handle timing
+            }
 
-            var grid = new Grid();
-            grid.Children.Add(webView);
-            Content = grid;
+            private async void InitializeWebView()
+            {
+                // 1. Start the backend/frontend first
+                StartWebServices();
 
-            await webView.EnsureCoreWebView2Async();
-            webView.Source = new Uri("http://localhost:3000");
+                webView = new WebView2
+                {
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    VerticalAlignment = VerticalAlignment.Stretch
+                };
 
-            webView.WebMessageReceived += OnWebMessageReceived;
+                var grid = new Grid();
+                grid.Children.Add(webView);
+                Content = grid;
 
-            Debug.WriteLine("[KeysightGPTPanel] WebView ready and listening.");
+                await webView.EnsureCoreWebView2Async();
+
+                // 2. CRITICAL: React takes time to start. 
+                // If you navigate immediately, you get "Connection Refused".
+                Debug.WriteLine("[KeysightGPT] Waiting for React dev server to boot...");
+                await Task.Delay(15000); // 15 second delay for 2025 modern machines
+
+                webView.Source = new Uri("http://localhost:3000");
+                webView.WebMessageReceived += OnWebMessageReceived;
+
+                Debug.WriteLine("[KeysightGPTPanel] WebView navigated to localhost:3000.");
+
+                this.Unloaded += (s, e) => Dispose();
+            }
+
+        private void StartWebServices()
+        {
+            string pluginDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string backendDir = Path.Combine(pluginDir, "backend");
+            string frontendDir = Path.Combine(pluginDir, "frontend");
+
+            // 1. Check if Frontend needs installation
+            string frontendMarker = Path.Combine(frontendDir, ".frontend_installed");
+
+            if (!File.Exists(frontendMarker))
+            {
+                Debug.WriteLine("[KeysightGPT] Installing frontend dependencies (one-time)...");
+                var installProc = Process.Start(new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = "/c npm install",
+                    WorkingDirectory = frontendDir,
+                    CreateNoWindow = false
+                });
+                installProc?.WaitForExit();
+
+                File.WriteAllText(frontendMarker, "ok");
+            }
+
+
+            // 2. Check if Backend needs libraries
+            // (Checking for a specific library folder in site-packages or just running it)
+            string backendMarker = Path.Combine(backendDir, ".backend_installed");
+
+            if (!File.Exists(backendMarker))
+            {
+                Debug.WriteLine("[KeysightGPT] Installing backend dependencies (one-time)...");
+                var pipProc = Process.Start(new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = "/c python -m pip install -r requirements.txt",
+                    WorkingDirectory = backendDir,
+                    CreateNoWindow = false
+                });
+                pipProc?.WaitForExit();
+
+                File.WriteAllText(backendMarker, "ok");
+            }
+
+            // 3. Now start the services as normal
+            LaunchProcess("cmd.exe", "/c uvicorn app.main:app --reload", backendDir);
+            LaunchProcess("cmd.exe", "/c npm start", frontendDir, new Dictionary<string, string> { { "BROWSER", "none" } });
         }
 
-        private void OnWebMessageReceived(object sender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs e)
+
+        private void LaunchProcess(string fileName, string args, string workingDir, Dictionary<string, string> env = null)
+            {
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = args,
+                    WorkingDirectory = workingDir,
+                    CreateNoWindow = true, // Set to false temporarily if you need to debug errors
+                    UseShellExecute = false
+                };
+
+                if (env != null)
+                {
+                    foreach (var item in env)
+                        startInfo.EnvironmentVariables[item.Key] = item.Value;
+                }
+
+                var proc = Process.Start(startInfo);
+                if (proc != null) _managedProcesses.Add(proc);
+            }
+
+            private void OnWebMessageReceived(object sender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs e)
         {
             try
             {
                 var rawJson = e.WebMessageAsJson;
                 var unwrappedJson = JsonConvert.DeserializeObject<string>(rawJson);
-
-                Debug.WriteLine("[Panel] Received JSON (unwrap): " + unwrappedJson);
-
                 var block = JsonConvert.DeserializeObject<ScpiCommandBlock>(unwrappedJson);
 
-                if (block == null)
+                if (block != null)
                 {
-                    Debug.WriteLine("[Panel] ERROR: Cannot parse SCPI block.");
-                    return;
+                    GuiHelpers.GuiInvoke(() => ApplyCommandsToTestPlan(block));
                 }
-
-                GuiHelpers.GuiInvoke(() =>
-                {
-                    ApplyCommandsToTestPlan(block);
-                });
             }
             catch (Exception ex)
             {
@@ -74,27 +152,14 @@ namespace KeysightGPT
         {
             try
             {
-                if (block?.commands == null || block.commands.Count == 0)
-                {
-                    Debug.WriteLine("[Panel] No SCPI commands in block.");
-                    return;
-                }
-
                 var plan = _context.Plan;
+                if (plan == null || block?.commands == null) return;
 
-                if (plan == null)
-                {
-                    Debug.WriteLine("[Panel] No active TestPlan found in context!");
-                    return;
-                }
-
-                Debug.WriteLine("[Panel] Clearing existing steps...");
                 plan.Steps.Clear();
 
                 foreach (var cmd in block.commands)
                 {
                     bool isQuery = cmd.command.Trim().EndsWith("?");
-
                     var step = new SCPIRegexStep
                     {
                         Action = isQuery ? SCPIAction.Query : SCPIAction.Command,
@@ -102,30 +167,39 @@ namespace KeysightGPT
                         AddToLog = true,
                         Name = cmd.command
                     };
-
                     plan.Steps.Add(step);
-
-                    Debug.WriteLine($"[Panel] Added Step: {cmd.command}");
                 }
-
-                Debug.WriteLine("[Panel] TestPlan updated successfully.");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("[Panel] ApplyCommandsToTestPlan ERROR: " + ex.Message);
+                Debug.WriteLine("[Panel] Apply Error: " + ex.Message);
             }
+        }
+
+        public void Dispose()
+        {
+            foreach (var proc in _managedProcesses)
+            {
+                try
+                {
+                    if (!proc.HasExited)
+                    {
+                        // Kill the process tree (kills cmd.exe and the child node/python process)
+                        Process.Start(new ProcessStartInfo
+                        {
+                            FileName = "taskkill",
+                            Arguments = $"/T /F /PID {proc.Id}",
+                            CreateNoWindow = true,
+                            UseShellExecute = false
+                        });
+                    }
+                }
+                catch { /* Ignore cleanup errors */ }
+            }
+            _managedProcesses.Clear();
         }
     }
 
-    public class ScpiCommand
-    {
-        public string command { get; set; }
-        public string type { get; set; }
-        public int order { get; set; }
-    }
-
-    public class ScpiCommandBlock
-    {
-        public System.Collections.Generic.List<ScpiCommand> commands { get; set; }
-    }
+    public class ScpiCommand { public string command { get; set; } public string type { get; set; } public int order { get; set; } }
+    public class ScpiCommandBlock { public List<ScpiCommand> commands { get; set; } }
 }
