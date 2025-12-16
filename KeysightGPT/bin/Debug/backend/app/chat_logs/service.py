@@ -3,7 +3,7 @@ from typing import Annotated
 from uuid import UUID, uuid4
 from fastapi import Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
-from ..entities.entities import ChatLog, ChatLogVersion
+from ..entities.entities import ChatLog, ChatLogVersion, SelectedInstrument
 import logging
 from ..exceptions import (
     InternalServerError)
@@ -165,6 +165,10 @@ MISTRAL_API_URL = "https://cofinal-semierectly-mignon.ngrok-free.dev/generate"
 
 
 def detect_intent(db: Session, request: LogCreate) -> LogResponse:
+    """
+    Detect user intent and generate AI response, automatically including
+    selected instrument information in the user message.
+    """
     try:
         logger.info(f"Detecting intent for session: {request.session_id}")
 

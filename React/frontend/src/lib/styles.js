@@ -76,6 +76,35 @@ export const lightTheme = {
     light: "#9CA3AF",
     textblue: "#88A9D7",
   },
+
+  sidebar: {
+    gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    accentPurple: "#667eea",
+    border: "#e5e7eb",
+    scrollbarThumb: "#d1d5db",
+    scrollbarThumbHover: "#9ca3af",
+    footerBg: "#f9fafb",
+    dangerHover: "#fee2e2",
+  },
+
+  conversation: {
+    editBorder: "#c0dbea",
+    versionBorder: "#e0e0e0",
+    versionText: "#666",
+    actionBg: "#F9FAFB",
+    actionBorder: "#e5e7eb",
+  },
+
+  home: {
+    pageGradient: "linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%)",
+    logoGradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    titleGradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    subtitle: "#6b7280",
+    cardBorder: "#e5e7eb",
+    cardBg: "#ffffff",
+    cardText: "#374151",
+    cardHoverBorder: "#667eea",
+  },
 };
 
 export const darkTheme = {
@@ -104,6 +133,35 @@ export const darkTheme = {
     medium: "#9CA3AF",
     light: "#6B7280",
     textblue: "#60A5FA",
+  },
+
+  sidebar: {
+    gradient: "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)",
+    accentPurple: "#a855f7",
+    border: "#374151",
+    scrollbarThumb: "#4B5563",
+    scrollbarThumbHover: "#6B7280",
+    footerBg: "#1F2937",
+    dangerHover: "#7f1d1d",
+  },
+
+  conversation: {
+    editBorder: "#3B82F6",
+    versionBorder: "#374151",
+    versionText: "#9CA3AF",
+    actionBg: "#1F2937",
+    actionBorder: "#374151",
+  },
+
+  home: {
+    pageGradient: "linear-gradient(135deg, #1F2937 0%, #111827 100%)",
+    logoGradient: "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)",
+    titleGradient: "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)",
+    subtitle: "#9CA3AF",
+    cardBorder: "#374151",
+    cardBg: "#1F2937",
+    cardText: "#E5E7EB",
+    cardHoverBorder: "#a855f7",
   },
 };
 
