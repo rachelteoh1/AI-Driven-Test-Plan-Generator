@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{E654EAFE-68B6-0CF4-82AD-842341FB0F4A}|KeysightGPT\\KeysightGPT.csproj|c:\\users\\rachel\\onedrive\\documents\\github\\ai-driven-test-plan-generator(1)\\ai-driven-test-plan-generator\\keysightgpt\\keysightgptpanel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E654EAFE-68B6-0CF4-82AD-842341FB0F4A}|KeysightGPT\\KeysightGPT.csproj|solutionrelative:keysightgpt\\keysightgptpanel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{E654EAFE-68B6-0CF4-82AD-842341FB0F4A}|KeysightGPT\\KeysightGPT.csproj|c:\\users\\rachel\\onedrive\\documents\\github\\ai-driven-test-plan-generator(1)\\ai-driven-test-plan-generator\\keysightgpt\\keysightgpt.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
       "RelativeMoniker": "D:0:0:{E654EAFE-68B6-0CF4-82AD-842341FB0F4A}|KeysightGPT\\KeysightGPT.csproj|solutionrelative:keysightgpt\\keysightgpt.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     },
@@ -13,10 +17,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{E654EAFE-68B6-0CF4-82AD-842341FB0F4A}|KeysightGPT\\KeysightGPT.csproj|c:\\users\\rachel\\onedrive\\documents\\github\\ai-driven-test-plan-generator(1)\\ai-driven-test-plan-generator\\keysightgpt\\keysightgptpanelplugin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{E654EAFE-68B6-0CF4-82AD-842341FB0F4A}|KeysightGPT\\KeysightGPT.csproj|solutionrelative:keysightgpt\\keysightgptpanelplugin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{E654EAFE-68B6-0CF4-82AD-842341FB0F4A}|KeysightGPT\\KeysightGPT.csproj|c:\\users\\rachel\\onedrive\\documents\\github\\ai-driven-test-plan-generator(1)\\ai-driven-test-plan-generator\\keysightgpt\\keysightgptpanel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{E654EAFE-68B6-0CF4-82AD-842341FB0F4A}|KeysightGPT\\KeysightGPT.csproj|solutionrelative:keysightgpt\\keysightgptpanel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,7 +26,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Bookmark",
@@ -34,20 +34,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 0,
               "Title": "KeysightGPTPanel.cs",
               "DocumentMoniker": "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\KeysightGPTPanel.cs",
               "RelativeDocumentMoniker": "KeysightGPT\\KeysightGPTPanel.cs",
               "ToolTip": "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\KeysightGPTPanel.cs",
               "RelativeToolTip": "KeysightGPT\\KeysightGPTPanel.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAwAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAFkAAAAAAAAAAAAgwE8AAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-08-27T06:21:37.578Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "KeysightGPTPanelPlugin.cs",
               "DocumentMoniker": "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\KeysightGPTPanelPlugin.cs",
               "RelativeDocumentMoniker": "KeysightGPT\\KeysightGPTPanelPlugin.cs",
@@ -55,12 +55,11 @@
               "RelativeToolTip": "KeysightGPT\\KeysightGPTPanelPlugin.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAAAIAAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-27T08:34:46.282Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-08-27T08:34:46.282Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "KeysightGPTTestStep.cs",
               "DocumentMoniker": "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\KeysightGPTTestStep.cs",
               "RelativeDocumentMoniker": "KeysightGPT\\KeysightGPTTestStep.cs",
@@ -68,12 +67,11 @@
               "RelativeToolTip": "KeysightGPT\\KeysightGPTTestStep.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-27T06:41:21.871Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-08-27T06:41:21.871Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "KeysightGPT.csproj",
               "DocumentMoniker": "C:\\Users\\Rachel\\OneDrive\\Documents\\GitHub\\AI-Driven-Test-Plan-Generator(1)\\AI-Driven-Test-Plan-Generator\\KeysightGPT\\KeysightGPT.csproj",
               "RelativeDocumentMoniker": "KeysightGPT\\KeysightGPT.csproj",

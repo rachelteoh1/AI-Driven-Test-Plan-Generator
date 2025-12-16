@@ -4,18 +4,11 @@
 		<UseWPF>true</UseWPF>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<DebugWith>TUI</DebugWith>
-	</PropertyGroup>
-
-	<PropertyGroup>
-		<OpenTapPackageDefinitionPath>package.xml</OpenTapPackageDefinitionPath>
-		<CreateOpenTapPackage>false</CreateOpenTapPackage>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-		<CreateOpenTapPackage>true</CreateOpenTapPackage>
+		<PluginInstallPath>C:\Program Files\OpenTAP\Packages\KeysightGPT\</PluginInstallPath>
+		<!-- FIX: Completely ignore dependency folders to prevent long-path errors -->
+		<DefaultItemExcludes>$(DefaultItemExcludes);..\backend\env\**;..\backend\**\__pycache__\**;..\React\frontend\node_modules\**</DefaultItemExcludes>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -24,40 +17,33 @@
 		<PackageReference Include="OpenTAP" Version="9.28.2" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(DebugWith)' == 'TUI' AND '$(Configuration)' == 'Debug'">
-		<OpenTapPackageReference Include="TUI" version="1" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(DebugWith)' == 'Editor' AND '$(Configuration)' == 'Debug'">
-		<OpenTapPackageReference Include="Editor" version="9" />
+	<!-- IMPORTANT FILES ONLY: Copy only source code, not dependencies -->
+	<ItemGroup>
+		<None Include="..\backend\**\*" Exclude="..\backend\env\**;..\backend\**\__pycache__\**">
+			<Link>backend\%(RecursiveDir)%(FileName)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\React\frontend\**\*" Exclude="..\React\frontend\node_modules\**;..\React\frontend\build\**">
+			<Link>frontend\%(RecursiveDir)%(FileName)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup>
-		<Reference Include="Keysight.OpenTap.Wpf">
-			<HintPath>C:\Program Files\OpenTAP\Packages\WPF Controls\Keysight.OpenTap.Wpf.dll</HintPath>
-		</Reference>
+		<Reference Include="Keysight.OpenTap.Wpf"><HintPath>C:\Program Files\OpenTAP\Packages\WPF Controls\Keysight.OpenTap.Wpf.dll</HintPath></Reference>
+		<Reference Include="OpenTap.Plugins.BasicSteps"><HintPath>C:\Program Files\OpenTAP\Packages\OpenTAP\OpenTap.Plugins.BasicSteps.dll</HintPath></Reference>
 	</ItemGroup>
 
-	<ItemGroup>
-		<Reference Include="OpenTap.Plugins.BasicSteps">
-			<HintPath>C:\Program Files\OpenTAP\Packages\OpenTAP\OpenTap.Plugins.BasicSteps.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-
-
-	<!-- Post-build step to copy DLLs into OpenTAP plugin folder -->
 	<Target Name="CopyToOpenTap" AfterTargets="Build">
+		<!-- Copy DLLs and Loader -->
 		<ItemGroup>
-			<MyOutput Include="$(OutputPath)*.dll" />
-			<WebView2LoaderDlls Include="$(OutputPath)runtimes\win-x64\native\WebView2Loader.dll" />
-			<!-- Above that loader file source need modify -->
+			<BinFiles Include="$(OutputPath)*.dll" />
+			<BinFiles Include="$(OutputPath)runtimes\win-x64\native\WebView2Loader.dll" />
 		</ItemGroup>
+		<Copy SourceFiles="@(BinFiles)" DestinationFolder="$(PluginInstallPath)" SkipUnchangedFiles="true" />
 
-		<!-- Copy managed DLLs -->
-		<Copy SourceFiles="@(MyOutput)" DestinationFolder="C:\Program Files\OpenTAP\Packages\KeysightGPT\" />
-
-		<!-- Copy WebView2 native loader -->
-		<Copy SourceFiles="@(WebView2LoaderDlls)" DestinationFolder="C:\Program Files\OpenTAP\Packages\KeysightGPT\" SkipUnchangedFiles="true" />
+		<!-- Deploy Web Folders (Robocopy is used to safely ignore excluded folders) -->
+		<Exec Command="robocopy &quot;$(OutputPath)backend&quot; &quot;$(PluginInstallPath)backend&quot; /E /IS /R:0 /W:0 /XD env __pycache__" IgnoreExitCode="true" />
+		<Exec Command="robocopy &quot;$(OutputPath)frontend&quot; &quot;$(PluginInstallPath)frontend&quot; /E /IS /R:0 /W:0 /XD node_modules" IgnoreExitCode="true" />
 	</Target>
 </Project>
-

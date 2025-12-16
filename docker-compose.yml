@@ -1,6 +1,24 @@
-version: '3.8'
-
 services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: keysight_db
+    environment:
+      POSTGRES_USER: rachel
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: lichee
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - keysight_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rachel -d lichee"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   # FastAPI Backend
   backend:
@@ -12,7 +30,7 @@ services:
       - "8000:8000"
     environment:
       # Database
-      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@192.168.100.183:5432/${DB_NAME}
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
       
       # Security
       SECRET_KEY: ${SECRET_KEY}
@@ -38,6 +56,9 @@ services:
       # Environment
       ENVIRONMENT: ${ENVIRONMENT:-development}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - ./backend:/app
       - backend_logs:/app/logs
@@ -70,6 +91,8 @@ services:
     tty: true
 
 volumes:
+  postgres_data:
+    driver: local
   backend_logs:
     driver: local
 

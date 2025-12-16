@@ -1135,7 +1135,7 @@ const PageContainer = styled.div`
   width: 100%;
   height: 100vh;
   overflow: hidden;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  background: ${({ theme }) => theme.home.pageGradient};
 `;
 
 const MainContent = styled.main`
@@ -1206,7 +1206,7 @@ const LogoContainer = styled.div`
   width: 120px;
   height: 120px;
   margin: 0 auto 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: ${({ theme }) => theme.home.logoGradient};
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1221,7 +1221,7 @@ const LogoContainer = styled.div`
     content: '';
     position: absolute;
     inset: -10px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: ${({ theme }) => theme.home.logoGradient};
     border-radius: 50%;
     opacity: 0.2;
     filter: blur(20px);
@@ -1245,7 +1245,7 @@ const LogoIcon = styled.img`
 const Title = styled.h1`
   font-size: 2.5rem;
   font-weight: ${FONTWEIGHT.bold};
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: ${({ theme }) => theme.home.titleGradient};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1254,7 +1254,7 @@ const Title = styled.h1`
 
 const Subtitle = styled.p`
   font-size: 1.25rem;
-  color: #6b7280;
+  color: ${({ theme }) => theme.home.subtitle};
   font-weight: ${FONTWEIGHT.normal};
 `;
 
@@ -1266,7 +1266,7 @@ const ExamplesSection = styled.div`
 
 const ExamplesLabel = styled.div`
   font-size: 0.875rem;
-  color: #6b7280;
+  color: ${({ theme }) => theme.home.subtitle};
   margin-bottom: 1rem;
   font-weight: ${FONTWEIGHT.medium};
 `;
@@ -1281,10 +1281,10 @@ const ExamplesGrid = styled.div`
 const ExampleCard = styled.button`
   text-align: left;
   padding: 1.25rem;
-  border: 2px solid #e5e7eb;
+  border: 2px solid ${({ theme }) => theme.home.cardBorder};
   border-radius: 1rem;
-  background: white;
-  color: #374151;
+  background: ${({ theme }) => theme.home.cardBg};
+  color: ${({ theme }) => theme.home.cardText};
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 0.875rem;
@@ -1292,7 +1292,7 @@ const ExampleCard = styled.button`
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   &:hover {
-    border-color: #667eea;
+    border-color: ${({ theme }) => theme.home.cardHoverBorder};
     box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
     transform: translateY(-2px);
   }

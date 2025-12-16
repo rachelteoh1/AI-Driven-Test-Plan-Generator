@@ -17,7 +17,7 @@ const Wrapper = styled.div`
   align-items: center;
   min-height: 100%;
   width: 100%;
-  background-color: ${({ theme }) => theme.background};
+  background: ${({ theme }) => theme.home.pageGradient};
 `;
 
 const FormContainer = styled.div`
@@ -42,6 +42,7 @@ const Avatar = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 `;
 
 const FieldRow = styled.div`
@@ -121,14 +122,21 @@ const StyledInput = styled.input`
   width: 100%;
   padding: 0 ${SPACING.md};
   font-size: ${FONTSIZE.sm};
-  border: 1px solid ${({ theme }) => theme.greys.medium};
-  background-color: ${({ theme }) => theme.background};
-  color: ${({ theme }) => theme.greys.dark};
-  border-radius: 0.375rem;
+  border: 1px solid ${({ theme }) => theme.conversation.actionBorder};
+  background-color: ${({ theme }) => theme.card};
+  color: ${({ theme }) => theme.text};
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
 
   &:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.accent};
-    outline-offset: 2px;
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  }
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
   &::placeholder {
@@ -151,22 +159,25 @@ const SaveButtonWrapper = styled.div`
 const StyledButton = styled.button`
   width: 8rem;
   height: 3rem;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
   background-color: ${({ theme }) => theme.newChat};
-  color: ${({ theme }) => theme.greys.dark};
+  color: ${({ theme }) => theme.text};
   font-weight: ${FONTWEIGHT.medium};
   font-size: ${FONTSIZE.base};
   border: none;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
   &:hover {
     background-color: ${({ theme }) => theme.hover};
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
   }
 
   &:focus-visible {
-    outline: 2px solid ${({ theme }) => theme.accent};
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   }
 `;
 
@@ -185,9 +196,10 @@ const DangerBox = styled.div`
   align-items: center;
   border: 1px solid ${COLORS.red};
   background-color: rgba(239, 68, 68, 0.1);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   padding: ${SPACING.lg};
   width: 100%;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
 `;
 
 const DangerTextGroup = styled.div`
@@ -215,9 +227,13 @@ const DangerButton = styled.button`
   font-weight: ${FONTWEIGHT.bold};
   border: none;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(234, 7, 46, 0.2);
+  transition: all 0.2s ease;
 
   &:hover {
-    background-color: #dc2626; // darker red
+    background-color: #dc2626;
+    box-shadow: 0 4px 12px rgba(234, 7, 46, 0.3);
+    transform: translateY(-2px);
   }
 `;
 

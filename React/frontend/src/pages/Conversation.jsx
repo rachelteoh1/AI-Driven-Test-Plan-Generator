@@ -2263,17 +2263,17 @@ const BotMessageContainer = styled.div`
 `;
 
 const BotMessageBubble = styled.div`
-  background: white;
+  background: ${({ theme }) => theme.card};
   border-radius: 1.5rem;
   border-top-left-radius: 0.25rem;
   padding: 1rem 1.5rem;
   max-width: 70%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
+  border: 1px solid ${({ theme }) => theme.conversation.actionBorder};
 `;
 
 const BotMessageContent = styled.div`
-  color: #374151;
+  color: ${({ theme }) => theme.text};
   font-weight: ${FONTWEIGHT.normal};
   font-size: ${FONTSIZE.sm};
   line-height: 1.6;
@@ -2285,7 +2285,7 @@ const LoadingContainer = styled.div`
   display: flex;
   align-items: center;
   gap: ${SPACING.sm};
-  color: #6b7280;
+  color: ${({ theme }) => theme.greys.medium};
 `;
 
 const LoadingIcon = styled(Loader2)`
@@ -2312,9 +2312,9 @@ const InstrumentBar = styled.div`
 const MessageInputWrapper = styled.div`
   position: relative;
   width: 100%;
-  background: white;
+  background: ${({ theme }) => theme.card};
   border-radius: 2rem;
-  border: 2px solid #e5e7eb;
+  border: 2px solid ${({ theme }) => theme.conversation.actionBorder};
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   transition: all 0.2s ease;
   
@@ -2332,7 +2332,7 @@ const MessageTextArea = styled.textarea`
   background: transparent;
   border: none;
   outline: none;
-  color: #1f2937;
+  color: ${({ theme }) => theme.text};
   resize: none;
   line-height: 1.5;
   font-family: inherit;
@@ -2340,7 +2340,7 @@ const MessageTextArea = styled.textarea`
   font-weight: ${FONTWEIGHT.normal};
   
   &::placeholder {
-    color: #9ca3af;
+    color: ${({ theme }) => theme.greys.light};
   }
   
   &:disabled {
@@ -2353,7 +2353,7 @@ const GhostText = styled.span`
   position: absolute;
   top: 1rem;
   left: 1.5rem;
-  color: #9ca3af;
+  color: ${({ theme }) => theme.greys.light};
   pointer-events: none;
   font-size: ${FONTSIZE.base};
   font-weight: ${FONTWEIGHT.normal};
@@ -2379,11 +2379,11 @@ const IconButton = styled(Button)`
   height: 2.5rem;
   padding: 0;
   border-radius: 50%;
-  background: ${({ $variant }) =>
+  background: ${({ $variant, theme }) =>
     $variant === 'primary'
       ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-      : '#f3f4f6'};
-  color: ${({ $variant }) => ($variant === 'primary' ? 'white' : '#6b7280')};
+      : theme.backgroundMedium};
+  color: ${({ $variant, theme }) => ($variant === 'primary' ? 'white' : theme.greys.medium)};
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -2446,8 +2446,8 @@ const ActionButtonsHover = styled.div`
 const ActionButton = styled(Button)`
   min-width: auto;
   padding: ${SPACING.xs};
-  background-color: ${COLORS.background.light};
-  border: 1px solid ${COLORS.border};
+  background-color: ${({ theme }) => theme.conversation.actionBg};
+  border: 1px solid ${({ theme }) => theme.conversation.actionBorder};
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 `;
 
@@ -2456,18 +2456,20 @@ const EditTextArea = styled.textarea`
   width: 100%;
   min-height: 80px;
   padding: 0.5rem;
-  border: 1px solid #c0dbea;
+  border: 1px solid ${({ theme }) => theme.conversation.editBorder};
   border-radius: 0.5rem;
   margin-bottom: 0.5rem;
   resize: vertical;
+  background: ${({ theme }) => theme.card};
+  color: ${({ theme }) => theme.text};
 `;
 
 const VersionHistoryIndicator = styled.div`
   margin-top: 0.5rem;
   padding-top: 0.5rem;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid ${({ theme }) => theme.conversation.versionBorder};
   font-size: 0.875rem;
-  color: #666;
+  color: ${({ theme }) => theme.conversation.versionText};
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -2478,10 +2480,10 @@ const InstrumentButton = styled(Button)`
   align-items: center;
   gap: ${SPACING.sm};
   padding: 0.75rem 1.25rem;
-  background: white;
-  border: 2px solid #e5e7eb;
+  background: ${({ theme }) => theme.card};
+  border: 2px solid ${({ theme }) => theme.conversation.actionBorder};
   border-radius: 1rem;
-  color: #374151;
+  color: ${({ theme }) => theme.text};
   font-size: ${FONTSIZE.sm};
   font-weight: ${FONTWEIGHT.medium};
   cursor: pointer;
@@ -2503,8 +2505,8 @@ const DropdownContainer = styled.div`
   bottom: 100%;
   left: 0;
   right: 0;
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: ${({ theme }) => theme.card};
+  border: 1px solid ${({ theme }) => theme.conversation.actionBorder};
   border-radius: 0.75rem;
   max-height: 200px;
   overflow-y: auto;
@@ -2516,18 +2518,18 @@ const DropdownContainer = styled.div`
 const DropdownHeader = styled.div`
   padding: 0.75rem;
   font-weight: bold;
-  border-bottom: 1px solid #f3f4f6;
-  background: #f9fafb;
-  color: #374151;
+  border-bottom: 1px solid ${({ theme }) => theme.backgroundMedium};
+  background: ${({ theme }) => theme.background};
+  color: ${({ theme }) => theme.text};
   font-size: ${FONTSIZE.sm};
 `;
 
 const DropdownItem = styled.div`
   padding: 0.75rem 1rem;
   cursor: pointer;
-  background: ${({ $isSelected }) => ($isSelected ? '#e3f2fd' : 'transparent')};
-  color: #374151;
-  border-bottom: 1px solid #f3f4f6;
+  background: ${({ $isSelected, theme }) => ($isSelected ? theme.hover : 'transparent')};
+  color: ${({ theme }) => theme.text};
+  border-bottom: 1px solid ${({ theme }) => theme.backgroundMedium};
   font-size: ${FONTSIZE.sm};
   
   &:last-child {
@@ -2535,7 +2537,7 @@ const DropdownItem = styled.div`
   }
   
   &:hover {
-    background: ${({ $isSelected }) => ($isSelected ? '#e3f2fd' : '#f9fafb')};
+    background: ${({ $isSelected, theme }) => ($isSelected ? theme.hover : theme.background)};
   }
 `;
 
