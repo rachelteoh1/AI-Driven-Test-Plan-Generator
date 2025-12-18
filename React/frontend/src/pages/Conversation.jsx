@@ -2848,7 +2848,6 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
     if (!isLoading && inputValue.trim()) {
       onSendMessage(inputValue, selectedInstrument?.id);
       setInputValue("");
-      setGhostText("");
       setAvailableParameters([]);
       setAvailableValues([]);
       setShowParameterDropdown(false);
@@ -3029,10 +3028,6 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
     if (e.key === " ") {
       e.preventDefault();
       handleInputChange(inputValue + " ");
-    } else if ((e.key === "Tab" || e.key === "ArrowRight") && ghostText) {
-      e.preventDefault();
-      setInputValue((prev) => prev + ghostText);
-      setGhostText("");
     } else if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);

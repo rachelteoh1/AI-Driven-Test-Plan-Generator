@@ -11,6 +11,7 @@ class LogCreate(BaseModel):  #save message
     session_id: UUID
     role: str
     content: str
+    rag_context: Optional[List[dict]] = None  # Optional RAG context with relevant SCPI commands
 
 class InstrumentResponse(BaseModel):
     manufacturer: Optional[str]
