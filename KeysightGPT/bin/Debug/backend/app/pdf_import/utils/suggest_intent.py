@@ -73,10 +73,6 @@ def normalize_text(text):
     return text.strip()
 
 def extract_instrument_name(file_bytes):
-    """
-    Extracts the instrument name from the first page of a PDF.
-    Returns a normalized instrument name or 'unknown_instrument' if not found.
-    """
     instrument_regex = re.compile(
         r"\b(?:[A-Z]{1,3}\d{3,4}[A-Z]?|\d{4,5}[A-Z]?)(?:[/&]\d{2,4}[A-Z]?)*\b"
     )
@@ -136,35 +132,24 @@ def extract_instrument_name(file_bytes):
     except Exception as e:
         raise ValueError(f"Failed to extract instrument name: {str(e)}")
 
-def process_scpi_text(text, page_number=None):
-    """
-    Extracts SCPI commands, parameters, and metadata from a PDF file using Gemini.
-
-    Args:
-        file (UploadFile or file-like object): The uploaded PDF file.
-
-    Returns:
-        list: A list of parsed model responses (JSON) from each page.
-    """
+def process_scpi_text(text, instrument_name, page_number=None):
     page_info_str = f"{page_number}" if page_number is not None else "merged pages"
     print(f"Extracting SCPI from page {page_info_str}...")
     # ...existing prompt code...
     prompt = (
         "You are a SCPI command parser.\n\n"
         "Extract SCPI command documentation into the following *structured JSON* format:\n\n"
-        "{\n"
-        "  \"<intent>\": {\n"
-        "    \"<subsystem>\": {\n"
-        "      \"command\": \"<full SCPI command>\",\n"
-        "      \"parameters\": [\"<parameter1>\", \"<parameter2>\", ...],\n"
-        "      \"values\": {\n"
-        "        \"<parameter1>\": [\"<value1>\", \"<value2>\", ...],\n"
-        "        ...\n"
-        "      },\n"
-        "      \"description\": \"<one-line explanation>\"\n"
-        "    }\n"
-        "  }\n"
-        "}\n\n"
+        "Requirements:\n"
+        "- Each SCPI command must be a single JSON object.\n"
+        "- Include the following fields:\n"
+        "  * command: full SCPI command string (without example values in braces)\n"
+        "  * parameters: list of parameter names (if any)\n"
+        "  * values: dictionary mapping each parameter to a list of possible values\n"
+        "  * description: one-line explanation\n"
+        "  * subsystem: top-level subsystem\n"
+        "  * feature: second-level subsystem or feature\n"
+        f"  * instrument: {instrument_name}\n"
+        f"  * page: {page_number}\n"
         "SCPI command format:\n"
         "- SCPI commands use colons : for hierarchy, e.g., :MEASure:CURRent:DC?\n"
         "- The first keyword indicates the *intent* (e.g., MEASure, SOURce, CONFigure)\n"
@@ -174,7 +159,7 @@ def process_scpi_text(text, page_number=None):
         "- Description is usually in the sentence above or below the command\n"
         "- **if the SCPI command doesn't have parameters, values and description, skip that page**\n"
         "---\n\n"
-        "Example input block:\n"
+        "Example input text:\n"
         ":SOURce:VOLTage:LEVel:IMMediate:AMPLitude\n"
         "Sets the output voltage level of the specified channel.\n"
         "Syntax:\n"
@@ -182,21 +167,24 @@ def process_scpi_text(text, page_number=None):
         "<channel>: CH1 or CH2\n"
         "<level>: voltage value in volts\n"
         "<unit>: V or mV\n"
-        "---\n\n"
-        "Return:\n"
-        "{\n"
-        "  \"source\": {\n"
-        "    \"voltage\": {\n"
-        "      \"command\": \":SOURce:VOLTage:LEVel:IMMediate:AMPLitude\",\n"
-        "      \"parameters\": [\"channel\", \"level\", \"unit\"],\n"
-        "      \"values\": {\n"
-        "        \"channel\": [\"CH1\", \"CH2\"],\n"
-        "        \"unit\": [\"V\", \"mV\"]\n"
-        "      },\n"
-        "      \"description\": \"Sets the output voltage level of the specified channel.\"\n"
-        "    }\n"
+        "\n"
+        "Example flattened JSON output:\n"
+        "[\n"
+        "  {\n"
+        "    \"command\": \":SOURce:VOLTage:LEVel:IMMediate:AMPLitude\",\n"
+        "    \"parameters\": [\"channel\", \"level\", \"unit\"],\n"
+        "    \"values\": {\n"
+        "      \"channel\": [\"CH1\", \"CH2\"],\n"
+        "      \"level\": [],\n"
+        "      \"unit\": [\"V\", \"mV\"]\n"
+        "    },\n"
+        "    \"description\": \"Sets the output voltage level of the specified channel.\",\n"
+        "    \"subsystem\": \"source\",\n"
+        "    \"feature\": \"voltage\",\n"
+        f"    \"instrument\": \"{instrument_name}\",\n"
+        f"    \"page\": {page_number}\n"
         "  }\n"
-        "}\n\n"
+        "]\n\n"
         "Only extract commands that show a SCPI command line starting with ':' or '*'."
         "Do not include generic subsystem headers (e.g., 'FETCh Subsystem', 'FORMat Subsystem') unless they also include at least one explicit SCPI command."
         "Only extract from pages that consist of the description of SCPI commands and their parameters."
@@ -222,16 +210,18 @@ def process_scpi_text(text, page_number=None):
         return None
     
 def merge_scpi_json(json_list):
-    merged = {}
+    merged = []
+    seen_commands = set()
 
-    for item in json_list:
-        if not isinstance(item, dict):
-            continue  # skip nulls or non-dicts
-        for intent, subsystems in item.items():
-            if intent not in merged:
-                merged[intent] = {}
-            for subsystem, details in subsystems.items():
-                merged[intent][subsystem] = details
+    for page_json in json_list:
+        if not page_json:
+            continue
+        for cmd_obj in page_json:
+            cmd = cmd_obj.get("command")
+            if cmd and cmd not in seen_commands:
+                seen_commands.add(cmd)
+                merged.append(cmd_obj)
+
     return merged
 
 def count_scpi_commands(scpi_json):
@@ -250,19 +240,12 @@ def count_scpi_commands(scpi_json):
     return count
 
 def normalize_scpi_command(cmd):
-    """
-    Removes brackets, angle brackets, spaces, and symbols from a SCPI command and lowercases it.
-    """
     cmd = re.sub(r"[\[\]<>]", "", cmd)  # Remove brackets and angle brackets
     cmd = re.sub(r"\s+", "", cmd)       # Remove all whitespace
     cmd = re.sub(r"[^\w:*\?]", "", cmd) # Remove non-word characters except :, *, ?
     return cmd.lower()
     
 def extract_scpi_from_pdf(file_bytes, max_pages=None):
-    """
-    Extracts SCPI commands and metadata from a PDF file by merging all relevant pages,
-    sending them in a single call to the model, and calculating extraction coverage.
-    """
     try:
         # Step 1: Extract instrument name
         instrument_name = extract_instrument_name(file_bytes)
@@ -281,7 +264,7 @@ def extract_scpi_from_pdf(file_bytes, max_pages=None):
         merged_text = "\n\n".join(merged_texts)
 
         # Send the merged text to the model in one call
-        result = process_scpi_text(merged_text, page_number="all")
+        result = process_scpi_text(merged_text, instrument_name, page_number="all")
         merged_results = merge_scpi_json([result])
 
         # Count the number of SCPI commands extracted

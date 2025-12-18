@@ -16,8 +16,21 @@ from ..instrument import service
 import requests
 import json
 from ..optimized_test_sequence import service as opt_service
+from sentence_transformers import SentenceTransformer
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 
 logger = logging.getLogger(__name__)
+
+# Initialize embedding model (loaded once at startup)
+try:
+    embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+    print("Embedding model loaded successfully")
+    logger.info("Embedding model loaded successfully")
+except Exception as e:
+    print(f"Failed to load embedding model: {str(e)}")
+    logger.error(f"Failed to load embedding model: {str(e)}")
+    embedding_model = None
 
 
 
@@ -164,15 +177,109 @@ def get_chat_log_by_user(db: Session, session_id):
 MISTRAL_API_URL = "https://cofinal-semierectly-mignon.ngrok-free.dev/generate"
 
 
+def perform_semantic_search(commands_data, query, top_k=5):
+    """
+    Perform semantic search on SCPI commands using vector embeddings.
+    Returns top-k commands ranked by cosine similarity.
+    """
+    if not commands_data or len(commands_data) == 0:
+        logger.info("[RAG] No commands available for semantic search")
+        return []
+    
+    logger.info(f"[RAG] Performing vector semantic search for: '{query}'")
+    
+    # Fallback to keyword search if embedding model not available
+    if embedding_model is None:
+        logger.warning("[RAG] Embedding model not available, using keyword fallback")
+        return _keyword_search_fallback(commands_data, query, top_k)
+    
+    try:
+        # Build text representations of commands (command + description)
+        command_texts = []
+        for cmd in commands_data:
+            text = cmd.get('command', '')
+            if cmd.get('description'):
+                text += " " + cmd.get('description')
+            command_texts.append(text)
+        
+        # Encode query and commands into embeddings
+        logger.info(f"[RAG] Encoding query and {len(command_texts)} commands...")
+        query_embedding = embedding_model.encode([query])
+        command_embeddings = embedding_model.encode(command_texts)
+        
+        # Compute cosine similarity
+        similarities = cosine_similarity(query_embedding, command_embeddings)[0]
+        
+        # Create scored commands with similarity scores
+        scored_commands = []
+        for idx, cmd in enumerate(commands_data):
+            similarity = float(similarities[idx])
+            if similarity > 0.1:  # Filter out very low similarity scores
+                scored_commands.append({**cmd, 'score': similarity})
+        
+        # Sort by similarity and return top-k
+        top_results = sorted(scored_commands, key=lambda x: x['score'], reverse=True)[:top_k]
+        
+        logger.info(f"[RAG] Found {len(top_results)} relevant commands: {[(r.get('command'), round(r.get('score'), 3)) for r in top_results]}")
+        return top_results
+        
+    except Exception as e:
+        logger.error(f"[RAG] Vector search failed: {str(e)}, falling back to keyword search")
+        return _keyword_search_fallback(commands_data, query, top_k)
+
+
+def _keyword_search_fallback(commands_data, query, top_k=5):
+    """
+    Fallback keyword-based search when vector embeddings are unavailable.
+    """
+    logger.info(f"[RAG] Using keyword search for: '{query}'")
+    query_lower = query.lower()
+    query_tokens = [t for t in query_lower.split() if len(t) > 2]
+    
+    scored_commands = []
+    for cmd in commands_data:
+        score = 0
+        cmd_lower = cmd.get('command', '').lower()
+        desc_lower = cmd.get('description', '').lower()
+        params_lower = ' '.join(cmd.get('parameters', [])).lower()
+        
+        # Exact command match (highest priority)
+        if cmd_lower == query_lower:
+            score += 100
+        
+        # Command starts with query
+        if cmd_lower.startswith(query_lower):
+            score += 50
+        
+        # Query tokens in command, description, parameters
+        for token in query_tokens:
+            if token in cmd_lower:
+                score += 10
+            if token in desc_lower:
+                score += 5
+            if token in params_lower:
+                score += 3
+        
+        # Boost for common measurement/configuration terms
+        intent_keywords = ['measure', 'voltage', 'current', 'frequency', 'output', 'input', 
+                          'configure', 'set', 'get', 'read', 'scan', 'route', 'display']
+        for keyword in intent_keywords:
+            if keyword in query_lower and (keyword in cmd_lower or keyword in desc_lower):
+                score += 8
+        
+        if score > 0:
+            scored_commands.append({**cmd, 'score': score})
+    
+    # Sort by score and return top-k
+    top_results = sorted(scored_commands, key=lambda x: x['score'], reverse=True)[:top_k]
+    
+    logger.info(f"[RAG] Found {len(top_results)} relevant commands: {[(r.get('command'), r.get('score')) for r in top_results]}")
+    return top_results
+
+
 def detect_intent(db: Session, request: LogCreate) -> LogResponse:
-    """
-    Detect user intent and generate AI response, automatically including
-    selected instrument information in the user message.
-    """
     try:
         logger.info(f"Detecting intent for session: {request.session_id}")
-
-        # --- Step 1: Retrieve the selected instrument(s) for this session ---
         instruments = service.get_selected_instruments(db, request.session_id)
         if instruments:
             selected_instrument = instruments[-1]
@@ -181,13 +288,59 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
             selected_instrument = None
             instrument_prefix = ""
 
-        # --- Step 2: Construct full user message ---
         user_msg = f"{instrument_prefix}{request.content.strip()}"
         logger.info(f"Constructed user message: {user_msg}")
 
-        # --- Step 3: Send message to Flask API ---
+        # Perform semantic search on instrument's SCPI commands (server-side RAG)
+        rag_context_text = ""
+        if selected_instrument and selected_instrument.json_url_manual:
+            try:
+                # Fetch SCPI commands from instrument JSON
+                logger.info(f"Fetching SCPI commands from: {selected_instrument.json_url_manual}")
+                import requests as req
+                json_response = req.get(selected_instrument.json_url_manual, timeout=10)
+                
+                if json_response.status_code == 200:
+                    scpi_data = json_response.json()
+                    
+                    # Expecting flat array of SCPI commands
+                    if not isinstance(scpi_data, list):
+                        logger.warning(f"Expected list of commands, got {type(scpi_data)}")
+                        scpi_data = []
+                    
+                    logger.info(f"Loaded {len(scpi_data)} SCPI commands")
+                    
+                    # Perform semantic search
+                    relevant_commands = perform_semantic_search(scpi_data, request.content, top_k=5)
+                    
+                    # Build RAG context text
+                    if relevant_commands:
+                        rag_context_text = "\n\nRelevant SCPI Commands from Documentation:\n"
+                        for idx, cmd_data in enumerate(relevant_commands, 1):
+                            cmd_info = f"{idx}. {cmd_data.get('command', '')}"
+                            if cmd_data.get('description'):
+                                cmd_info += f" - {cmd_data.get('description')}"
+                            if cmd_data.get('parameters'):
+                                params = cmd_data.get('parameters', [])
+                                if isinstance(params, list):
+                                    cmd_info += f"\n   Parameters: {', '.join(params)}"
+                            if cmd_data.get('values'):
+                                cmd_info += f"\n   Values: {cmd_data.get('values', '')}"
+                            if cmd_data.get('page'):
+                                cmd_info += f" (Page {cmd_data.get('page')})"
+                            rag_context_text += cmd_info + "\n"
+                        logger.info(f"RAG context built with {len(relevant_commands)} commands")
+                else:
+                    logger.warning(f"Failed to fetch SCPI JSON: {json_response.status_code}")
+            except Exception as e:
+                logger.error(f"Error performing semantic search: {str(e)}")
+
+        # Combine user message with RAG context
+        enhanced_prompt = user_msg + rag_context_text
+        logger.info(f"Enhanced prompt with RAG: {enhanced_prompt[:200]}...")
+
         payload = {
-            "prompt": user_msg,
+            "prompt": enhanced_prompt,
             "max_tokens": 512,
             "temperature": 0.2
         }

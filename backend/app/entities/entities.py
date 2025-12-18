@@ -139,6 +139,15 @@ class DetectedInstrument(Base):
     last_seen = Column(DateTime, default=datetime.now(timezone.utc))
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
 
+class PDFImport(Base):
+    __tablename__ = "pdf_imports"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    instrument_filename = Column(String, nullable=False, unique=True)  # e.g., "N6705C.json"
+    json_url_manual = Column(String, nullable=False)  # Supabase URL
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+
 class SelectedInstrument(Base):
     __tablename__ = "selected_instruments"
 
@@ -154,5 +163,5 @@ class SelectedInstrument(Base):
     firmware = Column(String, nullable=True)
     json_url = Column(String, nullable=True)
     instrument_filename = Column(String, nullable=True)
-    json_url_manual = Column(String, nullable=True)  # uploaded user manual pdf
+    json_url_manual = Column(String, nullable=True)  # populated from PDFImport table
     created_at = Column(DateTime, default=datetime.now(timezone.utc))

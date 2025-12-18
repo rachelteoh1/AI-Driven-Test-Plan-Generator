@@ -25,12 +25,10 @@ namespace KeysightGPT
             {
                 _context = context;
                 InitializeWebView();
-                // Note: StartWebServices is called inside InitializeWebView to handle timing
             }
 
             private async void InitializeWebView()
             {
-                // 1. Start the backend/frontend first
                 StartWebServices();
 
                 webView = new WebView2
@@ -45,10 +43,8 @@ namespace KeysightGPT
 
                 await webView.EnsureCoreWebView2Async();
 
-                // 2. CRITICAL: React takes time to start. 
-                // If you navigate immediately, you get "Connection Refused".
                 Debug.WriteLine("[KeysightGPT] Waiting for React dev server to boot...");
-                await Task.Delay(15000); // 15 second delay for 2025 modern machines
+            await Task.Delay(15000);
 
                 webView.Source = new Uri("http://localhost:3000");
                 webView.WebMessageReceived += OnWebMessageReceived;
@@ -64,7 +60,6 @@ namespace KeysightGPT
             string backendDir = Path.Combine(pluginDir, "backend");
             string frontendDir = Path.Combine(pluginDir, "frontend");
 
-            // 1. Check if Frontend needs installation
             string frontendMarker = Path.Combine(frontendDir, ".frontend_installed");
 
             if (!File.Exists(frontendMarker))
@@ -82,9 +77,6 @@ namespace KeysightGPT
                 File.WriteAllText(frontendMarker, "ok");
             }
 
-
-            // 2. Check if Backend needs libraries
-            // (Checking for a specific library folder in site-packages or just running it)
             string backendMarker = Path.Combine(backendDir, ".backend_installed");
 
             if (!File.Exists(backendMarker))
@@ -102,7 +94,6 @@ namespace KeysightGPT
                 File.WriteAllText(backendMarker, "ok");
             }
 
-            // 3. Now start the services as normal
             LaunchProcess("cmd.exe", "/c uvicorn app.main:app --reload", backendDir);
             LaunchProcess("cmd.exe", "/c npm start", frontendDir, new Dictionary<string, string> { { "BROWSER", "none" } });
         }

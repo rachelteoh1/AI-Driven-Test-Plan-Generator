@@ -1168,18 +1168,18 @@ const CenterContainer = styled.div`
   flex: 1;
   width: 100%;
   text-align: center;
-  padding: 2rem;
 `;
 
 const ChatWrapper = styled.div`
   width: 100%;
   max-width: 100%;
   background: transparent;
-  z-index: 10;
+  z-index: 100;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
 `;
 
 const WelcomeSection = styled.div`
@@ -1259,7 +1259,7 @@ const Subtitle = styled.p`
 `;
 
 const ExamplesSection = styled.div`
-  margin-top: 2rem;
+  margin-top: 1rem;
   width: 100%;
   max-width: 900px;
 `;

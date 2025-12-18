@@ -2134,7 +2134,7 @@ import { useState, useRef, useEffect } from "react";
 import * as React from "react";
 import Button from "@mui/material/Button";
 import ScanInstrumentModal from "../modal/ScanInstrumentModal";
-import { useAllInstruments, useScanInstrument, useSelectInstrument, useDeleteInstrument, useDeleteAllInstrument } from "../hook/useInstrument";
+import { useAllInstruments, useSessionInstrument, useScanInstrument, useSelectInstrument, useDeleteInstrument, useDeleteAllInstrument } from "../hook/useInstrument";
 import useModal from "../modal/useModal";
 import {
   DropdownMenu,
@@ -2349,21 +2349,6 @@ const MessageTextArea = styled.textarea`
   }
 `;
 
-const GhostText = styled.span`
-  position: absolute;
-  top: 1rem;
-  left: 1.5rem;
-  color: ${({ theme }) => theme.greys.light};
-  pointer-events: none;
-  font-size: ${FONTSIZE.base};
-  font-weight: ${FONTWEIGHT.normal};
-  line-height: 1.5;
-  font-family: inherit;
-  white-space: nowrap;
-  opacity: 0.5;
-  z-index: 0;
-`;
-
 const InputActions = styled.div`
   position: absolute;
   right: 0.75rem;
@@ -2541,6 +2526,76 @@ const DropdownItem = styled.div`
   }
 `;
 
+// Prefix Autocomplete Dropdown Styles
+const PrefixDropdownContainer = styled.div`
+  position: fixed;
+  bottom: auto;
+  top: auto;
+  left: auto;
+  right: auto;
+  background: ${({ theme }) => theme.card};
+  border: 2px solid #667eea;
+  border-radius: 0.75rem;
+  max-height: 300px;
+  width: 600px;
+  overflow-y: auto;
+  z-index: 9999;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+  transform: translateY(-100%);
+  margin-bottom: 0.5rem;
+`;
+
+const PrefixDropdownHeader = styled.div`
+  padding: 0.75rem 1rem;
+  font-weight: bold;
+  border-bottom: 2px solid ${({ theme }) => theme.backgroundMedium};
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: ${FONTSIZE.sm};
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const PrefixDropdownItem = styled.div`
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  background: ${({ $isSelected, theme }) => ($isSelected ? '#e3f2fd' : 'transparent')};
+  color: ${({ theme }) => theme.text};
+  border-bottom: 1px solid ${({ theme }) => theme.backgroundMedium};
+  transition: background 0.2s ease;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  &:hover {
+    background: ${({ $isSelected }) => ($isSelected ? '#bbdefb' : '#f5f5f5')};
+  }
+`;
+
+const CommandText = styled.div`
+  font-family: 'Courier New', monospace;
+  font-size: ${FONTSIZE.sm};
+  font-weight: ${FONTWEIGHT.medium};
+  color: #667eea;
+  margin-bottom: 0.25rem;
+`;
+
+const CommandDescription = styled.div`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.greys.medium};
+  line-height: 1.4;
+`;
+
+const CommandMeta = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  color: ${({ theme }) => theme.greys.medium};
+`;
+
 export default function ChatInterface({ chat, onSendMessage, isLoading, onInstrumentChange }) {
   const [inputValue, setInputValue] = useState("");
   const [editingMessageId, setEditingMessageId] = useState(null);
@@ -2553,7 +2608,6 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
   const modifyChatLogMutation = useModifyChatLog();
   const [copiedMessageId, setCopiedMessageId] = useState(null);
   const [scpiSuggestions, setScpiSuggestions] = useState([]);
-  const [ghostText, setGhostText] = useState("");
   const { showModal, hideModal } = useModal();
   const [isScanning, setIsScanning] = useState(false);
   const [selectedInstrument, setSelectedInstrument] = useState(null);
@@ -2567,6 +2621,14 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
   const [isRecording, setIsRecording] = useState(false);
   const [recognition, setRecognition] = useState(null);
   const textareaRef = useRef(null);
+  const inputWrapperRef = useRef(null);
+  
+  // Prefix autocomplete states
+  const [flattenedCommands, setFlattenedCommands] = useState([]);
+  const [prefixSuggestions, setPrefixSuggestions] = useState([]);
+  const [showPrefixDropdown, setShowPrefixDropdown] = useState(false);
+  const [selectedPrefixIndex, setSelectedPrefixIndex] = useState(0);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
   const {
     data: instrumentsData,
@@ -2574,10 +2636,21 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
     error: instrumentsError,
   } = useGetAllInstruments();
 
-  const { data: instrumentData = [], isLoading: isGettingAllInstrument } = useAllInstruments({
+  // Get session-specific selected instruments for dropdown
+  const { data: sessionInstrumentData = [], isLoading: isGettingSessionInstrument } = useSessionInstrument(chat.session_id);
+
+  // Get all detected instruments for scan modal
+  const { data: allInstrumentsData = [], isLoading: isGettingAllInstrument } = useAllInstruments({
     staleTime: 5 * 60 * 1000,
     cacheTime: 10 * 60 * 1000,
   });
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Session ID:', chat.session_id);
+    console.log('Session Instrument Data:', sessionInstrumentData);
+    console.log('Is Getting Session Instrument:', isGettingSessionInstrument);
+  }, [chat.session_id, sessionInstrumentData, isGettingSessionInstrument]);
 
   const scanMutation = useScanInstrument();
   const selectMutation = useSelectInstrument();
@@ -2645,18 +2718,87 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
     }
   }, [inputValue]);
 
+  // Reset selected instrument when session changes
   useEffect(() => {
+    setSelectedInstrument(null);
+    if (onInstrumentChange) {
+      onInstrumentChange(null);
+    }
+  }, [chat.session_id]);
+
+  // Function to flatten SCPI JSON structure into searchable commands
+  const flattenScpiCommands = (data) => {
+    console.log('[FLATTEN] Starting to flatten data:', typeof data, Array.isArray(data));
+    const commands = [];
+    
+    // If data is an array (flattened JSON format from PDF)
+    if (Array.isArray(data)) {
+      console.log('[FLATTEN] Data is array, length:', data.length);
+      data.forEach(item => {
+        if (item.command) {
+          commands.push({
+            command: item.command,
+            description: item.description || '',
+            parameters: item.parameters || [],
+            values: item.values || {},
+            page: item.page || 'N/A'
+          });
+        }
+      });
+    }
+    // If data is hierarchical object (old format)
+    else if (typeof data === 'object') {
+      console.log('[FLATTEN] Data is hierarchical object');
+      const traverse = (obj, path = '') => {
+        if (!obj || typeof obj !== 'object') return;
+        
+        // Check if this is a command node (has 'command' property)
+        if (obj.command) {
+          commands.push({
+            command: obj.command,
+            description: obj.description || '',
+            parameters: obj.parameters || [],
+            values: obj.values || {},
+            page: obj.page || 'N/A'
+          });
+        }
+        
+        // Traverse children
+        Object.keys(obj).forEach(key => {
+          if (!['command', 'description', 'parameters', 'values', 'page'].includes(key)) {
+            traverse(obj[key], path ? `${path}:${key}` : key);
+          }
+        });
+      };
+      traverse(data);
+    }
+    
+    console.log('[FLATTEN] Total commands flattened:', commands.length);
+    if (commands.length > 0) {
+      console.log('[FLATTEN] Sample commands:', commands.slice(0, 3));
+    }
+    return commands;
+  };
+
+  useEffect(() => {
+    console.log('[USEEFFECT] selectedInstrument changed:', selectedInstrument);
     if (!selectedInstrument) return;
 
     if (selectedInstrument.json_url_manual) {
+      console.log('[USEEFFECT] Fetching JSON from:', selectedInstrument.json_url_manual);
       fetch(selectedInstrument.json_url_manual)
         .then((res) => {
           if (!res.ok) throw new Error(`Failed to fetch JSON: ${res.status}`);
           return res.json();
         })
         .then((data) => {
-          console.log("Fetched SCPI JSON data:", data);
+          console.log("[USEEFFECT] Fetched SCPI JSON data:", data);
           setScpiSuggestions(data);
+          
+          // Flatten commands for prefix autocomplete
+          const flattened = flattenScpiCommands(data);
+          console.log("[USEEFFECT] Flattened commands count:", flattened.length);
+          setFlattenedCommands(flattened);
         })
         .catch((err) => {
           console.error("Error fetching SCPI JSON:", err);
@@ -2670,18 +2812,50 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
     }
   }, [instrumentsData, instrumentsLoading, selectedInstrument]);
 
+  // Prefix search for SCPI commands
+  const searchPrefixCommands = (prefix) => {
+    if (!prefix || prefix.length < 2) {
+      console.log('[SEARCH] Prefix too short, clearing');
+      setPrefixSuggestions([]);
+      setShowPrefixDropdown(false);
+      return;
+    }
+    const intentPattern = /^(explain|generate|create|optimize|analyze|show|list|get|set|configure|test|debug|help|what is)\s+(.+)/i;
+    const match = prefix.match(intentPattern);
+    const scpiPart = match ? match[2] : prefix;
+    
+    if (scpiPart.includes(' ')) {
+      setPrefixSuggestions([]);
+      setShowPrefixDropdown(false);
+      return;
+    }
+    
+    const upperPrefix = scpiPart.toUpperCase();
+    const matches = flattenedCommands
+      .filter(cmd => {
+        const matches = cmd.command.toUpperCase().startsWith(upperPrefix);
+        return matches;
+      })
+      .slice(0, 10);
+    
+    setPrefixSuggestions(matches);
+    setShowPrefixDropdown(matches.length > 0);
+    setSelectedPrefixIndex(0);
+  };
+
   const handleSubmit = (e) => {
     if (e) e.preventDefault();
     if (!isLoading && inputValue.trim()) {
       onSendMessage(inputValue, selectedInstrument?.id);
       setInputValue("");
-      setGhostText("");
       setAvailableParameters([]);
       setAvailableValues([]);
       setShowParameterDropdown(false);
       setShowValueDropdown(false);
       setSelectedParameter(null);
       setSelectedValue(null);
+      setPrefixSuggestions([]);
+      setShowPrefixDropdown(false);
       if (isRecording) {
         recognition.stop();
         setIsRecording(false);
@@ -2732,21 +2906,11 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
   };
 
   const handleSelectInstrument = async (instrument) => {
-    try {
-      const response = await selectMutation.mutateAsync({
-        instrument_id: instrument.id,
-        session_id: chat.session_id,
-      });
-      const instruments = instrumentsData?.instruments || [];
-      const fullInstrument = instruments.find(inst => inst.id === response.id);
-
-      setSelectedInstrument(fullInstrument || response);
-
-      if (onInstrumentChange) {
-        onInstrumentChange(fullInstrument || response);
-      }
-    } catch (err) {
-      console.error("Failed to select instrument:", err);
+    console.log('Selecting instrument from dropdown:', instrument);
+    setSelectedInstrument(instrument);
+    
+    if (onInstrumentChange) {
+      onInstrumentChange(instrument);
     }
   };
 
@@ -2828,211 +2992,62 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
     setInputValue(value);
 
     if (!value.trim()) {
-      setGhostText("");
-      setAvailableParameters([]);
-      setAvailableValues([]);
-      setShowParameterDropdown(false);
-      setShowValueDropdown(false);
+      setPrefixSuggestions([]);
+      setShowPrefixDropdown(false);
       return;
     }
 
-    const rawParts = value.split(" ");
-    let parts = rawParts.filter((p, idx) => p !== "" || idx < rawParts.length - 1);
-
-    if (value.endsWith(" ") && parts[parts.length - 1] !== "") {
-      parts.push("");
+    if (flattenedCommands.length > 0) {
+      searchPrefixCommands(value.trim());
     }
-
-    let node = scpiSuggestions;
-    let ghost = "";
-
-    const metaKeys = ["command", "description", "parameters", "values"];
-
-    let i = 0;
-    for (; i < parts.length; i++) {
-      const part = parts[i];
-      if (!node || typeof node !== "object") break;
-
-      const keys = Object.keys(node).filter((k) => !metaKeys.includes(k));
-
-      if (node.parameters) break;
-
-      if (i < parts.length - 1 || part !== "") {
-        const match = keys.find((k) =>
-          k.toLowerCase().startsWith(part.toLowerCase())
-        );
-        if (match) {
-          if (match.toLowerCase() !== part.toLowerCase()) {
-            ghost = match.slice(part.length);
-            setGhostText(ghost);
-            setShowParameterDropdown(false);
-            setShowValueDropdown(false);
-            setAvailableParameters([]);
-            setAvailableValues([]);
-            return;
-          }
-          node = node[match];
-        } else {
-          setShowParameterDropdown(false);
-          setShowValueDropdown(false);
-          setAvailableParameters([]);
-          setAvailableValues([]);
-          break;
-        }
-      } else {
-        if (keys.length > 0) {
-          ghost = keys[0];
-          setGhostText(ghost);
-          setShowParameterDropdown(false);
-          setShowValueDropdown(false);
-          setAvailableParameters([]);
-          setAvailableValues([]);
-          return;
-        }
-      }
-    }
-
-    if (node.parameters && Array.isArray(node.parameters) && node.parameters.length > 0) {
-      const currentPartIndex = i;
-      const typed = parts[currentPartIndex]?.toLowerCase() || "";
-
-      const hasCompleteMatch = node.parameters.some(p =>
-        p.toLowerCase() === typed.toLowerCase()
-      );
-
-      if (hasCompleteMatch) {
-        const selectedParam = node.parameters.find(p =>
-          p.toLowerCase() === typed.toLowerCase()
-        );
-
-        const hasValues = node.values && node.values[selectedParam] && node.values[selectedParam].length > 0;
-
-        if (hasValues && parts.length > currentPartIndex + 1) {
-          const valueTyped = parts[currentPartIndex + 1]?.toLowerCase() || "";
-          const matchingValues = node.values[selectedParam].filter((v) =>
-            v.toLowerCase().startsWith(valueTyped)
-          );
-
-          setAvailableValues(matchingValues);
-          setSelectedParameter(selectedParam);
-          setShowParameterDropdown(false);
-          setShowValueDropdown(true);
-          setAvailableParameters([]);
-
-          if (matchingValues.length > 0 && valueTyped) {
-            const match = matchingValues[0];
-            if (match.toLowerCase() !== valueTyped) {
-              ghost = match.slice(valueTyped.length);
-              setGhostText(ghost);
-              return;
-            }
-          } else if (matchingValues.length > 0 && !valueTyped) {
-            ghost = matchingValues[0];
-            setGhostText(ghost);
-            return;
-          }
-        } else {
-          setShowParameterDropdown(false);
-          setShowValueDropdown(false);
-          setAvailableParameters([]);
-          setAvailableValues([]);
-          setSelectedParameter(null);
-          setGhostText("");
-          return;
-        }
-      }
-      else if (value.endsWith(" ") && parts[currentPartIndex] === "") {
-        setAvailableParameters(node.parameters);
-        setShowParameterDropdown(true);
-        setShowValueDropdown(false);
-        setAvailableValues([]);
-        setSelectedParameter(null);
-
-        if (node.parameters.length > 0) {
-          ghost = node.parameters[0];
-          setGhostText(ghost);
-          return;
-        }
-      }
-      else if (typed && !value.endsWith(" ")) {
-        const matchingParams = node.parameters.filter((p) =>
-          p.toLowerCase().startsWith(typed)
-        );
-
-        if (matchingParams.length > 0) {
-          setAvailableParameters(matchingParams);
-          setShowParameterDropdown(true);
-          setShowValueDropdown(false);
-          setAvailableValues([]);
-          setSelectedParameter(null);
-
-          const match = matchingParams[0];
-          if (match.toLowerCase() !== typed) {
-            ghost = match.slice(typed.length);
-            setGhostText(ghost);
-            return;
-          }
-        } else {
-          setShowParameterDropdown(false);
-          setShowValueDropdown(false);
-          setAvailableParameters([]);
-          setAvailableValues([]);
-        }
-      }
-      else {
-        setShowParameterDropdown(false);
-        setShowValueDropdown(false);
-        setAvailableParameters([]);
-        setAvailableValues([]);
-      }
-    } else {
-      setShowParameterDropdown(false);
-      setShowValueDropdown(false);
-      setAvailableParameters([]);
-      setAvailableValues([]);
-    }
-
-    setGhostText(ghost);
   };
 
   const handleKeyDown = (e) => {
+    if (showPrefixDropdown && prefixSuggestions.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedPrefixIndex((prev) => 
+          prev < prefixSuggestions.length - 1 ? prev + 1 : prev
+        );
+        return;
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedPrefixIndex((prev) => (prev > 0 ? prev - 1 : 0));
+        return;
+      } else if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handlePrefixSelect(prefixSuggestions[selectedPrefixIndex]);
+        return;
+      } else if (e.key === "Escape") {
+        setShowPrefixDropdown(false);
+        setPrefixSuggestions([]);
+        return;
+      }
+    }
+
     if (e.key === " ") {
       e.preventDefault();
       handleInputChange(inputValue + " ");
-    } else if ((e.key === "Tab" || e.key === "ArrowRight") && ghostText) {
-      e.preventDefault();
-      setInputValue((prev) => prev + ghostText);
-      setGhostText("");
     } else if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
 
-  const handleParameterSelect = (parameter) => {
-    setSelectedParameter(parameter);
-    setShowParameterDropdown(false);
-    setShowValueDropdown(true);
-
-    const words = inputValue.split(" ");
-    words[words.length - 1] = parameter;
-    const newValue = words.join(" ") + " ";
+  const handlePrefixSelect = (command) => {
+    // Check if there's an intent prefix to preserve
+    const intentPattern = /^(explain|generate|create|optimize|analyze|show|list|get|set|configure|test|debug|help|what is)\s+/i;
+    const match = inputValue.match(intentPattern);
+    const intentPrefix = match ? match[0] : '';
+    
+    // Combine intent prefix with selected command and add a space
+    const newValue = intentPrefix + command.command + ' ';
+    console.log('[SELECT] Intent prefix:', intentPrefix, 'Final value:', newValue);
+    
     setInputValue(newValue);
-    handleInputChange(newValue);
-  };
-
-  const handleValueSelect = (value) => {
-    setSelectedValue(value);
-    setShowValueDropdown(false);
-    setShowParameterDropdown(false);
-    setAvailableParameters([]);
-    setAvailableValues([]);
-
-    const words = inputValue.split(" ");
-    words[words.length - 1] = value;
-    const newValue = words.join(" ");
-    setInputValue(newValue);
-    setGhostText("");
+    setShowPrefixDropdown(false);
+    setPrefixSuggestions([]);
+    setSelectedPrefixIndex(0);
   };
 
   const onUpload = async (message) => { try { setUploadingMessageId(message.message_id); const data = await sequenceService.getSequence(message.message_id); if (!data) { alert("No optimized sequence found for this message."); return; } const scpiCommands = data.commands.sort((a, b) => a.order_sequence - b.order_sequence).map(cmd => ({ command: cmd.optimized_scpi, type: cmd.type, order: cmd.order_sequence })); const payload = { commands: scpiCommands }; console.log("Sending to PTEM:", payload); if (window.chrome?.webview) { window.chrome.webview.postMessage(JSON.stringify(payload)); alert(`Successfully loaded ${scpiCommands.length} SCPI commands to PTEM!`); } else { console.warn("WebView2 not available. Would send:", payload); alert("PTEM integration not available in browser mode."); } } catch (error) { console.error("Failed to upload to PTEM:", error); alert(`Failed to upload: ${error.message}`); } finally { setUploadingMessageId(null); } };
@@ -3453,19 +3468,19 @@ function BotMessage({
                 </InstrumentButton>
               </DropdownMenuTrigger>
               
-              <DropdownMenuContent align="start" className="w-80 bg-white shadow-md">
-                {isGettingAllInstrument ? (
+              <DropdownMenuContent align="start" side="top" className="w-80 bg-white shadow-md">
+                {isGettingSessionInstrument ? (
                   <DropdownMenuItem disabled>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Loading instruments...
                   </DropdownMenuItem>
-                ) : !Array.isArray(instrumentData) || instrumentData.length === 0 ? (
+                ) : !Array.isArray(sessionInstrumentData) || sessionInstrumentData.length === 0 ? (
                   <DropdownMenuItem disabled>
-                    No instruments detected
+                    No instruments selected for this session
                   </DropdownMenuItem>
                 ) : (
                   <>
-                    {instrumentData.map((instrument) => (
+                    {sessionInstrumentData.map((instrument) => (
                       <DropdownMenuItem
                         key={instrument.id}
                         className="flex items-center justify-between p-3"
@@ -3508,42 +3523,39 @@ function BotMessage({
             </DropdownMenu>
           </InstrumentBar>
 
-          <MessageInputWrapper>
-            {/* Parameter Selection Dropdown */}
-            {availableParameters.length > 0 && (
-              <DropdownContainer>
-                <DropdownHeader>
-                  Available Parameters ({availableParameters.length})
-                </DropdownHeader>
-                {availableParameters.map((param, index) => (
-                  <DropdownItem
-                    key={index}
-                    $isSelected={selectedParameter === param}
-                    onClick={() => handleParameterSelect(param)}
-                  >
-                    {param}
-                  </DropdownItem>
-                ))}
-              </DropdownContainer>
-            )}
-
-            {/* Value Selection Dropdown */}
-            {availableValues.length > 0 && selectedParameter && (
-              <DropdownContainer>
-                <DropdownHeader>
-                  Values for "{selectedParameter}" ({availableValues.length})
-                </DropdownHeader>
-                {availableValues.map((value, index) => (
-                  <DropdownItem
-                    key={index}
-                    $isSelected={selectedValue === value}
-                    onClick={() => handleValueSelect(value)}
-                  >
-                    {value}
-                  </DropdownItem>
-                ))}
-              </DropdownContainer>
-            )}
+          <MessageInputWrapper ref={inputWrapperRef}>
+            {/* Prefix Autocomplete Dropdown (SCPI Commands) */}
+            {(() => {
+              if (showPrefixDropdown && prefixSuggestions.length > 0 && inputWrapperRef.current) {
+                const rect = inputWrapperRef.current.getBoundingClientRect();
+                const style = {
+                  position: 'fixed',
+                  top: `${rect.top - 8}px`,
+                  left: `${rect.left}px`,
+                  width: `${rect.width}px`,
+                  transform: 'translateY(-100%)'
+                };
+                
+                return (
+                  <PrefixDropdownContainer style={style}>
+                    <PrefixDropdownHeader>
+                      <span>SCPI Commands</span>
+                      <span>{prefixSuggestions.length}</span>
+                    </PrefixDropdownHeader>
+                    {prefixSuggestions.map((suggestion, index) => (
+                      <PrefixDropdownItem
+                        key={index}
+                        $isSelected={index === selectedPrefixIndex}
+                        onClick={() => handlePrefixSelect(suggestion)}
+                      >
+                        <CommandText>{suggestion.command}</CommandText>
+                      </PrefixDropdownItem>
+                    ))}
+                  </PrefixDropdownContainer>
+                );
+              }
+              return null;
+            })()}
 
             <MessageTextArea
               ref={textareaRef}
@@ -3555,12 +3567,6 @@ function BotMessage({
               disabled={isLoading}
             />
             
-            {ghostText && (
-              <GhostText>
-                {inputValue}<span>{ghostText}</span>
-              </GhostText>
-            )}
-
             <InputActions>
               <TooltipProvider>
                 <Tooltip>

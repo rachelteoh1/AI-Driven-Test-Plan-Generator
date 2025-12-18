@@ -150,7 +150,7 @@ export const darkTheme = {
     versionBorder: "#374151",
     versionText: "#9CA3AF",
     actionBg: "#1F2937",
-    actionBorder: "#374151",
+    actionBorder: "#1F2937",
   },
 
   home: {
