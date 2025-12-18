@@ -1174,11 +1174,12 @@ const ChatWrapper = styled.div`
   width: 100%;
   max-width: 100%;
   background: transparent;
-  z-index: 10;
+  z-index: 100;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
 `;
 
 const WelcomeSection = styled.div`
