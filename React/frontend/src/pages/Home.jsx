@@ -1396,7 +1396,7 @@ export const Home = ({
     }
   };
 
-  const [isReplyLoading, setIsReplyLoading] = useState(false);
+  const [loadingSessions, setLoadingSessions] = useState({});
   const [showLogoAnimation, setShowLogoAnimation] = useState(false);
 
   const handleSendMessage = async (message, selectedInstrumentId) => {
@@ -1405,7 +1405,7 @@ export const Home = ({
       setShowLogoAnimation(true);
     }
 
-    setIsReplyLoading(true);
+    setLoadingSessions(prev => ({ ...prev, [activeChatId]: true }));
     try {
       let response = null;
       if (message) {
@@ -1431,7 +1431,7 @@ export const Home = ({
     } catch (err) {
       console.error("Message submission failed:", err);
     } finally {
-      setIsReplyLoading(false);
+      setLoadingSessions(prev => ({ ...prev, [activeChatId]: false }));
     }
   };
 
@@ -1548,7 +1548,7 @@ export const Home = ({
                   messages: activeChatLogs,
                 }}
                 onSendMessage={handleSendMessage}
-                isLoading={isReplyLoading}
+                isLoading={loadingSessions[activeChat?.session_id] || false}
                 onInstrumentChange={setSelectedInstrument}
               />
             </ChatWrapper>

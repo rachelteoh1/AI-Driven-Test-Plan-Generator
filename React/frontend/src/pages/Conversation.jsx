@@ -3562,7 +3562,7 @@ function BotMessage({
               value={inputValue}
               onChange={(e) => handleInputChange(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type your intent (e.g., measure)"
+              placeholder="Type your intent (e.g., generate)"
               rows={1}
               disabled={isLoading}
             />
