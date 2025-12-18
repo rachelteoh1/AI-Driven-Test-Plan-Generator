@@ -2134,8 +2134,7 @@ import { useState, useRef, useEffect } from "react";
 import * as React from "react";
 import Button from "@mui/material/Button";
 import ScanInstrumentModal from "../modal/ScanInstrumentModal";
-import PdfModal from "../modal/PdfModal";
-import { useAllInstruments, useScanInstrument, useSelectInstrument, useDeleteInstrument, useDeleteAllInstrument } from "../hook/useInstrument";
+import { useAllInstruments, useSessionInstrument, useScanInstrument, useSelectInstrument, useDeleteInstrument, useDeleteAllInstrument } from "../hook/useInstrument";
 import useModal from "../modal/useModal";
 import {
   DropdownMenu,
@@ -2162,7 +2161,6 @@ import {
   Trash2,
   Mic,
   MicOff,
-  Download,
 } from "lucide-react";
 import {
   Tooltip,
@@ -2502,11 +2500,6 @@ const ScanButton = styled(IconButton)`
   color: white;
 `;
 
-const UploadManualButton = styled(IconButton)`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-`;
-
 const DropdownContainer = styled.div`
   position: absolute;
   bottom: 100%;
@@ -2548,7 +2541,7 @@ const DropdownItem = styled.div`
   }
 `;
 
-export default function ChatInterface({ chat, onSendMessage, isLoading, onInstrumentChange, onPdfUploadSuccess }) {
+export default function ChatInterface({ chat, onSendMessage, isLoading, onInstrumentChange }) {
   const [inputValue, setInputValue] = useState("");
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editContent, setEditContent] = useState("");
@@ -2581,10 +2574,21 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
     error: instrumentsError,
   } = useGetAllInstruments();
 
-  const { data: instrumentData = [], isLoading: isGettingAllInstrument } = useAllInstruments({
+  // Get session-specific selected instruments for dropdown
+  const { data: sessionInstrumentData = [], isLoading: isGettingSessionInstrument } = useSessionInstrument(chat.session_id);
+
+  // Get all detected instruments for scan modal
+  const { data: allInstrumentsData = [], isLoading: isGettingAllInstrument } = useAllInstruments({
     staleTime: 5 * 60 * 1000,
     cacheTime: 10 * 60 * 1000,
   });
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Session ID:', chat.session_id);
+    console.log('Session Instrument Data:', sessionInstrumentData);
+    console.log('Is Getting Session Instrument:', isGettingSessionInstrument);
+  }, [chat.session_id, sessionInstrumentData, isGettingSessionInstrument]);
 
   const scanMutation = useScanInstrument();
   const selectMutation = useSelectInstrument();
@@ -2651,6 +2655,14 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [inputValue]);
+
+  // Reset selected instrument when session changes
+  useEffect(() => {
+    setSelectedInstrument(null);
+    if (onInstrumentChange) {
+      onInstrumentChange(null);
+    }
+  }, [chat.session_id]);
 
   useEffect(() => {
     if (!selectedInstrument) return;
@@ -2739,21 +2751,12 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
   };
 
   const handleSelectInstrument = async (instrument) => {
-    try {
-      const response = await selectMutation.mutateAsync({
-        instrument_id: instrument.id,
-        session_id: chat.session_id,
-      });
-      const instruments = instrumentsData?.instruments || [];
-      const fullInstrument = instruments.find(inst => inst.id === response.id);
-
-      setSelectedInstrument(fullInstrument || response);
-
-      if (onInstrumentChange) {
-        onInstrumentChange(fullInstrument || response);
-      }
-    } catch (err) {
-      console.error("Failed to select instrument:", err);
+    console.log('Selecting instrument from dropdown:', instrument);
+    // Just set the selected instrument from the dropdown (already selected in session)
+    setSelectedInstrument(instrument);
+    
+    if (onInstrumentChange) {
+      onInstrumentChange(instrument);
     }
   };
 
@@ -3461,18 +3464,18 @@ function BotMessage({
               </DropdownMenuTrigger>
               
               <DropdownMenuContent align="start" className="w-80 bg-white shadow-md">
-                {isGettingAllInstrument ? (
+                {isGettingSessionInstrument ? (
                   <DropdownMenuItem disabled>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Loading instruments...
                   </DropdownMenuItem>
-                ) : !Array.isArray(instrumentData) || instrumentData.length === 0 ? (
+                ) : !Array.isArray(sessionInstrumentData) || sessionInstrumentData.length === 0 ? (
                   <DropdownMenuItem disabled>
-                    No instruments detected
+                    No instruments selected for this session
                   </DropdownMenuItem>
                 ) : (
                   <>
-                    {instrumentData.map((instrument) => (
+                    {sessionInstrumentData.map((instrument) => (
                       <DropdownMenuItem
                         key={instrument.id}
                         className="flex items-center justify-between p-3"
@@ -3513,32 +3516,6 @@ function BotMessage({
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <UploadManualButton
-                    onClick={() => {
-                      showModal({
-                        modal: (
-                          <PdfModal
-                            key={selectedInstrument?.id}
-                            hideModal={hideModal}
-                            onUploadSuccess={onPdfUploadSuccess}
-                            selectedInstrument={selectedInstrument}
-                          />
-                        ),
-                      });
-                    }}
-                  >
-                    <Download className="h-5 w-5" />
-                  </UploadManualButton>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Import Manual</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </InstrumentBar>
 
           <MessageInputWrapper>

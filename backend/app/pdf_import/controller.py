@@ -28,16 +28,16 @@ async def get_all_instruments(db: Session = Depends(get_db)):
         "instruments": [instrument.__dict__ for instrument in instruments]
     }
     
-# @router.post("/test-process-scpi")
-# async def test_process_scpi(prompt: str):
-#     """
-#     Endpoint to test the process_scpi_text function.
-#     """
-#     try:
-#         result = process_scpi_text(prompt)
-#         return JSONResponse(content={"result": result})
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error processing SCPI text: {str(e)}")
+@router.post("/test-process-scpi")
+async def test_process_scpi(prompt: str):
+    """
+    Endpoint to test the process_scpi_text function.
+    """
+    try:
+        result = process_scpi_text(prompt)
+        return JSONResponse(content={"result": result})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing SCPI text: {str(e)}")
 
     
 @router.post("/test-extract-actual_scpi")

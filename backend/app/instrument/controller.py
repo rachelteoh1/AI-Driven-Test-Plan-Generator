@@ -18,16 +18,16 @@ class InstrumentInfo(BaseModel):
     serial: str | None = None
     firmware: str | None = None
     instrument_filename: str | None = None
-    json_url_manual: str | None = None  # Add this field
+    json_url_manual: str | None = None
 
 class InstrumentSelectedRequest(BaseModel):
     session_id: UUID
-    message_id:UUID
+    message_id: UUID
    
 class InstrumentSelectedResponse(BaseModel):
     id: UUID
     session_id: UUID
-    message_id: UUID
+    message_id: UUID | None = None
     resource_string: str
     idn: str | None = None
     manufacturer: str | None = None
@@ -63,8 +63,8 @@ def select_instrument(instrument_id:UUID, session_id:UUID, db: DbSession):
 
 #update chatlog id
 @router.post("/update/{selected_id}/{message_id}")
-def update_instrument(selected_id:UUID,message_id:UUID, db: DbSession):
-    return service.update_selected_instrument(db, selected_id,message_id)
+def update_instrument(selected_id:UUID, message_id:UUID, db: DbSession):
+    return service.update_selected_instrument(db, selected_id, message_id)
 
 @router.post("/save/")
 def save_instrument(request:InstrumentInfo, db: DbSession):

@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 # --- Save selected instrument ---
 def save_selected_instrument(db: Session, instrument_id: UUID, session_id: UUID, chatlog_id: UUID = None):
     try:
+        from ..entities.entities import PDFImport
+        
         instrument = db.query(DetectedInstrument).filter_by(id=instrument_id).first()
         if not instrument:
             raise HTTPException(status_code=404, detail=f"Instrument {instrument_id} not found")
@@ -31,13 +33,44 @@ def save_selected_instrument(db: Session, instrument_id: UUID, session_id: UUID,
         ).first()
         
         if selected:
-            # Optionally update message_id or other fields if needed
+            # Update message_id if provided
             if chatlog_id:
                 selected.message_id = chatlog_id
-                db.commit()
-                db.refresh(selected)
+            
+            # Only update json_url_manual if it's currently empty
+            if not selected.json_url_manual and instrument.model:
+                pdf_imports = db.query(PDFImport).all()
+                for pdf in pdf_imports:
+                    filename_base = pdf.instrument_filename.replace(".json", "").lower()
+                    models_in_filename = filename_base.split("_")
+                    
+                    if instrument.model.lower() in models_in_filename:
+                        selected.json_url_manual = pdf.json_url_manual
+                        selected.instrument_filename = pdf.instrument_filename
+                        logger.info(f"Updated PDF link for existing selected instrument: {pdf.instrument_filename}")
+                        break
+            
+            db.commit()
+            db.refresh(selected)
             logger.info(f"Instrument already selected: {selected.instrument_id})")
             return selected
+
+        # Look for matching PDF in PDFImport table
+        json_url_manual = None
+        instrument_filename = None
+        if instrument.model:
+            # Try to find a PDF that matches this instrument model
+            pdf_imports = db.query(PDFImport).all()
+            for pdf in pdf_imports:
+                # Extract model names from filename (e.g., "N6705C.json" -> "n6705c")
+                filename_base = pdf.instrument_filename.replace(".json", "").lower()
+                models_in_filename = filename_base.split("_")
+                
+                if instrument.model.lower() in models_in_filename:
+                    json_url_manual = pdf.json_url_manual
+                    instrument_filename = pdf.instrument_filename
+                    logger.info(f"Found matching PDF for {instrument.model}: {pdf.instrument_filename}")
+                    break
 
         # Otherwise, create new selection
         selected = SelectedInstrument(
@@ -51,8 +84,8 @@ def save_selected_instrument(db: Session, instrument_id: UUID, session_id: UUID,
             serial=instrument.serial,
             firmware=instrument.firmware,
             json_url=instrument.json_url,
-            instrument_filename=None,
-            json_url_manual=None,
+            instrument_filename=instrument_filename,
+            json_url_manual=json_url_manual,
         )
 
         db.add(selected)
@@ -86,10 +119,12 @@ def update_selected_instrument(db: Session, selected_id: UUID, message_id: UUID)
         logger.error(f"Error updating selected instrument: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to update selected instrument")
 
-
 # --- Get all selected instruments for session ---
 def get_selected_instruments(db: Session, session_id: UUID):
     try:
+        # Return instruments that are:
+        # 1. Previously selected in this session (regardless of current detection status)
+        # OR already filtered by session_id, so just return all for this session
         instruments = db.query(SelectedInstrument).filter_by(session_id=session_id).all()
         logger.info(f"Retrieved {len(instruments)} selected instruments for session {session_id}")
         return instruments
@@ -260,17 +295,8 @@ def delete_detected_instrument(db: Session, instrument_id: UUID):
         
         logger.info(f"Found {len(selected_instruments)} selected instruments to delete")
         
-        # Delete Supabase files for each selected instrument
-        bucket_name = "scpi-json"
+        # Delete the selected instrument records (no need to delete Supabase files as they're in PDFImport table)
         for selected in selected_instruments:
-            if selected.instrument_filename:
-                try:
-                    delete_from_supabase(bucket_name, selected.instrument_filename)
-                    logger.info(f"Deleted Supabase file: {selected.instrument_filename}")
-                except Exception as e:
-                    logger.warning(f"Failed to delete Supabase file {selected.instrument_filename}: {e}")
-            
-            # Delete the selected instrument record
             db.delete(selected)
             logger.info(f"Deleted selected instrument: {selected.id}")
         
@@ -286,17 +312,7 @@ def delete_detected_instrument(db: Session, instrument_id: UUID):
 def delete_all_detected_instruments(db: Session):
     try:
         count = db.query(DetectedInstrument).delete()
-        all_selected = db.query(SelectedInstrument).all()
         selected_count = db.query(SelectedInstrument).delete()
-        bucket_name = "scpi-json"
-        for selected in all_selected:
-            if selected.instrument_filename:
-                try:
-                    delete_from_supabase(bucket_name, selected.instrument_filename)
-                    logger.info(f"Deleted Supabase file: {selected.instrument_filename}")
-                except Exception as e:
-                    logger.warning(f"Failed to delete Supabase file {selected.instrument_filename}: {e}")
-                    
         db.commit()
         logger.info(f"Deleted {count} detected instruments, {selected_count} selected instruments")
         return count

@@ -1549,7 +1549,6 @@ export const Home = ({
                 onSendMessage={handleSendMessage}
                 isLoading={isReplyLoading}
                 onInstrumentChange={setSelectedInstrument}
-                onPdfUploadSuccess={handlePdfUploadSuccess}
               />
             </ChatWrapper>
           </MainContent>
