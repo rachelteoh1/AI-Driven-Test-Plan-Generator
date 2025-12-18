@@ -1168,7 +1168,6 @@ const CenterContainer = styled.div`
   flex: 1;
   width: 100%;
   text-align: center;
-  padding: 2rem;
 `;
 
 const ChatWrapper = styled.div`
@@ -1259,7 +1258,7 @@ const Subtitle = styled.p`
 `;
 
 const ExamplesSection = styled.div`
-  margin-top: 2rem;
+  margin-top: 1rem;
   width: 100%;
   max-width: 900px;
 `;
@@ -1550,6 +1549,7 @@ export const Home = ({
                 onSendMessage={handleSendMessage}
                 isLoading={isReplyLoading}
                 onInstrumentChange={setSelectedInstrument}
+                onPdfUploadSuccess={handlePdfUploadSuccess}
               />
             </ChatWrapper>
           </MainContent>

@@ -105,7 +105,7 @@ export default function ResetPwPage() {
       }
     },
     onError: () => {
-      setErrors({ emailTel: "Email not found or server error." });
+      setErrors({ emailTel: "Email not found." });
     },
   }
 );

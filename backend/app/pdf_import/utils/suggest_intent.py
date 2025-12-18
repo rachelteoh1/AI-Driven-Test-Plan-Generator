@@ -53,12 +53,53 @@ SCPI_TOC_REGEX = re.compile(r"""
     (?:[:*])?[A-Z]{3,}[A-Za-z0-9]*
 """, re.VERBOSE)
 
+def normalize_text(text):
+    text = re.sub(r"\n+", " ", text)
+    text = re.sub(r"\s{2,}", " ", text)
+    text = re.sub(r"(\S)\s*\n\s*(\S)", r"\1 \2", text)
+    return text.strip()
 
 def is_unwanted_page(text):
     """Check if page is likely a TOC or unrelated."""
     lower_text = text.lower()
     return any(kw in lower_text for kw in EXCLUDE_KEYWORDS)
 
+def normalize_text(text):
+    """
+    Cleans up and normalizes extracted text by removing excessive line breaks
+    and joining broken lines.
+    """
+    # Replace multiple newlines with a single space
+    text = re.sub(r"\n+", " ", text)
+    # Remove extra spaces
+    text = re.sub(r"\s{2,}", " ", text)
+    # Join lines that are broken mid-sentence or mid-command
+    text = re.sub(r"(\S)\s*\n\s*(\S)", r"\1 \2", text)  # Join lines without punctuation
+    return text.strip()
+def normalize_text(text):
+    """
+    Cleans up and normalizes extracted text by removing excessive line breaks
+    and joining broken lines.
+    """
+    # Replace multiple newlines with a single space
+    text = re.sub(r"\n+", " ", text)
+    # Remove extra spaces
+    text = re.sub(r"\s{2,}", " ", text)
+    # Join lines that are broken mid-sentence or mid-command
+    text = re.sub(r"(\S)\s*\n\s*(\S)", r"\1 \2", text)  # Join lines without punctuation
+    return text.strip()
+def normalize_text(text):
+    """
+    Cleans up and normalizes extracted text by removing excessive line breaks
+    and joining broken lines.
+    """
+    # Replace multiple newlines with a single space
+    text = re.sub(r"\n+", " ", text)
+    # Remove extra spaces
+    text = re.sub(r"\s{2,}", " ", text)
+    # Join lines that are broken mid-sentence or mid-command
+    text = re.sub(r"(\S)\s*\n\s*(\S)", r"\1 \2", text)  # Join lines without punctuation
+    return text.strip()
 def normalize_text(text):
     """
     Cleans up and normalizes extracted text by removing excessive line breaks

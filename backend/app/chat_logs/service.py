@@ -165,14 +165,8 @@ MISTRAL_API_URL = "https://cofinal-semierectly-mignon.ngrok-free.dev/generate"
 
 
 def detect_intent(db: Session, request: LogCreate) -> LogResponse:
-    """
-    Detect user intent and generate AI response, automatically including
-    selected instrument information in the user message.
-    """
     try:
         logger.info(f"Detecting intent for session: {request.session_id}")
-
-        # --- Step 1: Retrieve the selected instrument(s) for this session ---
         instruments = service.get_selected_instruments(db, request.session_id)
         if instruments:
             selected_instrument = instruments[-1]
@@ -181,11 +175,9 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
             selected_instrument = None
             instrument_prefix = ""
 
-        # --- Step 2: Construct full user message ---
         user_msg = f"{instrument_prefix}{request.content.strip()}"
         logger.info(f"Constructed user message: {user_msg}")
 
-        # --- Step 3: Send message to Flask API ---
         payload = {
             "prompt": user_msg,
             "max_tokens": 512,

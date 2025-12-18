@@ -8,11 +8,11 @@ class OptimizedScpiCreateRequest(BaseModel):
     message_id: UUID
     optimized_scpi: str
     order_sequence: int
-    type: str  # 'command' or 'query'
+    type: str
 
 class BulkOptimizedScpiCreateRequest(BaseModel):
     message_id: UUID
-    scpi_commands: List[str]  # Parse from optimized sequence text
+    scpi_commands: List[str]
 
 # Response model
 class OptimizedScpiResponse(BaseModel):

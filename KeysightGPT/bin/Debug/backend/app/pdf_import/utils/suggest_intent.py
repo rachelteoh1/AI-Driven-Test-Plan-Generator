@@ -137,15 +137,6 @@ def extract_instrument_name(file_bytes):
         raise ValueError(f"Failed to extract instrument name: {str(e)}")
 
 def process_scpi_text(text, page_number=None):
-    """
-    Extracts SCPI commands, parameters, and metadata from a PDF file using Gemini.
-
-    Args:
-        file (UploadFile or file-like object): The uploaded PDF file.
-
-    Returns:
-        list: A list of parsed model responses (JSON) from each page.
-    """
     page_info_str = f"{page_number}" if page_number is not None else "merged pages"
     print(f"Extracting SCPI from page {page_info_str}...")
     # ...existing prompt code...
@@ -250,19 +241,12 @@ def count_scpi_commands(scpi_json):
     return count
 
 def normalize_scpi_command(cmd):
-    """
-    Removes brackets, angle brackets, spaces, and symbols from a SCPI command and lowercases it.
-    """
     cmd = re.sub(r"[\[\]<>]", "", cmd)  # Remove brackets and angle brackets
     cmd = re.sub(r"\s+", "", cmd)       # Remove all whitespace
     cmd = re.sub(r"[^\w:*\?]", "", cmd) # Remove non-word characters except :, *, ?
     return cmd.lower()
     
 def extract_scpi_from_pdf(file_bytes, max_pages=None):
-    """
-    Extracts SCPI commands and metadata from a PDF file by merging all relevant pages,
-    sending them in a single call to the model, and calculating extraction coverage.
-    """
     try:
         # Step 1: Extract instrument name
         instrument_name = extract_instrument_name(file_bytes)

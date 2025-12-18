@@ -2134,6 +2134,7 @@ import { useState, useRef, useEffect } from "react";
 import * as React from "react";
 import Button from "@mui/material/Button";
 import ScanInstrumentModal from "../modal/ScanInstrumentModal";
+import PdfModal from "../modal/PdfModal";
 import { useAllInstruments, useScanInstrument, useSelectInstrument, useDeleteInstrument, useDeleteAllInstrument } from "../hook/useInstrument";
 import useModal from "../modal/useModal";
 import {
@@ -2161,6 +2162,7 @@ import {
   Trash2,
   Mic,
   MicOff,
+  Download,
 } from "lucide-react";
 import {
   Tooltip,
@@ -2500,6 +2502,11 @@ const ScanButton = styled(IconButton)`
   color: white;
 `;
 
+const UploadManualButton = styled(IconButton)`
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+`;
+
 const DropdownContainer = styled.div`
   position: absolute;
   bottom: 100%;
@@ -2541,7 +2548,7 @@ const DropdownItem = styled.div`
   }
 `;
 
-export default function ChatInterface({ chat, onSendMessage, isLoading, onInstrumentChange }) {
+export default function ChatInterface({ chat, onSendMessage, isLoading, onInstrumentChange, onPdfUploadSuccess }) {
   const [inputValue, setInputValue] = useState("");
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editContent, setEditContent] = useState("");
@@ -3506,6 +3513,32 @@ function BotMessage({
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <UploadManualButton
+                    onClick={() => {
+                      showModal({
+                        modal: (
+                          <PdfModal
+                            key={selectedInstrument?.id}
+                            hideModal={hideModal}
+                            onUploadSuccess={onPdfUploadSuccess}
+                            selectedInstrument={selectedInstrument}
+                          />
+                        ),
+                      });
+                    }}
+                  >
+                    <Download className="h-5 w-5" />
+                  </UploadManualButton>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Import Manual</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </InstrumentBar>
 
           <MessageInputWrapper>
