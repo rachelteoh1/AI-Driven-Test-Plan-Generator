@@ -122,10 +122,27 @@ def update_selected_instrument(db: Session, selected_id: UUID, message_id: UUID)
 # --- Get all selected instruments for session ---
 def get_selected_instruments(db: Session, session_id: UUID):
     try:
-        # Return instruments that are:
-        # 1. Previously selected in this session (regardless of current detection status)
-        # OR already filtered by session_id, so just return all for this session
+        from ..entities.entities import PDFImport
+        
         instruments = db.query(SelectedInstrument).filter_by(session_id=session_id).all()
+        
+        # Dynamically add PDF info from PDFImport table WITHOUT saving to database
+        pdf_imports = db.query(PDFImport).all()
+        
+        for instrument in instruments:
+            if instrument.model and not instrument.json_url_manual:
+                # Check if there's a matching PDF
+                for pdf in pdf_imports:
+                    filename_base = pdf.instrument_filename.replace(".json", "").lower()
+                    models_in_filename = filename_base.split("_")
+                    
+                    if instrument.model.lower() in models_in_filename:
+                        # Add PDF info to the object but don't commit to database
+                        instrument.json_url_manual = pdf.json_url_manual
+                        instrument.instrument_filename = pdf.instrument_filename
+                        logger.info(f"Dynamically added PDF info for {instrument.model}: {pdf.instrument_filename}")
+                        break
+        
         logger.info(f"Retrieved {len(instruments)} selected instruments for session {session_id}")
         return instruments
     except Exception as e:
@@ -174,7 +191,7 @@ SIMULATED_INSTRUMENTS = [
         "resource": "TCPIP0::127.0.0.1::inst0::INSTR",
         "idn": "Keysight Technologies,E5071C,MY00000004,A.09.33",
         "manufacturer": "Keysight Technologies",
-        "model": "E5071C",
+        "model": "33220A",
         "serial": "MY00000004",
         "firmware": "A.09.33",
     },

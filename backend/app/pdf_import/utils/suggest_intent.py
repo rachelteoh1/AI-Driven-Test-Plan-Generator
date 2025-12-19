@@ -209,10 +209,19 @@ def process_scpi_text(text, instrument_name, page_number=None):
             cleaned = re.sub(r"```$", "", cleaned).strip()
 
         response_json = json.loads(cleaned)
-        # Ignore empty {}
+        
+        # Aggressively clean all commands - strip leading colons
+        if isinstance(response_json, list):
+            for obj in response_json:
+                if isinstance(obj, dict) and "command" in obj:
+                    if isinstance(obj["command"], str):
+                        # Remove all leading colons (including multiple ones like ::FREQ)
+                        obj["command"] = obj["command"].lstrip(":")
+        
         if not response_json:
             return None
         return response_json
+    
     except json.JSONDecodeError as e:
         print(f"JSON Parsing Error: {e}")
         return None
@@ -226,9 +235,14 @@ def merge_scpi_json(json_list):
             continue
         for cmd_obj in page_json:
             cmd = cmd_obj.get("command")
-            if cmd and cmd not in seen_commands:
-                seen_commands.add(cmd)
-                merged.append(cmd_obj)
+            if cmd:
+                # Clean leading colon
+                cleaned_cmd = cmd.lstrip(":")
+                cmd_obj["command"] = cleaned_cmd
+                
+                if cleaned_cmd not in seen_commands:
+                    seen_commands.add(cleaned_cmd)
+                    merged.append(cmd_obj)
 
     return merged
 
@@ -247,10 +261,25 @@ def count_scpi_commands(scpi_json):
             count += count_scpi_commands(item)
     return count
 
+def clean_scpi_commands(data):
+    """
+    Recursively removes leading ':' from all 'command' values in the JSON structure.
+    """
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if key == "command" and isinstance(value, str):
+                data[key] = value.lstrip(":")
+            else:
+                clean_scpi_commands(value)
+    elif isinstance(data, list):
+        for item in data:
+            clean_scpi_commands(item)
+    return data
+
 def normalize_scpi_command(cmd):
     cmd = re.sub(r"[\[\]<>]", "", cmd)  # Remove brackets and angle brackets
     cmd = re.sub(r"\s+", "", cmd)       # Remove all whitespace
-    cmd = re.sub(r"[^\w*\?]", "", cmd) # Remove non-word characters except :, *, ?
+    cmd = re.sub(r"[^\w*\?]", "", cmd) # Remove non-word characters except *, ?
     return cmd.lower()
     
 def extract_scpi_from_pdf(file_bytes, max_pages=None):
@@ -274,6 +303,16 @@ def extract_scpi_from_pdf(file_bytes, max_pages=None):
         # Send the merged text to the model in one call
         result = process_scpi_text(merged_text, instrument_name, page_number="all")
         merged_results = merge_scpi_json([result])
+        
+        # Final cleanup: remove any leading colons that might have slipped through
+        clean_scpi_commands(merged_results)
+        
+        # Additional safety check - log if any colons remain
+        for cmd_obj in merged_results:
+            if isinstance(cmd_obj, dict) and "command" in cmd_obj:
+                if cmd_obj["command"].startswith(":"):
+                    print(f"WARNING: Command still has leading colon: {cmd_obj['command']}")
+                    cmd_obj["command"] = cmd_obj["command"].lstrip(":")
 
         # Count the number of SCPI commands extracted
         scpi_command_count = count_scpi_commands(merged_results)
@@ -352,9 +391,7 @@ def extract_scpi_from_pdf(file_bytes, max_pages=None):
         raise ValueError(f"Failed to extract SCPI commands from PDF: {str(e)}")
     
 def is_toc_line(line: str) -> bool:
-    # Trim whitespace
     line = line.strip()
-    # Match: some text + spaces/dots + page number at end
     return bool(re.match(r"^.+\s+(\d+)$", line))
 
 def extract_scpi_commands_from_toc(file_bytes):
