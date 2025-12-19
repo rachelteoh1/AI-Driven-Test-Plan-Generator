@@ -165,44 +165,44 @@ SIMULATED_INSTRUMENTS = [
 def scan_instruments(db: Session, timeout_ms: int = 800):
     """Scan VISA resources, update DB, and return active instruments."""
 
-    rm = pyvisa.ResourceManager()
-    resources = rm.list_resources()
-    detected = []
+    # rm = pyvisa.ResourceManager()
+    # resources = rm.list_resources()
+    # detected = []
     
-    # detected = SIMULATED_INSTRUMENTS.copy()
+    detected = SIMULATED_INSTRUMENTS.copy()
 
     # 1. Scan VISA
-    for res in resources:
-        idn = None
-        manufacturer = model = serial = firmware = None
-        inst = None
-        try:
-            inst = rm.open_resource(res, open_timeout=timeout_ms)
-            inst.timeout = timeout_ms
-            idn = inst.query("*IDN?").strip()
-            parts = [p.strip() for p in idn.split(",")]
-            manufacturer = parts[0] if len(parts) > 0 else None
-            model = parts[1] if len(parts) > 1 else None
-            serial = parts[2] if len(parts) > 2 else None
-            firmware = parts[3] if len(parts) > 3 else None
-        except Exception:
-            pass
-        finally:
-            try:
-                inst and inst.close()
-            except Exception:
-                pass
+    # for res in resources:
+    #     idn = None
+    #     manufacturer = model = serial = firmware = None
+    #     inst = None
+    #     try:
+    #         inst = rm.open_resource(res, open_timeout=timeout_ms)
+    #         inst.timeout = timeout_ms
+    #         idn = inst.query("*IDN?").strip()
+    #         parts = [p.strip() for p in idn.split(",")]
+    #         manufacturer = parts[0] if len(parts) > 0 else None
+    #         model = parts[1] if len(parts) > 1 else None
+    #         serial = parts[2] if len(parts) > 2 else None
+    #         firmware = parts[3] if len(parts) > 3 else None
+    #     except Exception:
+    #         pass
+    #     finally:
+    #         try:
+    #             inst and inst.close()
+    #         except Exception:
+    #             pass
 
-        detected.append({
-            "resource": res,
-            "idn": idn,
-            "manufacturer": manufacturer,
-            "model": model,
-            "serial": serial,
-            "firmware": firmware,
-        })
+    #     detected.append({
+    #         "resource": res,
+    #         "idn": idn,
+    #         "manufacturer": manufacturer,
+    #         "model": model,
+    #         "serial": serial,
+    #         "firmware": firmware,
+    #     })
 
-    rm.close()
+    # rm.close()
 
     # 2. Update DB
     try:
