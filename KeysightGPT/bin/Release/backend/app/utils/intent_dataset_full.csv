@@ -1,0 +1,108 @@
+text,intent
+Generate test case to measure the voltage on channel 1.,generate_scpi
+Test case to perform a diode forward voltage check.,generate_scpi
+I want to measure current through the load.,generate_scpi
+Explain ROUT:SCAN (@101:110).,explain_scpi
+What is the purpose of a current sweep test?,explain_scpi
+How does a diode voltage check work?,explain_scpi
+Explain :NET:TYPE,explain_scpi
+Generate a test sequence using :NET:TYPE,generate_scpi
+Explain :PAGE:MEAS:OSEQ:TRIG:TIMEMAX,explain_scpi
+Create SCPI sequence for :PAGE:MEAS:OSEQ:TRIG:TIMEMAX,generate_scpi
+What is the purpose of :GNDU:DIS?,explain_scpi
+Use :GNDU:DIS in a test sequence,generate_scpi
+Can you explain :PAGE:SC?,explain_scpi
+Generate a test sequence using :PAGE:SC,generate_scpi
+What does :SYST:COMM:NET:PRIN:NET:GRAP do?,explain_scpi
+Create SCPI sequence for :SYST:COMM:NET:PRIN:NET:GRAP,generate_scpi
+Can you explain :PAGE:GLIS:ASEL?,explain_scpi
+Use :PAGE:GLIS:ASEL in a test sequence,generate_scpi
+I want to understand :PAGE:STR:SET:SST?,explain_scpi
+Build a test case that includes :PAGE:STR:SET:SST?,generate_scpi
+How does :SYST:COMM:NET:FILE:SET? work?,explain_scpi
+Build a test case that includes :SYST:COMM:NET:FILE:SET?,generate_scpi
+Can you explain :MMEM:STOR:SSH:L?,explain_scpi
+Generate a test sequence using :MMEM:STOR:SSH:L,generate_scpi
+How does :PAGE:MEAS:SAMP:CONS:VSU work?,explain_scpi
+Build a test case that includes :PAGE:MEAS:SAMP:CONS:VSU,generate_scpi
+What does :AFT:STAT? do?,explain_scpi
+Use :AFT:STAT? in a test sequence,generate_scpi
+I want to understand :TRAC:DEL,explain_scpi
+Generate a test sequence using :TRAC:DEL,generate_scpi
+I want to understand :PAGE:MEAS:SAMP:CONS:SMU,explain_scpi
+Run a measurement with :PAGE:MEAS:SAMP:CONS:SMU,generate_scpi
+Explain :PAGE:GLIS:DISP:LPAR?,explain_scpi
+Run a measurement with :PAGE:GLIS:DISP:LPAR?,generate_scpi
+What does :DISP:ALL? do?,explain_scpi
+Generate a test sequence using :DISP:ALL?,generate_scpi
+How does :PAGE:DISP:GRAP:X:MIN? work?,explain_scpi
+Run a measurement with :PAGE:DISP:GRAP:X:MIN?,generate_scpi
+What is the purpose of :PAGE:MEAS:OSEQ:TRIGON?,explain_scpi
+Generate a test sequence using :PAGE:MEAS:OSEQ:TRIGON,generate_scpi
+Explain :PAGE:MEAS:PGUS:CONS:PGU,explain_scpi
+Run a measurement with :PAGE:MEAS:PGUS:CONS:PGU,generate_scpi
+I want to understand :HCOP:DEV:LANG?,explain_scpi
+Generate a test sequence using :HCOP:DEV:LANG?,generate_scpi
+Explain :SYST:DATE?,explain_scpi
+Use :SYST:DATE? in a test sequence,generate_scpi
+How does :PROG:STAT work?,explain_scpi
+Use :PROG:STAT in a test sequence,generate_scpi
+How does :PAGE:GLIS:DISP:GRID? work?,explain_scpi
+Build a test case that includes :PAGE:GLIS:DISP:GRID?,generate_scpi
+I want to understand :SYST:COMM:NET:PRIN:SET,explain_scpi
+Make a voltage test with :SYST:COMM:NET:PRIN:SET,generate_scpi
+What is the purpose of :PAGE:LINE?,explain_scpi
+Build a test case that includes :PAGE:LINE,generate_scpi
+How does :TANG:AFT:STAT? work?,explain_scpi
+Make a voltage test with :TANG:AFT:STAT?,generate_scpi
+Can you explain :FUNC??,explain_scpi
+Make a voltage test with :FUNC?,generate_scpi
+What does :STAT:OPER:PTR do?,explain_scpi
+Use :STAT:OPER:PTR in a test sequence,generate_scpi
+Explain :PAGE:STR:FORC:STAT,explain_scpi
+Make a voltage test with :PAGE:STR:FORC:STAT,generate_scpi
+What does :PAGE:GL do?,explain_scpi
+Make a voltage test with :PAGE:GL,generate_scpi
+I want to understand :SYST:COMM:NET:SELF:GROU?,explain_scpi
+Make a voltage test with :SYST:COMM:NET:SELF:GROU?,generate_scpi
+I want to understand :PAGE:MEAS:VARD:PCOM?,explain_scpi
+Build a test case that includes :PAGE:MEAS:VARD:PCOM?,generate_scpi
+What does :STAT:OPER:ENAB? do?,explain_scpi
+Make a voltage test with :STAT:OPER:ENAB?,generate_scpi
+Explain :HCOP:PAGE:WIDT?,explain_scpi
+Run a measurement with :HCOP:PAGE:WIDT?,generate_scpi
+What does :TRAC:DEL:ALL do?,explain_scpi
+Use :TRAC:DEL:ALL in a test sequence,generate_scpi
+What does :PAGE:SYST:CONF do?,explain_scpi
+Make a voltage test with :PAGE:SYST:CONF,generate_scpi
+Explain :SYST:COMM:NET:FILE:NET:IPAD?,explain_scpi
+Run a measurement with :SYST:COMM:NET:FILE:NET:IPAD?,generate_scpi
+What is the purpose of :TEST:ABOR?,explain_scpi
+Use :TEST:ABOR in a test sequence,generate_scpi
+Can you explain :PAGE:GLIS:LIST?,explain_scpi
+Run a measurement with :PAGE:GLIS:LIST,generate_scpi
+What is the purpose of :ITEM:PNUM?,explain_scpi
+Generate a test sequence using :ITEM:PNUM,generate_scpi
+What is the purpose of :PAGE:CHAN:UVAR:DEF??,explain_scpi
+Run a measurement with :PAGE:CHAN:UVAR:DEF?,generate_scpi
+What does :CMAP:COL do?,explain_scpi
+Run a measurement with :CMAP:COL,generate_scpi
+Can you explain :PAGE:MEAS:VARD:PCOM?,explain_scpi
+Use :PAGE:MEAS:VARD:PCOM in a test sequence,generate_scpi
+I want to understand :HCOP:ITEM:TRAC:GRAT:STAT,explain_scpi
+Create SCPI sequence for :HCOP:ITEM:TRAC:GRAT:STAT,generate_scpi
+What does :PAGE:MEAS:MSET:SMU do?,explain_scpi
+Create SCPI sequence for :PAGE:MEAS:MSET:SMU,generate_scpi
+Explain :PAGE:DISP:GRAP:X:MAX,explain_scpi
+Use :PAGE:DISP:GRAP:X:MAX in a test sequence,generate_scpi
+What is the purpose of :COMPMAX?,explain_scpi
+Generate a test sequence using :COMPMAX,generate_scpi
+Explain :PAGE:STR:TRIG?,explain_scpi
+Create SCPI sequence for :PAGE:STR:TRIG?,generate_scpi
+Can you explain :ITEM:ANN?,explain_scpi
+Generate a test sequence using :ITEM:ANN,generate_scpi
+What does :PAGE:MEAS:SAMP:SCON:EVENT do?,explain_scpi
+Make a voltage test with :PAGE:MEAS:SAMP:SCON:EVENT,generate_scpi
+Can you explain :TANG:POS?,explain_scpi
+Use :TANG:POS in a test sequence,generate_scpi
+

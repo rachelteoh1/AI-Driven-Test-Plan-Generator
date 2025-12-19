@@ -1,8 +1,11 @@
 from datetime import timedelta, datetime, timezone
+import time
 from typing import Annotated
 from uuid import UUID, uuid4
 from fastapi import Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
+
+from ..chat_logs import monitoring_service
 from ..entities.entities import ChatLog, ChatLogVersion, SelectedInstrument
 import logging
 from ..exceptions import (
@@ -278,6 +281,7 @@ def _keyword_search_fallback(commands_data, query, top_k=5):
 
 
 def detect_intent(db: Session, request: LogCreate) -> LogResponse:
+    start_time = time.time()
     try:
         logger.info(f"Detecting intent for session: {request.session_id}")
         instruments = service.get_selected_instruments(db, request.session_id)
@@ -340,7 +344,7 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
         logger.info(f"Enhanced prompt with RAG: {enhanced_prompt[:200]}...")
 
         payload = {
-            "prompt": enhanced_prompt,
+            "prompt": user_msg,
             "max_tokens": 512,
             "temperature": 0.2
         }
@@ -402,10 +406,26 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
                 serial=selected_instrument.serial,
             ) if selected_instrument else None,
         )
+        elapsed_time = time.time() - start_time
+        monitoring_service.record_response_time(elapsed_time)
 
         logger.info(f"Returning LogResponse")
         return log_response
 
+    except requests.Timeout:
+        response_time = time.time() - start_time
+        monitoring_service.record_response_time(response_time)
+        logger.error("Flask API request timed out")
+        raise HTTPException(
+            status_code=504, 
+            detail="Request timed out. Please try again."
+        )
+        
     except Exception as e:
+        response_time = time.time() - start_time
+        monitoring_service.record_response_time(response_time)
         logger.exception("Intent detection failed")
-        raise HTTPException(status_code=500, detail=f"Failed to detect intent: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Failed to detect intent: {str(e)}"
+        )

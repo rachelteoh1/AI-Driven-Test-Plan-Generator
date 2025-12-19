@@ -156,8 +156,9 @@ def process_scpi_text(text, instrument_name, page_number=None):
         "Do NOT use the same page number for all commands.\n"
         "\n"
         "SCPI command format:\n"
-        "- SCPI commands use colons : for hierarchy, e.g., :MEASure:CURRent:DC?\n"
         "- The first keyword indicates the *intent* (e.g., MEASure, SOURce, CONFigure)\n"
+        "- The extracted SCPI command string MUST NOT start with ':'.\n"
+        "- If the command appears as ':MEASure:VOLTage', remove the leading ':' and output 'MEASure:VOLTage'.\n"
         "- The second part(s) are the *subsystem*\n"
         "- Parameters are inside syntax blocks like <channel>, <range>, <nplc> or described in nearby lines or tables\n"
         "- Parameter values are examples listed below or near each parameter with | as separator.\n"
@@ -166,10 +167,10 @@ def process_scpi_text(text, instrument_name, page_number=None):
         "---\n\n"
         "Example input text:\n"
         "--- Page 42 ---\n"
-        ":SOURce:VOLTage:LEVel:IMMediate:AMPLitude\n"
+        "SOURce:VOLTage:LEVel:IMMediate:AMPLitude\n"
         "Sets the output voltage level of the specified channel.\n"
         "Syntax:\n"
-        ":SOURce:VOLTage:LEVel:IMMediate:AMPLitude <channel>,<level>,<unit>\n"
+        "SOURce:VOLTage:LEVel:IMMediate:AMPLitude <channel>,<level>,<unit>\n"
         "<channel>: CH1 or CH2\n"
         "<level>: voltage value in volts\n"
         "<unit>: V or mV\n"
@@ -177,7 +178,7 @@ def process_scpi_text(text, instrument_name, page_number=None):
         "Example flattened JSON output:\n"
         "[\n"
         "  {\n"
-        "    \"command\": \":SOURce:VOLTage:LEVel:IMMediate:AMPLitude\",\n"
+        "    \"command\": \"SOURce:VOLTage:LEVel:IMMediate:AMPLitude\",\n"
         "    \"parameters\": [\"channel\", \"level\", \"unit\"],\n"
         "    \"values\": {\n"
         "      \"channel\": [\"CH1\", \"CH2\"],\n"
@@ -191,7 +192,7 @@ def process_scpi_text(text, instrument_name, page_number=None):
         "    \"page\": 42\n"
         "  }\n"
         "]\n\n"
-        "Only extract commands that show a SCPI command line starting with ':' or '*'."
+        "Only extract commands that show a SCPI command line."
         "Do not include generic subsystem headers (e.g., 'FETCh Subsystem', 'FORMat Subsystem') unless they also include at least one explicit SCPI command."
         "Only extract from pages that consist of the description of SCPI commands and their parameters."
         "Dont extract duplicated SCPI Commands.\n"
@@ -249,7 +250,7 @@ def count_scpi_commands(scpi_json):
 def normalize_scpi_command(cmd):
     cmd = re.sub(r"[\[\]<>]", "", cmd)  # Remove brackets and angle brackets
     cmd = re.sub(r"\s+", "", cmd)       # Remove all whitespace
-    cmd = re.sub(r"[^\w:*\?]", "", cmd) # Remove non-word characters except :, *, ?
+    cmd = re.sub(r"[^\w*\?]", "", cmd) # Remove non-word characters except :, *, ?
     return cmd.lower()
     
 def extract_scpi_from_pdf(file_bytes, max_pages=None):

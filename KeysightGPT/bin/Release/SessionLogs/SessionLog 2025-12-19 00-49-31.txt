@@ -1,0 +1,60 @@
+﻿2025-12-19 00:49:31.817111 ; Session        ; Debug       ; Session log loaded as 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Release\SessionLogs\tap 2025-12-19 00-49-31.txt'. [1.53 ms]
+2025-12-19 00:49:31.854115 ; Session        ; Debug       ; Deleting log file: C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Debug\SessionLogs\MSBuild.27676 2025-08-28 22-52-05.txt
+2025-12-19 00:49:31.904112 ; Session        ; Debug       ; Running '.\tap  package create "C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\\package.xml" --install' in 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Release'.
+2025-12-19 00:49:31.951287 ; AssemblyFinder ; Debug       ; Found 16/37 assembly files. [19.6 ms]
+2025-12-19 00:49:31.964284 ; Resolver       ; Debug       ; Found match for System.Collections.Immutable, Version=1.2.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a in C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Release\Dependencies\System.Collections.Immutable.1.2.3.0\System.Collections.Immutable.dll
+2025-12-19 00:49:32.136285 ; Resolver       ; Debug       ; Found match for System.Reflection.Metadata, Version=1.4.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a in C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Release\Dependencies\System.Reflection.Metadata.1.4.3.0\System.Reflection.Metadata.dll
+2025-12-19 00:49:32.423223 ; Searcher       ; Debug       ; Ordered 12 assemblies according to references. [444 ms]
+2025-12-19 00:49:32.480219 ; PluginManager  ; Debug       ; Found 5 plugin assemblies containing 205 plugin types. [504 ms]
+2025-12-19 00:49:32.481220 ; PluginManager  ; Debug       ; Found version 9.28.2+504225fd  of OpenTap.dll
+2025-12-19 00:49:32.481220 ; PluginManager  ; Debug       ; Found version 9.28.2+504225fd  of OpenTap.Package.dll
+2025-12-19 00:49:32.481220 ; PluginManager  ; Debug       ; Found version 9.28.2+504225fd  of OpenTap.Plugins.BasicSteps.dll
+2025-12-19 00:49:32.481220 ; PluginManager  ; Debug       ; Found version 9.17.5+6f353459  of Keysight.OpenTap.Wpf.dll
+2025-12-19 00:49:32.481220 ; PluginManager  ; Debug       ; Found version 0.0.0            of KeysightGPT.dll
+2025-12-19 00:49:32.481220 ; PluginManager  ; Debug       ; Searched 16 Assemblies. [507 ms]
+2025-12-19 00:49:32.492221 ; AssemblyData   ; Debug       ; Loaded OpenTap. [501 us]
+2025-12-19 00:49:32.502219 ; AssemblyData   ; Debug       ; Loaded Keysight.OpenTap.Wpf. [3.84 ms]
+2025-12-19 00:49:32.513220 ; SystemInfo     ; Debug       ; Microsoft Windows 10.0.19045 X64
+2025-12-19 00:49:32.513220 ; SystemInfo     ; Debug       ; .NET Framework 4.8.9310.0
+2025-12-19 00:49:32.514227 ; SystemInfo     ; Debug       ; OpenTAP Engine 9.28.2+504225fd X64
+2025-12-19 00:49:32.518222 ; AssemblyData   ; Debug       ; Loaded OpenTap.Package. [4.43 ms]
+2025-12-19 00:49:32.525215 ; Settings       ; Debug       ; No settings file exists for EngineSettings. A new instance with default values has been created. [7.01 ms]
+2025-12-19 00:49:32.556222 ; AssemblyData   ; Debug       ; Loaded OpenTap.Plugins.BasicSteps. [3.73 ms]
+2025-12-19 00:49:32.573224 ; Session        ; Debug       ; Session log loaded as 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Release\SessionLogs\SessionLog 2025-12-19 00-49-31.txt'. [18.6 ms]
+2025-12-19 00:49:32.615656 ; AssemblyData   ; Debug       ; Loaded mscorlib. [0 ns]
+2025-12-19 00:49:32.684653 ; CLI            ; Debug       ; Executing CLI action: package \ create
+2025-12-19 00:49:32.695650 ; VariableExpander ; Debug       ; Initialized variable expander:
+2025-12-19 00:49:32.709537 ; Installation   ; Debug       ; OpenTAP                        - 9.28.2+504225fd
+2025-12-19 00:49:32.709537 ; Installation   ; Debug       ; Keysight Fixed License Manager - 1.6.2+d58f8a89
+2025-12-19 00:49:32.709537 ; Installation   ; Debug       ; Keysight IO Libraries Suite    - 18.4.30319-beta.2.5+a2799c9d
+2025-12-19 00:49:32.709537 ; Installation   ; Debug       ; PathWave License Manager       - 7.4.1+efeba870
+2025-12-19 00:49:32.711536 ; Package        ; Debug       ; Package preprocessing completed. [19.6 ms]
+2025-12-19 00:49:32.718543 ; Resolver       ; Debug       ; Found match for DotNet.Glob, Version=3.0.1.0, Culture=neutral, PublicKeyToken=b68cc888b4f632d1 in C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Release\Dependencies\DotNet.Glob.3.0.1.0\DotNet.Glob.dll
+2025-12-19 00:49:32.834972 ; Searcher       ; Debug       ; Ordered 35 assemblies according to references. [95.6 ms]
+2025-12-19 00:49:32.867978 ; AssemblyData   ; Debug       ; Loaded KeysightGPT. [3.57 ms]
+2025-12-19 00:49:32.926673 ; Package        ; Information ; Satisfying assembly reference to OpenTap by adding dependency on package OpenTAP
+2025-12-19 00:49:32.926673 ; Package        ; Information ; Satisfying assembly reference to OpenTap.Plugins.BasicSteps by adding dependency on package OpenTAP
+2025-12-19 00:49:32.926673 ; Package        ; Information ; Satisfying assembly reference to Newtonsoft.Json by adding dependency on package OpenTAP
+2025-12-19 00:49:32.926673 ; Package        ; Information ; Satisfying assembly reference to System by adding dependency on package OpenTAP
+2025-12-19 00:49:32.926673 ; Package        ; Information ; Adding dependency on package 'OpenTAP' version 9.28.2+504225fd
+2025-12-19 00:49:32.930680 ; Package        ; Information ; 'KeysightGPT.dll' depends on 'Keysight.OpenTap.Wpf' version '9.17.5.0'. Adding dependency to package, it was not found in any other packages.
+2025-12-19 00:49:32.934678 ; Package        ; Information ; 'KeysightGPT.dll' depends on 'Microsoft.Web.WebView2.Wpf' version '1.0.3405.78'. Adding dependency to package, it was not found in any other packages.
+2025-12-19 00:49:32.935680 ; Package        ; Information ; 'KeysightGPT.dll' depends on 'Microsoft.Web.WebView2.Core' version '1.0.3405.78'. Adding dependency to package, it was not found in any other packages.
+2025-12-19 00:49:32.951674 ; Package        ; Debug       ; Using temporary folder at 'C:\Users\Rachel\AppData\Local\Temp\35qkipyb.sn5'
+2025-12-19 00:49:32.957678 ; Package        ; Debug       ; Updating version info for 'KeysightGPT.dll' [2.50 ms]
+2025-12-19 00:49:32.959677 ; Resolver       ; Debug       ; Found match for Mono.Cecil, Version=0.10.1.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e in C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Release\Dependencies\Mono.Cecil.0.10.1.0\Mono.Cecil.dll
+2025-12-19 00:49:33.363843 ; Package        ; Information ; Updated assembly version info using Mono method. [408 ms]
+2025-12-19 00:49:33.369847 ; Package        ; Debug       ; Available custom actions for 'create' stage. (2 actions: OpenTap.Package.IncludePackageDependencies, OpenTap.Package.FileHashPackageAction)
+2025-12-19 00:49:33.372850 ; Package        ; Information ; Package action IncludePackageDependencies completed [2.92 ms]
+2025-12-19 00:49:33.436569 ; Package        ; Information ; Package action FileHashPackageAction completed [63.7 ms]
+2025-12-19 00:49:33.436569 ; Package        ; Information ; Creating OpenTAP package.
+2025-12-19 00:49:33.445779 ; Package        ; Debug       ; Compressed 'C:\Users\Rachel\AppData\Local\Temp\35qkipyb.sn5\Versioned\KeysightGPT.dll' [4.18 ms]
+2025-12-19 00:49:33.558857 ; Package        ; Debug       ; Compressed 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Release\Keysight.OpenTap.Wpf.dll' [112 ms]
+2025-12-19 00:49:33.565859 ; Package        ; Debug       ; Compressed 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Release\Microsoft.Web.WebView2.Wpf.dll' [7.32 ms]
+2025-12-19 00:49:33.594157 ; Package        ; Debug       ; Compressed 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Release\Microsoft.Web.WebView2.Core.dll' [28.0 ms]
+2025-12-19 00:49:33.687042 ; Package        ; Debug       ; Verifying package integrity...
+2025-12-19 00:49:33.739664 ; Package        ; Debug       ; Verified metadata integrity. [52.6 ms]
+2025-12-19 00:49:33.750660 ; Package        ; Debug       ; Verified archive integrity. [63.9 ms]
+2025-12-19 00:49:33.755663 ; PackageAction  ; Information ; OpenTAP plugin package 'KeysightGPT.0.1.0-alpha.TapPackage' containing 'KeysightGPT' successfully created.
+2025-12-19 00:49:33.757663 ; PackageAction  ; Information ; Installed 'KeysightGPT' (C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Release\Packages\KeysightGPT\package.xml)
+2025-12-19 00:49:33.757663 ; CLI            ; Debug       ; CLI action returned exit code: 0 [1.07 s]
