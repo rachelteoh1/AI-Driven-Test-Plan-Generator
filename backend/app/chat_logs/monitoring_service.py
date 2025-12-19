@@ -164,7 +164,7 @@ def get_total_requests():
 class IntentMonitor:
     """Monitor and track intent classifications"""
     
-    def _init_(self):
+    def __init__(self):
         self.lock = Lock()
         self.intent_counts = defaultdict(int)
         self.intent_confidences = defaultdict(list)
