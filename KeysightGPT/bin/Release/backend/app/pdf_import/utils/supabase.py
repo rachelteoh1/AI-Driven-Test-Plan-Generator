@@ -1,0 +1,61 @@
+import json
+from supabase import create_client
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+
+supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+def upload_to_supabase(bucket_name: str, json_data: list, file_name: str) -> str:
+    """
+    Uploads JSON data to Supabase Storage and returns the public URL.
+
+    Args:
+        bucket_name (str): The name of the Supabase Storage bucket.
+        json_data (list): The JSON data to upload.
+        file_name (str): The name of the file in the bucket.
+
+    Returns:
+        str: The public URL of the uploaded file.
+    """
+    try:
+        # Convert JSON data to a string
+        json_string = json.dumps(json_data, indent=4)
+
+        # Delete the file if it exists
+        supabase.storage.from_(bucket_name).remove([file_name])
+
+        # Upload the JSON string to Supabase
+        response = supabase.storage.from_(bucket_name).upload(
+            file_name,
+            json_string.encode("utf-8"),
+            {"content-type": "application/json"}
+        )
+
+        # Construct the public URL
+        public_url = f"{SUPABASE_URL}/storage/v1/object/public/{bucket_name}/{file_name}"
+        return public_url
+    except Exception as e:
+        raise Exception(f"Error uploading JSON to Supabase: {str(e)}")
+
+def delete_from_supabase(bucket_name: str, file_name: str) -> bool:
+    """Delete a file from Supabase Storage."""
+    try:
+        response = supabase.storage.from_(bucket_name).remove([file_name])
+        return True
+        
+    except Exception as e:
+        raise
+
+
+def file_exists_in_supabase(bucket_name: str, file_name: str) -> bool:
+    """Check if a file exists in Supabase Storage."""
+    try:
+        files = supabase.storage.from_(bucket_name).list()
+        return any(f['name'] == file_name for f in files)
+    except Exception as e:
+        return False

@@ -42,18 +42,33 @@ export default function LogoutModal({
   const navigate = useNavigate(); // <-- Use the hook
 
 
+  // const handleLogout = async () => {
+  //   try {
+  //     await onLogout?.();
+  //     setStatus("success");
+  //     setTimeout(() => {
+  //       hideModal();
+  //       navigate(navigateTo);
+  //     }, 6000);
+  //   } catch {
+  //     setStatus("fail");
+  //   }
+  // };
+
   const handleLogout = async () => {
-    try {
-      await onLogout?.();
-      setStatus("success");
-      setTimeout(() => {
-        hideModal();
-        navigate(navigateTo);
-      }, 6000);
-    } catch {
-      setStatus("fail");
-    }
-  };
+  try {
+    await onLogout?.();
+    setStatus("success");
+    setTimeout(() => {
+      hideModal();
+      navigate(navigateTo);
+    }, 6000);
+  } catch (error) {
+    console.error("Logout error:", error); // Debug logging
+    setStatus("fail");
+    // Don't auto-close - let user dismiss manually via CrossedModal's hideModal
+  }
+};
 
 
   if (status === "success") {

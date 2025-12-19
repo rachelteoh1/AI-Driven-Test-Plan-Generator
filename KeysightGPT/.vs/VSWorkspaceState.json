@@ -2,11 +2,6 @@
   "ExpandedNodes": [
     "",
     "\\bin",
-    "\\bin\\Release",
-    "\\bin\\Release\\Dependencies",
-    "\\bin\\Release\\Dependencies\\OpenTap.Repository.Client.4.17.0.0",
-    "\\bin\\Release\\Dependencies\\System.Reflection.Metadata.1.4.3.0",
-    "\\bin\\Release\\Dependencies\\System.Threading.Tasks.Extensions.4.2.0.1",
     "\\obj",
     "\\obj\\Debug",
     "\\obj\\Release"

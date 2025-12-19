@@ -45,20 +45,20 @@ export default function ClearModal({
   const clearChatLogMutation = useDeleteChatLog();
 
 
-  const handleClear = () => {
-    if (!activeChat) {
-      setStatus("fail");
-      return;
-    }
-   try {
-     clearChatLogMutation.mutateAsync(activeChat.session_id);
-      setStatus("success");
-     
-    } catch (err) {
-      console.error("Delete failed", err);
-      setStatus("fail");
-    }
+  const handleClear = async () => {  // Add async
+  if (!activeChat) {
+    setStatus("fail");
+    return;
   }
+  
+  try {
+    await clearChatLogMutation.mutateAsync(activeChat.session_id);  // Add await
+    setStatus("success");
+  } catch (err) {
+    console.error("Delete failed", err);
+    setStatus("fail");
+  }
+}
 
   if (status === "success") {
     return (
