@@ -215,7 +215,7 @@ class IntentFeedback(Base):
     __tablename__ = "intent_feedback"
     
     id = Column(Integer, primary_key=True, index=True)
-    message_id = Column(Integer, ForeignKey("chat_logs.message_id"), nullable=False)
+    message_id = Column(UUID(as_uuid=True), ForeignKey("chat_logs.message_id", ondelete="CASCADE"), nullable=True)
     intent_metadata_id = Column(Integer, ForeignKey("intent_metadata.id"), nullable=False)
     
     # Feedback

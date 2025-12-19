@@ -230,6 +230,7 @@ export const Home = ({
   const [selectedInstrument, setSelectedInstrument] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showHeader, setShowHeader] = useState(false);
+  const [isReplyLoading, setIsReplyLoading] = useState(false);
   const { showModal, hideModal } = useModal();
   // Track if this is a fresh chat (no messages yet)
   const previousChatIdRef = useRef(activeChatId);

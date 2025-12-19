@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import * as React from "react";
 import Button from "@mui/material/Button";
 import ScanInstrumentModal from "../modal/ScanInstrumentModal";
-import { useAllInstruments, useSessionInstrument, useScanInstrument, useSelectInstrument, useDeleteInstrument, useDeleteAllInstrument } from "../hook/useInstrument";
+import { useAllInstruments, useScanInstrument, useSelectInstrument, useDeleteInstrument, useDeleteAllInstrument, useSessionInstrument } from "../hook/useInstrument";
 import useModal from "../modal/useModal";
 import {
   DropdownMenu,
@@ -507,21 +507,14 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
     error: instrumentsError,
   } = useGetAllInstruments();
 
-  // Get session-specific selected instruments for dropdown
-  const { data: sessionInstrumentData = [], isLoading: isGettingSessionInstrument } = useSessionInstrument(chat.session_id);
-
-  // Get all detected instruments for scan modal
-  const { data: allInstrumentsData = [], isLoading: isGettingAllInstrument } = useAllInstruments({
+  // Get all detected instruments for dropdown and scan modal
+  const { data: instrumentData = [], isLoading: isGettingAllInstrument } = useAllInstruments({
     staleTime: 5 * 60 * 1000,
     cacheTime: 10 * 60 * 1000,
   });
 
-  // Debug logging
-  useEffect(() => {
-    console.log('Session ID:', chat.session_id);
-    console.log('Session Instrument Data:', sessionInstrumentData);
-    console.log('Is Getting Session Instrument:', isGettingSessionInstrument);
-  }, [chat.session_id, sessionInstrumentData, isGettingSessionInstrument]);
+  // Get selected instruments for this session
+  const { data: sessionInstrumentsData = [], isLoading: isSessionInstrumentsLoading } = useSessionInstrument(chat.session_id);
 
   const scanMutation = useScanInstrument();
   const selectMutation = useSelectInstrument();
@@ -652,23 +645,23 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
   };
 
   useEffect(() => {
-    console.log('[USEEFFECT] selectedInstrument changed:', selectedInstrument);
+    console.log('selectedInstrument changed:', selectedInstrument);
     if (!selectedInstrument) return;
 
     if (selectedInstrument.json_url_manual) {
-      console.log('[USEEFFECT] Fetching JSON from:', selectedInstrument.json_url_manual);
+      console.log('Fetching JSON from:', selectedInstrument.json_url_manual);
       fetch(selectedInstrument.json_url_manual)
         .then((res) => {
           if (!res.ok) throw new Error(`Failed to fetch JSON: ${res.status}`);
           return res.json();
         })
         .then((data) => {
-          console.log("[USEEFFECT] Fetched SCPI JSON data:", data);
+          console.log("Fetched SCPI JSON data:", data);
           setScpiSuggestions(data);
           
           // Flatten commands for prefix autocomplete
           const flattened = flattenScpiCommands(data);
-          console.log("[USEEFFECT] Flattened commands count:", flattened.length);
+          console.log("Flattened commands count:", flattened.length);
           setFlattenedCommands(flattened);
         })
         .catch((err) => {
@@ -801,15 +794,34 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
 };
 const handleSelectInstrument = async (instrument) => {
   try {
+    // Create SelectedInstrument record for this session
     const response = await selectMutation.mutateAsync({
       instrument_id: instrument.id,
       session_id: chat.session_id,
     });
-    const instruments = instrumentsData?.instruments || [];
-    const fullInstrument = instruments.find(inst => inst.id === response.id);
-    setSelectedInstrument(fullInstrument || response);
+    
+    console.log('[SELECT] Backend response:', response);
+    console.log('[SELECT] json_url_manual:', response.json_url_manual);
+    
+    // Check if PDF manual exists
+    if (!response.json_url_manual) {
+      console.log('[SELECT] No PDF manual found, showing modal');
+      showModal({
+        modal: (
+          <CrossedModal
+            title="Manual not uploaded."
+            description="Import a user manual to get started."
+            hideModal={hideModal}
+          />
+        ),
+      });
+    }
+    
+    // Set selected instrument using backend response (which has PDF info)
+    setSelectedInstrument(response);
+    
     if (onInstrumentChange) {
-      onInstrumentChange(fullInstrument || response);
+      onInstrumentChange(response);
     }
   } catch (err) {
     console.error("Failed to select instrument:", err);
@@ -1106,6 +1118,82 @@ const onUpload = async (message) => {
   } finally {
     setUploadingMessageId(null);
   }
+    return (
+    <Container>
+      <MessagesContainer>
+        {viewingHistory && versionData[viewingHistory]
+          ? (() => {
+            console.log(" Version Viewer Debug Info:");
+            console.log("viewingHistory:", viewingHistory);
+            console.log("versionData:", versionData);
+            console.log(
+              "versionData[viewingHistory]:",
+              versionData[viewingHistory]
+            );
+            console.log("Number of response:", versionData.responses);
+
+            return (
+              <PreviousVersionViewer
+                versions={versionData[viewingHistory]}
+                onBack={handleBackToCurrent}
+              />
+            );
+          })()
+          : chat.messages.map((message) => (
+            <Message
+              key={message.message_id}
+              message={message}
+              isEditing={editingMessageId === message.message_id}
+              editContent={editContent}
+              setEditContent={setEditContent}
+              onSaveEdit={handleSaveEdit}
+              onCancelEdit={handleCancelEdit}
+              onCopy={(text) => copyToClipboard(text, message.message_id)}
+              onEdit={handleEditMessage}
+              versions={messageVersions[message.message_id] || []}
+              currentVersionIndex={currentVersions[message.message_id]}
+              isViewingHistory={viewingHistory === message.message_id}
+              onViewVersion={handleViewVersion}
+              onBackToCurrent={handleBackToCurrent}
+              getMessageContent={getMessageContent}
+              copiedMessageId={copiedMessageId}
+              onUpload={onUpload}
+              isUploading={uploadingMessageId === message.message_id}
+            />
+          ))}
+
+        {isLoading && <LoadingIndicator />}
+        <div ref={messagesEndRef} />
+      </MessagesContainer>
+            <InputArea>
+        <MessageInput
+          value={inputValue}
+          onChange={handleInputChange}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+          ghostText={ghostText}
+          onKeyDown={handleKeyDown}
+          onScan={handleScanInstrument}
+          selectedInstrument={selectedInstrument}
+          handleDeleteAllInstruments={handleDeleteAllInstruments}
+          handleDeleteInstrument={handleDeleteInstrument}
+          handleSelectInstrument={handleSelectInstrument}
+          isScanning={isScanning}
+          instrumentData={instrumentData}
+          availableParameters={availableParameters}
+          availableValues={availableValues}
+          selectedParameter={selectedParameter}
+          selectedValue={selectedValue}
+          onParameterSelect={handleParameterSelect}
+          onValueSelect={handleValueSelect}
+          showParameterDropdown={showParameterDropdown}
+          showValueDropdown={showValueDropdown}
+          isGettingAllInstrument ={isGettingAllInstrument}
+
+        />
+      </InputArea>
+    </Container>
+  );
 };
 
 
@@ -1542,44 +1630,54 @@ function BotMessage({
               </DropdownMenuTrigger>
               
               <DropdownMenuContent align="start" side="top" className="w-80 bg-white shadow-md">
-                {isGettingSessionInstrument ? (
+                {isGettingAllInstrument ? (
                   <DropdownMenuItem disabled>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Loading instruments...
                   </DropdownMenuItem>
-                ) : !Array.isArray(sessionInstrumentData) || sessionInstrumentData.length === 0 ? (
+                ) : !Array.isArray(instrumentData) || instrumentData.length === 0 ? (
                   <DropdownMenuItem disabled>
-                    No instruments selected for this session
+                    No instruments detected
                   </DropdownMenuItem>
                 ) : (
                   <>
-                    {sessionInstrumentData.map((instrument) => (
-                      <DropdownMenuItem
-                        key={instrument.id}
-                        className="flex items-center justify-between p-3"
-                      >
-                        <div
-                          className="flex-1 cursor-pointer"
-                          onClick={() => handleSelectInstrument(instrument)}
+                    {instrumentData.map((instrument) => {
+                      // Check if this instrument is already selected in this session
+                      const isSelected = sessionInstrumentsData?.some(
+                        selected => selected.instrument_id === instrument.id
+                      );
+                      
+                      return (
+                        <DropdownMenuItem
+                          key={instrument.id}
+                          className="flex items-center justify-between p-3"
                         >
-                          <div className="font-medium">{instrument.model}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {instrument.model} • {instrument.resource_string}
+                          <div
+                            className="flex-1 cursor-pointer"
+                            onClick={() => handleSelectInstrument(instrument)}
+                          >
+                            <div className="font-medium">
+                              {instrument.model}
+                              {isSelected && <span className="ml-2 text-xs text-blue-600">✓ Selected</span>}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {instrument.model} • {instrument.resource_string}
+                            </div>
                           </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteInstrument(instrument.id);
-                          }}
-                          className="ml-2 h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </DropdownMenuItem>
-                    ))}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteInstrument(instrument.id);
+                            }}
+                            className="ml-2 h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </DropdownMenuItem>
+                      );
+                    })}
 
                     <DropdownMenuSeparator />
 
@@ -1588,7 +1686,7 @@ function BotMessage({
                       className="text-destructive focus:text-destructive-foreground focus:bg-destructive"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Delete All Instruments
+                      Delete All Detected Instruments
                     </DropdownMenuItem>
                   </>
                 )}
