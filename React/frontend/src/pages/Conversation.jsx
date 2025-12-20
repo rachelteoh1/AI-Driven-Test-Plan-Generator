@@ -1,9 +1,8 @@
-
-
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import * as React from "react";
 import Button from "@mui/material/Button";
 import ScanInstrumentModal from "../modal/ScanInstrumentModal";
+import PTEMResultModal from "../modal/PTEMSuccessModal";
 import { useAllInstruments, useScanInstrument, useSelectInstrument, useDeleteInstrument, useDeleteAllInstrument, useSessionInstrument } from "../hook/useInstrument";
 import useModal from "../modal/useModal";
 import {
@@ -83,6 +82,7 @@ const MessagesContainer = styled.div`
   flex-direction: column;
   gap: ${SPACING.xl};
   margin-bottom: 1rem;
+  z-index: 1;
 `;
 
 const InputArea = styled.div`
@@ -98,6 +98,7 @@ const UserMessageContainer = styled.div`
   gap: ${SPACING.sm};
   margin-bottom: ${SPACING.lg};
   position: relative;
+  z-index: 1;
 `;
 
 const UserMessageContent_Wrapper = styled.div`
@@ -131,6 +132,7 @@ const BotMessageContainer = styled.div`
   flex-direction: column;
   align-items: flex-start;
   gap: ${SPACING.sm};
+  z-index: 1;
 `;
 
 const BotMessageBubble = styled.div`
@@ -194,6 +196,9 @@ const MessageInputWrapper = styled.div`
     box-shadow: 0 4px 24px rgba(102, 126, 234, 0.2);
   }
 `;
+const EditContainer = styled.div`
+  width: 100%;
+`;
 
 const MessageTextArea = styled.textarea`
   width: 100%;
@@ -250,9 +255,9 @@ const IconButton = styled(Button)`
   &:hover {
     transform: translateY(-2px);
     box-shadow: ${({ $variant }) =>
-      $variant === 'primary'
-        ? '0 8px 16px rgba(102, 126, 234, 0.4)'
-        : '0 4px 8px rgba(0, 0, 0, 0.1)'};
+    $variant === 'primary'
+      ? '0 8px 16px rgba(102, 126, 234, 0.4)'
+      : '0 4px 8px rgba(0, 0, 0, 0.1)'};
   }
   
   &:disabled {
@@ -356,21 +361,6 @@ const ScanButton = styled(IconButton)`
   color: white;
 `;
 
-const DropdownContainer = styled.div`
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  right: 0;
-  background: ${({ theme }) => theme.card};
-  border: 1px solid ${({ theme }) => theme.conversation.actionBorder};
-  border-radius: 0.75rem;
-  max-height: 200px;
-  overflow-y: auto;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin-bottom: 0.5rem;
-`;
-
 const DropdownHeader = styled.div`
   padding: 0.75rem;
   font-weight: bold;
@@ -466,6 +456,19 @@ const CommandMeta = styled.div`
   font-size: 0.7rem;
   color: ${({ theme }) => theme.greys.medium};
 `;
+function LoadingIndicator() {
+  console.log("LoadingIndicator is rendered");
+  return (
+    <BotMessageContainer>
+      <BotMessageBubble>
+        <LoadingContainer>
+          <LoadingIcon />
+          <span>Generating response...</span>
+        </LoadingContainer>
+      </BotMessageBubble>
+    </BotMessageContainer>
+  );
+}
 
 export default function ChatInterface({ chat, onSendMessage, isLoading, onInstrumentChange }) {
   const [inputValue, setInputValue] = useState("");
@@ -493,7 +496,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
   const [recognition, setRecognition] = useState(null);
   const textareaRef = useRef(null);
   const inputWrapperRef = useRef(null);
-  
+
   // Prefix autocomplete states
   const [flattenedCommands, setFlattenedCommands] = useState([]);
   const [prefixSuggestions, setPrefixSuggestions] = useState([]);
@@ -520,7 +523,27 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
   const selectMutation = useSelectInstrument();
   const deleteInstrumentMutation = useDeleteInstrument();
   const deleteAllInstrumentMutation = useDeleteAllInstrument();
+  const handleParameterSelect = (parameter) => {
+    setSelectedParameter(parameter);
+    setShowParameterDropdown(false);
 
+    // If this parameter has associated values, show value dropdown
+    if (parameter && parameter.values && parameter.values.length > 0) {
+      setAvailableValues(parameter.values);
+      setShowValueDropdown(true);
+    }
+  };
+
+  const handleValueSelect = (value) => {
+    setSelectedValue(value);
+    setShowValueDropdown(false);
+
+    // Optionally append the selected value to input
+    if (selectedParameter && value) {
+      const newInput = `${inputValue} ${selectedParameter.name} ${value}`.trim();
+      setInputValue(newInput);
+    }
+  };
   // Initialize speech recognition
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -535,7 +558,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
           .map(result => result[0])
           .map(result => result.transcript)
           .join('');
-        
+
         setInputValue(transcript);
       };
 
@@ -582,9 +605,10 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
     }
   }, [inputValue]);
 
-  // Reset selected instrument when session changes
+  // Reset selected instrument and input field when session changes
   useEffect(() => {
     setSelectedInstrument(null);
+    setInputValue("");
     if (onInstrumentChange) {
       onInstrumentChange(null);
     }
@@ -594,7 +618,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
   const flattenScpiCommands = (data) => {
     console.log('[FLATTEN] Starting to flatten data:', typeof data, Array.isArray(data));
     const commands = [];
-    
+
     // If data is an array (flattened JSON format from PDF)
     if (Array.isArray(data)) {
       console.log('[FLATTEN] Data is array, length:', data.length);
@@ -615,7 +639,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
       console.log('[FLATTEN] Data is hierarchical object');
       const traverse = (obj, path = '') => {
         if (!obj || typeof obj !== 'object') return;
-        
+
         // Check if this is a command node (has 'command' property)
         if (obj.command) {
           commands.push({
@@ -626,7 +650,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
             page: obj.page || 'N/A'
           });
         }
-        
+
         // Traverse children
         Object.keys(obj).forEach(key => {
           if (!['command', 'description', 'parameters', 'values', 'page'].includes(key)) {
@@ -636,7 +660,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
       };
       traverse(data);
     }
-    
+
     console.log('[FLATTEN] Total commands flattened:', commands.length);
     if (commands.length > 0) {
       console.log('[FLATTEN] Sample commands:', commands.slice(0, 3));
@@ -658,7 +682,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
         .then((data) => {
           console.log("Fetched SCPI JSON data:", data);
           setScpiSuggestions(data);
-          
+
           // Flatten commands for prefix autocomplete
           const flattened = flattenScpiCommands(data);
           console.log("Flattened commands count:", flattened.length);
@@ -687,13 +711,13 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
     const intentPattern = /^(explain|generate|create|optimize|analyze|show|list|get|set|configure|test|debug|help|what is)\s+(.+)/i;
     const match = prefix.match(intentPattern);
     const scpiPart = match ? match[2] : prefix;
-    
+
     if (scpiPart.includes(' ')) {
       setPrefixSuggestions([]);
       setShowPrefixDropdown(false);
       return;
     }
-    
+
     const upperPrefix = scpiPart.toUpperCase();
     const matches = flattenedCommands
       .filter(cmd => {
@@ -701,7 +725,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
         return matches;
       })
       .slice(0, 10);
-    
+
     setPrefixSuggestions(matches);
     setShowPrefixDropdown(matches.length > 0);
     setSelectedPrefixIndex(0);
@@ -728,114 +752,114 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
   };
 
   const handleScanInstrument = () => {
-  scanMutation.mutate(undefined, {
-    onSuccess: (scannedInstruments) => {
-      if (scannedInstruments.length > 0) {
-        showModal({
-          modal: (
-            <ScanResultsModal
-              hideModal={hideModal}
-              detectedInstruments={scannedInstruments}
-              onSelectInstrument={(instrument) => {
-                selectMutation.mutate({
-                  instrument_id: instrument.id,
-                  session_id: chat.session_id,
-                }, {
-                  onSuccess: (response) => {
-                    setSelectedInstrument(response);
-                    if (onInstrumentChange) {
-                      onInstrumentChange(response);
+    scanMutation.mutate(undefined, {
+      onSuccess: (scannedInstruments) => {
+        if (scannedInstruments.length > 0) {
+          showModal({
+            modal: (
+              <ScanResultsModal
+                hideModal={hideModal}
+                detectedInstruments={scannedInstruments}
+                onSelectInstrument={(instrument) => {
+                  selectMutation.mutate({
+                    instrument_id: instrument.id,
+                    session_id: chat.session_id,
+                  }, {
+                    onSuccess: (response) => {
+                      setSelectedInstrument(response);
+                      if (onInstrumentChange) {
+                        onInstrumentChange(response);
+                      }
+                      hideModal();
+                    },
+                    onError: (error) => {  // ADD THIS
+                      console.error("Failed to select instrument:", error);
+                      showModal({
+                        modal: (
+                          <CrossedModal
+                            title="Failed to select instrument"
+                            description="Please try again later"
+                            hideModal={hideModal}
+                          />
+                        ),
+                      });
                     }
-                    hideModal();
-                  },
-                  onError: (error) => {  // ADD THIS
-                    console.error("Failed to select instrument:", error);
-                    showModal({
-                      modal: (
-                        <CrossedModal
-                          title="Failed to select instrument"
-                          description="Please try again later"
-                          hideModal={hideModal}
-                        />
-                      ),
-                    });
-                  }
-                });
-              }}
-              selectedInstrument={selectedInstrument}
-            />
-          ),
-        });
-      } else {
+                  });
+                }}
+                selectedInstrument={selectedInstrument}
+              />
+            ),
+          });
+        } else {
+          showModal({
+            modal: (
+              <CrossedModal
+                title="No instruments detected"
+                description="Make sure instrument is connected."
+                hideModal={hideModal}
+              />
+            ),
+          });
+        }
+      },
+      onError: (error) => {  // ADD THIS
+        console.error("Scan failed:", error);
         showModal({
           modal: (
             <CrossedModal
-              title="No instruments detected"
-              description="Make sure instrument is connected."
+              title="Failed to scan instruments"
+              description="Please check connection and try again"
               hideModal={hideModal}
             />
           ),
         });
       }
-    },
-    onError: (error) => {  // ADD THIS
-      console.error("Scan failed:", error);
+    });
+  };
+  const handleSelectInstrument = async (instrument) => {
+    try {
+      // Create SelectedInstrument record for this session
+      const response = await selectMutation.mutateAsync({
+        instrument_id: instrument.id,
+        session_id: chat.session_id,
+      });
+
+      console.log('[SELECT] Backend response:', response);
+      console.log('[SELECT] json_url_manual:', response.json_url_manual);
+
+      // Check if PDF manual exists
+      if (!response.json_url_manual) {
+        console.log('[SELECT] No PDF manual found, showing modal');
+        showModal({
+          modal: (
+            <CrossedModal
+              title="Manual not uploaded."
+              description="Import a user manual to get started."
+              hideModal={hideModal}
+            />
+          ),
+        });
+      }
+
+      // Set selected instrument using backend response (which has PDF info)
+      setSelectedInstrument(response);
+
+      if (onInstrumentChange) {
+        onInstrumentChange(response);
+      }
+    } catch (err) {
+      console.error("Failed to select instrument:", err);
       showModal({
         modal: (
           <CrossedModal
-            title="Failed to scan instruments"
-            description="Please check connection and try again"
+            title="Failed to select instrument"
+            description="Please try again later"
             hideModal={hideModal}
           />
         ),
       });
     }
-  });
-};
-const handleSelectInstrument = async (instrument) => {
-  try {
-    // Create SelectedInstrument record for this session
-    const response = await selectMutation.mutateAsync({
-      instrument_id: instrument.id,
-      session_id: chat.session_id,
-    });
-    
-    console.log('[SELECT] Backend response:', response);
-    console.log('[SELECT] json_url_manual:', response.json_url_manual);
-    
-    // Check if PDF manual exists
-    if (!response.json_url_manual) {
-      console.log('[SELECT] No PDF manual found, showing modal');
-      showModal({
-        modal: (
-          <CrossedModal
-            title="Manual not uploaded."
-            description="Import a user manual to get started."
-            hideModal={hideModal}
-          />
-        ),
-      });
-    }
-    
-    // Set selected instrument using backend response (which has PDF info)
-    setSelectedInstrument(response);
-    
-    if (onInstrumentChange) {
-      onInstrumentChange(response);
-    }
-  } catch (err) {
-    console.error("Failed to select instrument:", err);
-    showModal({
-      modal: (
-        <CrossedModal
-          title="Failed to select instrument"
-          description="Please try again later"
-          hideModal={hideModal}
-        />
-      ),
-    });
-  }
-};
+  };
   // const handleSelectInstrument = async (instrument) => {
   //   try {
   //     const response = await selectMutation.mutateAsync({
@@ -862,52 +886,61 @@ const handleSelectInstrument = async (instrument) => {
   //   deleteInstrumentMutation.mutate({ instrument_id: instrumentId });
   // };
   const handleDeleteInstrument = (instrumentId) => {
-  if (selectedInstrument?.id === instrumentId) {
+    if (selectedInstrument?.id === instrumentId) {
+      setSelectedInstrument(null);
+    }
+    deleteInstrumentMutation.mutate(
+      { instrument_id: instrumentId },
+      {
+        onError: (error) => {
+          console.error("Failed to delete instrument:", error);
+          showModal({
+            modal: (
+              <CrossedModal
+                title="Failed to delete instrument"
+                description="Please try again later"
+                hideModal={hideModal}
+              />
+            ),
+          });
+        }
+      }
+    );
+  };
+
+  const handleDeleteAllInstruments = () => {
     setSelectedInstrument(null);
-  }
-  deleteInstrumentMutation.mutate(
-    { instrument_id: instrumentId },
-    {
+    deleteAllInstrumentMutation.mutate(undefined, {
       onError: (error) => {
-        console.error("Failed to delete instrument:", error);
+        console.error("Failed to delete all instruments:", error);
         showModal({
           modal: (
             <CrossedModal
-              title="Failed to delete instrument"
+              title="Failed to delete all instruments"
               description="Please try again later"
               hideModal={hideModal}
             />
           ),
         });
       }
-    }
-  );
-};
-
-  const handleDeleteAllInstruments = () => {
-  setSelectedInstrument(null);
-  deleteAllInstrumentMutation.mutate(undefined, {
-    onError: (error) => {
-      console.error("Failed to delete all instruments:", error);
-      showModal({
-        modal: (
-          <CrossedModal
-            title="Failed to delete all instruments"
-            description="Please try again later"
-            hideModal={hideModal}
-          />
-        ),
-      });
-    }
-  });
-};
+    });
+  };
 
   // const handleDeleteAllInstruments = () => {
   //   setSelectedInstrument(null);
   //   deleteAllInstrumentMutation.mutate();
   // };
 
-  const copyToClipboard = async (text, messageId) => {
+  // const copyToClipboard = async (text, messageId) => {
+  //   try {
+  //     await navigator.clipboard.writeText(text);
+  //     setCopiedMessageId(messageId);
+  //     setTimeout(() => setCopiedMessageId(null), 2000);
+  //   } catch (err) {
+  //     console.error("Failed to copy text: ", err);
+  //   }
+  // };
+  const copyToClipboard = useCallback(async (text, messageId) => {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedMessageId(messageId);
@@ -915,12 +948,16 @@ const handleSelectInstrument = async (instrument) => {
     } catch (err) {
       console.error("Failed to copy text: ", err);
     }
-  };
+  }, []);
 
-  const handleEditMessage = (messageId, content) => {
+  // const handleEditMessage = (messageId, content) => {
+  //   setEditingMessageId(messageId);
+  //   setEditContent(content);
+  // };
+  const handleEditMessage = useCallback((messageId, content) => {
     setEditingMessageId(messageId);
     setEditContent(content);
-  };
+  }, []);
 
   // const handleSaveEdit = async (message, editContent) => {
   //   try {
@@ -940,29 +977,29 @@ const handleSelectInstrument = async (instrument) => {
   // };
 
   const handleSaveEdit = async (message, editContent) => {
-  try {
-    await modifyChatLogMutation.mutateAsync({
-      message_id: message.message_id,
-      session_id: message.session_id,
-      role: message.role,
-      content: editContent,
-      has_been_modified: true,
-    });
-    setEditingMessageId(null);
-    setEditContent("");
-  } catch (err) {
-    console.error("Edit failed:", err);
-    showModal({
-      modal: (
-        <CrossedModal
-          title="Failed to save edit"
-          description="Please try again later"
-          hideModal={hideModal}
-        />
-      ),
-    });
-  }
-};
+    try {
+        await modifyChatLogMutation.mutateAsync({
+        message_id: message.message_id,
+        session_id: message.session_id,
+        role: message.role,
+        content: editContent,
+        has_been_modified: true,
+      });
+      setEditingMessageId(null);
+      setEditContent("");
+    } catch (err) {
+      console.error("Edit failed:", err);
+      showModal({
+        modal: (
+          <CrossedModal
+            title="Failed to save edit"
+            description="Please try again later"
+            hideModal={hideModal}
+          />
+        ),
+      });
+    }
+  };
 
   const handleCancelEdit = () => {
     setEditingMessageId(null);
@@ -980,30 +1017,39 @@ const handleSelectInstrument = async (instrument) => {
   // };
 
   const handleViewVersion = async (messageId) => {
-  try {
-    const data = await getVersionChatLogs(messageId);
-    setVersionData({ [messageId]: data || [] });
-    setViewingHistory(messageId);
-  } catch (err) {
-    console.error("Error fetching version:", err);
-    showModal({
-      modal: (
-        <CrossedModal
-          title="Failed to load version history"
-          description="Please try again later"
-          hideModal={hideModal}
-        />
-      ),
-    });
-  }
-};
+    try {
+      const data = await getVersionChatLogs(messageId);
+      setVersionData({ [messageId]: data || [] });
+      setViewingHistory(messageId);
+    } catch (err) {
+      console.error("Error fetching version:", err);
+      showModal({
+        modal: (
+          <CrossedModal
+            title="Failed to load version history"
+            description="Please try again later"
+            hideModal={hideModal}
+          />
+        ),
+      });
+    }
+  };
 
   const handleBackToCurrent = () => {
     setViewingHistory(null);
     setVersionData({});
   };
 
-  const getMessageContent = (message) => {
+  // const getMessageContent = (message) => {
+  //   if (viewingHistory === message.message_id) {
+  //     const versions = messageVersions[message.message_id] || [];
+  //     if (versions.length > 0) {
+  //       return versions[0].old_content;
+  //     }
+  //   }
+  //   return message.content;
+  // };
+  const getMessageContent = useCallback((message) => {
     if (viewingHistory === message.message_id) {
       const versions = messageVersions[message.message_id] || [];
       if (versions.length > 0) {
@@ -1011,7 +1057,7 @@ const handleSelectInstrument = async (instrument) => {
       }
     }
     return message.content;
-  };
+  }, [viewingHistory, messageVersions]);
 
   const handleInputChange = (value) => {
     setInputValue(value);
@@ -1031,7 +1077,7 @@ const handleSelectInstrument = async (instrument) => {
     if (showPrefixDropdown && prefixSuggestions.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setSelectedPrefixIndex((prev) => 
+        setSelectedPrefixIndex((prev) =>
           prev < prefixSuggestions.length - 1 ? prev + 1 : prev
         );
         return;
@@ -1064,243 +1110,170 @@ const handleSelectInstrument = async (instrument) => {
     const intentPattern = /^(explain|generate|create|optimize|analyze|show|list|get|set|configure|test|debug|help|what is)\s+/i;
     const match = inputValue.match(intentPattern);
     const intentPrefix = match ? match[0] : '';
-    
+
     // Combine intent prefix with selected command and add a space
     const newValue = intentPrefix + command.command + ' ';
     console.log('[SELECT] Intent prefix:', intentPrefix, 'Final value:', newValue);
-    
+
     setInputValue(newValue);
     setShowPrefixDropdown(false);
     setPrefixSuggestions([]);
     setSelectedPrefixIndex(0);
   };
 
-const [uploadStatus, setUploadStatus] = useState(null);
-const [uploadError, setUploadError] = useState("");
+  const [uploadStatus, setUploadStatus] = useState(null);
+  const [uploadError, setUploadError] = useState("");
 
-const onUpload = async (message) => {
-  try {
-    setUploadingMessageId(message.message_id);
-    const data = await sequenceService.getSequence(message.message_id);
-    
-    if (!data) {
+  const onUpload = async (message) => {
+    try {
+      setUploadingMessageId(message.message_id);
+      setUploadStatus(null);
+      setUploadError("");
+
+      const data = await sequenceService.getSequence(message.message_id);
+
+      if (!data) {
+        setUploadStatus("fail");
+        setUploadError("No optimized sequence found for this message.");
+        return;
+      }
+
+      const scpiCommands = data.commands
+        .sort((a, b) => a.order_sequence - b.order_sequence)
+        .map(cmd => ({
+          command: cmd.optimized_scpi,
+          type: cmd.type,
+          order: cmd.order_sequence
+        }));
+
+      const payload = { commands: scpiCommands };
+      console.log("Sending to PTEM:", payload);
+
+      if (window.chrome?.webview) {
+        window.chrome.webview.postMessage(JSON.stringify(payload));
+        setUploadStatus("success");
+        setTimeout(() => {
+          setUploadStatus(null);
+        }, 3000);
+      } else {
+        console.warn("WebView2 not available. Would send:", payload);
+        setUploadStatus("fail");
+        setUploadError("PTEM integration not available in browser mode.");
+      }
+    } catch (error) {
+      console.error("Failed to upload to PTEM:", error);
       setUploadStatus("fail");
-      setUploadError("No optimized sequence found for this message.");
-      return;
+      setUploadError(error.message || "An unexpected error occurred");
+    } finally {
+      setUploadingMessageId(null);
     }
-    
-    const scpiCommands = data.commands
-      .sort((a, b) => a.order_sequence - b.order_sequence)
-      .map(cmd => ({
-        command: cmd.optimized_scpi,
-        type: cmd.type,
-        order: cmd.order_sequence
-      }));
-    
-    const payload = { commands: scpiCommands };
-    console.log("Sending to PTEM:", payload);
-    
-    if (window.chrome?.webview) {
-      window.chrome.webview.postMessage(JSON.stringify(payload));
-      setUploadStatus("success");
-      setTimeout(() => {
-        setUploadStatus(null);
-      }, 3000);
-    } else {
-      console.warn("WebView2 not available. Would send:", payload);
-      setUploadStatus("fail");
-      setUploadError("PTEM integration not available in browser mode.");
-    }
-  } catch (error) {
-    console.error("Failed to upload to PTEM:", error);
-    setUploadStatus("fail");
-    setUploadError(error.message || "An unexpected error occurred");
-  } finally {
-    setUploadingMessageId(null);
-  }
+  };
+
+
+
+  function PreviousVersionViewer({ versions, onBack }) {
     return (
-    <Container>
-      <MessagesContainer>
-        {viewingHistory && versionData[viewingHistory]
-          ? (() => {
-            console.log(" Version Viewer Debug Info:");
-            console.log("viewingHistory:", viewingHistory);
-            console.log("versionData:", versionData);
-            console.log(
-              "versionData[viewingHistory]:",
-              versionData[viewingHistory]
-            );
-            console.log("Number of response:", versionData.responses);
-
-            return (
-              <PreviousVersionViewer
-                versions={versionData[viewingHistory]}
-                onBack={handleBackToCurrent}
-              />
-            );
-          })()
-          : chat.messages.map((message) => (
-            <Message
-              key={message.message_id}
-              message={message}
-              isEditing={editingMessageId === message.message_id}
-              editContent={editContent}
-              setEditContent={setEditContent}
-              onSaveEdit={handleSaveEdit}
-              onCancelEdit={handleCancelEdit}
-              onCopy={(text) => copyToClipboard(text, message.message_id)}
-              onEdit={handleEditMessage}
-              versions={messageVersions[message.message_id] || []}
-              currentVersionIndex={currentVersions[message.message_id]}
-              isViewingHistory={viewingHistory === message.message_id}
-              onViewVersion={handleViewVersion}
-              onBackToCurrent={handleBackToCurrent}
-              getMessageContent={getMessageContent}
-              copiedMessageId={copiedMessageId}
-              onUpload={onUpload}
-              isUploading={uploadingMessageId === message.message_id}
-            />
-          ))}
-
-        {isLoading && <LoadingIndicator />}
-        <div ref={messagesEndRef} />
-      </MessagesContainer>
-            <InputArea>
-        <MessageInput
-          value={inputValue}
-          onChange={handleInputChange}
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-          ghostText={ghostText}
-          onKeyDown={handleKeyDown}
-          onScan={handleScanInstrument}
-          selectedInstrument={selectedInstrument}
-          handleDeleteAllInstruments={handleDeleteAllInstruments}
-          handleDeleteInstrument={handleDeleteInstrument}
-          handleSelectInstrument={handleSelectInstrument}
-          isScanning={isScanning}
-          instrumentData={instrumentData}
-          availableParameters={availableParameters}
-          availableValues={availableValues}
-          selectedParameter={selectedParameter}
-          selectedValue={selectedValue}
-          onParameterSelect={handleParameterSelect}
-          onValueSelect={handleValueSelect}
-          showParameterDropdown={showParameterDropdown}
-          showValueDropdown={showValueDropdown}
-          isGettingAllInstrument ={isGettingAllInstrument}
-
-        />
-      </InputArea>
-    </Container>
-  );
-};
-
-
-
-function PreviousVersionViewer({ versions, onBack }) {
-  return (
-    <div>
-      {versions.map((logVersion) => (
-        <div key={logVersion.version_id}>
-          <div style={{ marginBottom: "1rem" }}>
-            <strong>Edited at:</strong>{" "}
-            {new Date(logVersion.edited_at).toLocaleString()}
-            <UserMessageContainer>
-              <UserMessageContent_Wrapper>
-                <UserMessageBubble>
-                  <UserMessageContent>
-                    {logVersion.old_content}
-                  </UserMessageContent>
-                </UserMessageBubble>
-                <CircleUserRound size={32} />
-              </UserMessageContent_Wrapper>
-            </UserMessageContainer>
-          </div>
-          {logVersion.responses.map((response) =>
-            response.role === "user" ? (
-              <UserMessageContainer key={response.message_id}>
+      <div>
+        {versions.map((logVersion) => (
+          <div key={logVersion.version_id}>
+            <div style={{ marginBottom: "1rem" }}>
+              <strong>Edited at:</strong>{" "}
+              {new Date(logVersion.edited_at).toLocaleString()}
+              <UserMessageContainer>
                 <UserMessageContent_Wrapper>
                   <UserMessageBubble>
-                    <UserMessageContent>{response.content}</UserMessageContent>
+                    <UserMessageContent>
+                      {logVersion.old_content}
+                    </UserMessageContent>
                   </UserMessageBubble>
                   <CircleUserRound size={32} />
                 </UserMessageContent_Wrapper>
               </UserMessageContainer>
-            ) : (
-              <BotMessageContainer key={response.message_id}>
-                <BotMessageBubble>
-                  <BotMessageContent>{response.content}</BotMessageContent>
-                </BotMessageBubble>
-              </BotMessageContainer>
-            )
-          )}
-          <hr style={{ margin: "1rem 0" }} />
-        </div>
-      ))}
+            </div>
+            {logVersion.responses.map((response) =>
+              response.role === "user" ? (
+                <UserMessageContainer key={response.message_id}>
+                  <UserMessageContent_Wrapper>
+                    <UserMessageBubble>
+                      <UserMessageContent>{response.content}</UserMessageContent>
+                    </UserMessageBubble>
+                    <CircleUserRound size={32} />
+                  </UserMessageContent_Wrapper>
+                </UserMessageContainer>
+              ) : (
+                <BotMessageContainer key={response.message_id}>
+                  <BotMessageBubble>
+                    <BotMessageContent>{response.content}</BotMessageContent>
+                  </BotMessageBubble>
+                </BotMessageContainer>
+              )
+            )}
+            <hr style={{ margin: "1rem 0" }} />
+          </div>
+        ))}
 
-      <Button onClick={onBack} startIcon={<ArrowLeft size={14} />}>
-        Back to current conversation
-      </Button>
-    </div>
-  );
-}
+        <Button onClick={onBack} startIcon={<ArrowLeft size={14} />}>
+          Back to current conversation
+        </Button>
+      </div>
+    );
+  }
 
-function Message({
-  message,
-  isEditing,
-  editContent,
-  setEditContent,
-  onSaveEdit,
-  onCancelEdit,
-  onCopy,
-  onEdit,
-  isStarred,
-  versions,
-  currentVersionIndex,
-  isViewingHistory,
-  onViewVersion,
-  onBackToCurrent,
-  getMessageContent,
-  copiedMessageId,
-  onUpload,
-  isUploading,
-}) {
-  return message.role === "user" ? (
-    <UserMessage
-      message={message}
-      isEditing={isEditing}
-      editContent={editContent}
-      setEditContent={setEditContent}
-      onSaveEdit={onSaveEdit}
-      onCancelEdit={onCancelEdit}
-      onCopy={onCopy}
-      onEdit={onEdit}
-      copiedMessageId={copiedMessageId}
-      versions={versions}
-      currentVersionIndex={currentVersionIndex}
-      isViewingHistory={isViewingHistory}
-      onViewVersion={onViewVersion}
-      onBackToCurrent={onBackToCurrent}
-      getMessageContent={getMessageContent}
-    />
-  ) : (
-    <BotMessage
-      message={message}
-      onCopy={onCopy}
-      isStarred={isStarred}
-      versions={versions}
-      copiedMessageId={copiedMessageId}
-      currentVersionIndex={currentVersionIndex}
-      isViewingHistory={isViewingHistory}
-      onViewVersion={onViewVersion}
-      onBackToCurrent={onBackToCurrent}
-      getMessageContent={getMessageContent}
-      onUpload={onUpload}
-      isUploading={isUploading}
-    />
-  );
-}
+  function Message({
+    message,
+    isEditing,
+    editContent,
+    setEditContent,
+    onSaveEdit,
+    onCancelEdit,
+    onCopy,
+    onEdit,
+    isStarred,
+    versions,
+    currentVersionIndex,
+    isViewingHistory,
+    onViewVersion,
+    onBackToCurrent,
+    getMessageContent,
+    copiedMessageId,
+    onUpload,
+    isUploading,
+  }) {
+    return message.role === "user" ? (
+      <UserMessage
+        message={message}
+        isEditing={isEditing}
+        editContent={editContent}
+        setEditContent={setEditContent}
+        onSaveEdit={onSaveEdit}
+        onCancelEdit={onCancelEdit}
+        onCopy={onCopy}
+        onEdit={onEdit}
+        copiedMessageId={copiedMessageId}
+        versions={versions}
+        currentVersionIndex={currentVersionIndex}
+        isViewingHistory={isViewingHistory}
+        onViewVersion={onViewVersion}
+        onBackToCurrent={onBackToCurrent}
+        getMessageContent={getMessageContent}
+      />
+    ) : (
+      <BotMessage
+        message={message}
+        onCopy={onCopy}
+        isStarred={isStarred}
+        versions={versions}
+        copiedMessageId={copiedMessageId}
+        currentVersionIndex={currentVersionIndex}
+        isViewingHistory={isViewingHistory}
+        onViewVersion={onViewVersion}
+        onBackToCurrent={onBackToCurrent}
+        getMessageContent={getMessageContent}
+        onUpload={onUpload}
+        isUploading={isUploading}
+      />
+    );
+  }
 
 function UserMessage({
   message,
@@ -1433,130 +1406,129 @@ function UserMessage({
     </UserMessageContainer>
   );
 }
+  function BotMessage({
+    message,
+    onCopy,
+    onUpload,
+    isUploading,
+    isStarred,
+    versions,
+    copiedMessageId,
+    currentVersionIndex,
+    isViewingHistory,
+    onViewVersion,
+    onBackToCurrent,
+    getMessageContent,
+  }) {
+    const messageContent = getMessageContent(message);
+    const hasOptimization = message.has_optimization;
 
-function BotMessage({
-  message,
-  onCopy,
-  onUpload,
-  isUploading,
-  isStarred,
-  versions,
-  copiedMessageId,
-  currentVersionIndex,
-  isViewingHistory,
-  onViewVersion,
-  onBackToCurrent,
-  getMessageContent,
-}) {
-  const messageContent = getMessageContent(message);
-  const hasOptimization = message.has_optimization;
+    return (
+      <BotMessageContainer>
+        <BotMessageBubble>
+          <BotMessageContent>{messageContent}</BotMessageContent>
 
-  return (
-    <BotMessageContainer>
-      <BotMessageBubble>
-        <BotMessageContent>{messageContent}</BotMessageContent>
-
-        {isViewingHistory && (
-          <VersionHistoryIndicator>
-            <span>Viewing previous version</span>
-            <Button
-              size="small"
-              onClick={() => onBackToCurrent(message.message_id)}
-              startIcon={<ArrowLeft size={14} />}
-            ></Button>
-          </VersionHistoryIndicator>
-        )}
-      </BotMessageBubble>
-
-      <ActionButtonsHover>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <ActionButton onClick={() => onCopy(messageContent)}>
-                {copiedMessageId === message.message_id ? (
-                  <Check size={16} />
-                ) : (
-                  <Copy size={16} />
-                )}
-              </ActionButton>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Copy message</p>
-            </TooltipContent>
-          </Tooltip>
-          
-          {hasOptimization && (
-  <>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <ActionButton
-          onClick={() => onUpload(message)}
-          disabled={isUploading}
-        >
-          {isUploading ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <Upload size={16} />
+          {isViewingHistory && (
+            <VersionHistoryIndicator>
+              <span>Viewing previous version</span>
+              <Button
+                size="small"
+                onClick={() => onBackToCurrent(message.message_id)}
+                startIcon={<ArrowLeft size={14} />}
+              ></Button>
+            </VersionHistoryIndicator>
           )}
-        </ActionButton>
-      </TooltipTrigger>
-      <TooltipContent>
-        <p>Load to PTEM</p>
-      </TooltipContent>
-    </Tooltip>
+        </BotMessageBubble>
 
-    {uploadStatus === "success" && (
-      <TickedModal 
-        title="Upload Successful!" 
-        hideModal={() => setUploadStatus(null)} 
-      />
-    )}
-    
-    {uploadStatus === "fail" && (
-      <CrossedModal
-        title="Upload Failed"
-        description={uploadError}
-        hideModal={() => setUploadStatus(null)}
-      />
-    )}
-  </>
-)}
-          
-          {versions.length > 0 && (
+        <ActionButtonsHover>
+          <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <ActionButton
-                  onClick={() =>
-                    isViewingHistory
-                      ? onBackToCurrent(message.message_id)
-                      : onViewVersion(message.message_id)
-                  }
-                >
-                  <History size={16} />
+                <ActionButton onClick={() => onCopy(messageContent)}>
+                  {copiedMessageId === message.message_id ? (
+                    <Check size={16} />
+                  ) : (
+                    <Copy size={16} />
+                  )}
                 </ActionButton>
               </TooltipTrigger>
               <TooltipContent>
-                <p>See previous versions ({versions.length})</p>
+                <p>Copy message</p>
               </TooltipContent>
             </Tooltip>
-          )}
-        </TooltipProvider>
-      </ActionButtonsHover>
-    </BotMessageContainer>
-  );
-}
+
+            {hasOptimization && (
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <ActionButton
+                      onClick={() => onUpload(message)}
+                      disabled={isUploading}
+                    >
+                      {isUploading ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : (
+                        <Upload size={16} />
+                      )}
+                    </ActionButton>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Load to PTEM</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                {uploadStatus === "success" && (
+                  <PTEMResultModal
+                    status="success"
+                    hideModal={() => setUploadStatus(null)}
+                  />
+                )}
+
+                {uploadStatus === "fail" && (
+                  <PTEMResultModal
+                    status="fail"
+                    errorMessage={uploadError}
+                    hideModal={() => setUploadStatus(null)}
+                  />
+                )}
+              </>
+            )}
+
+            {versions.length > 0 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <ActionButton
+                    onClick={() =>
+                      isViewingHistory
+                        ? onBackToCurrent(message.message_id)
+                        : onViewVersion(message.message_id)
+                    }
+                  >
+                    <History size={16} />
+                  </ActionButton>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>See previous versions ({versions.length})</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </TooltipProvider>
+        </ActionButtonsHover>
+      </BotMessageContainer>
+    );
+  }
 
   return (
     <Container>
       <MessagesContainer>
         {viewingHistory && versionData[viewingHistory] ? (
-          <PreviousVersionViewer 
-            versions={versionData[viewingHistory]} 
-            onBack={handleBackToCurrent} 
+          <PreviousVersionViewer
+            versions={versionData[viewingHistory]}
+            onBack={handleBackToCurrent}
           />
         ) : (
           chat.messages.map((message) => (
-            
+
             <Message
               key={message.message_id}
               message={message}
@@ -1580,16 +1552,7 @@ function BotMessage({
           ))
         )}
 
-        {isLoading && (
-          <BotMessageContainer>
-            <BotMessageBubble>
-              <LoadingContainer>
-                <LoadingIcon />
-                <span>Generating response...</span>
-              </LoadingContainer>
-            </BotMessageBubble>
-          </BotMessageContainer>
-        )}
+        {isLoading && <LoadingIndicator />}
         <div ref={messagesEndRef} />
       </MessagesContainer>
 
@@ -1628,8 +1591,8 @@ function BotMessage({
                   )}
                 </InstrumentButton>
               </DropdownMenuTrigger>
-              
-              <DropdownMenuContent align="start" side="top" className="w-80 bg-white shadow-md">
+
+              <DropdownMenuContent align="start" side="top" className="w-80 bg-white shadow-md" style={{ zIndex: 9999 }}>
                 {isGettingAllInstrument ? (
                   <DropdownMenuItem disabled>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -1646,7 +1609,7 @@ function BotMessage({
                       const isSelected = sessionInstrumentsData?.some(
                         selected => selected.instrument_id === instrument.id
                       );
-                      
+
                       return (
                         <DropdownMenuItem
                           key={instrument.id}
@@ -1706,7 +1669,7 @@ function BotMessage({
                   width: `${rect.width}px`,
                   transform: 'translateY(-100%)'
                 };
-                
+
                 return (
                   <PrefixDropdownContainer style={style}>
                     <PrefixDropdownHeader>
@@ -1737,7 +1700,7 @@ function BotMessage({
               rows={1}
               disabled={isLoading}
             />
-            
+
             <InputActions>
               <TooltipProvider>
                 <Tooltip>
