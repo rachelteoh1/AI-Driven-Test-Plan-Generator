@@ -326,7 +326,7 @@ export const Home = ({
     }
   };
 
-  const [loadingSessions, setLoadingSessions] = useState({});
+  // const [loadingSessions, setLoadingSessions] = useState({});
   const [showLogoAnimation, setShowLogoAnimation] = useState(false);
 
   // const handleSendMessage = async (message, selectedInstrumentId) => {
@@ -519,7 +519,7 @@ export const Home = ({
                   messages: activeChatLogs,
                 }}
                 onSendMessage={handleSendMessage}
-                isLoading={loadingSessions[activeChat?.session_id] || false}
+                isLoading={isReplyLoading}
                 onInstrumentChange={setSelectedInstrument}
               />
             </ChatWrapper>

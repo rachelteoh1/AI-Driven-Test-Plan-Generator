@@ -102,15 +102,38 @@ def update_selected_instrument(db: Session, selected_id: UUID, message_id: UUID)
     try:
         selected = db.query(SelectedInstrument).filter_by(id=selected_id).first()
         if not selected:
-            raise HTTPException(status_code=404, detail=f"SelectedInstrument {id} not found")
+            raise HTTPException(status_code=404, detail=f"SelectedInstrument {selected_id} not found")
 
-        selected.message_id = message_id 
-
-        db.commit()
-        db.refresh(selected)
-
-        logger.info(f"Updated message_id for SelectedInstrument {id} → {message_id}")
-        return selected
+        if selected.message_id is not None:
+            logger.info(f"SelectedInstrument {selected_id} already has message_id {selected.message_id}, creating new record")
+            
+            new_selected = SelectedInstrument(
+                instrument_id=selected.instrument_id,
+                session_id=selected.session_id,
+                message_id=message_id,
+                resource_string=selected.resource_string,
+                idn=selected.idn,
+                manufacturer=selected.manufacturer,
+                model=selected.model,
+                serial=selected.serial,
+                firmware=selected.firmware,
+                json_url=selected.json_url,
+                instrument_filename=selected.instrument_filename,
+                json_url_manual=selected.json_url_manual,
+            )
+            db.add(new_selected)
+            db.commit()
+            db.refresh(new_selected)
+            logger.info(f"Created new SelectedInstrument {new_selected.id} with message_id {message_id}")
+            return new_selected
+        else:
+            # Update the existing one if message_id is NULL
+            selected.message_id = message_id 
+            db.commit()
+            db.refresh(selected)
+            logger.info(f"Updated message_id for SelectedInstrument {selected_id} → {message_id}")
+            return selected
+            
     except HTTPException:
         db.rollback()
         raise
@@ -119,7 +142,6 @@ def update_selected_instrument(db: Session, selected_id: UUID, message_id: UUID)
         logger.error(f"Error updating selected instrument: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to update selected instrument")
 
-# --- Get all selected instruments for session ---
 def get_selected_instruments(db: Session, session_id: UUID):
     try:
         from ..entities.entities import PDFImport

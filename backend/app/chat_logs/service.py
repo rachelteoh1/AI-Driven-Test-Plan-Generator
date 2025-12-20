@@ -313,14 +313,25 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
         # Step 2: Enhanced NLP Preprocessing
         # =====================================================================
         user_input = request.content.strip()
-        logger.info(f"Raw user input: {user_input}")
-        
-        # Parse user input with enhanced NLP
+
         parsed_input = preprocess_input(user_input)
-        
-        logger.info(f"Intent detected: {parsed_input.intent.value} (confidence: {parsed_input.confidence:.2f})")
-        logger.info(f"SCPI commands found: {parsed_input.scpi_commands}")
-        logger.info(f"Measurement types: {parsed_input.measurement_types}")
+
+        logger.info(
+            "\n"
+            "┌───────────────────────── NLP PARSE RESULT ─────────────────────────┐\n"
+            "│ Raw User Input        │ %-45s │\n"
+            "│ Intent Detected       │ %-45s │\n"
+            "│ Confidence            │ %-45s │\n"
+            "│ SCPI Commands         │ %-45s │\n"
+            "│ Measurement Types     │ %-45s │\n"
+            "└─────────────────────────────────────────────────────────────────────┘",
+            user_input[:45],
+            parsed_input.intent.value,
+            f"{parsed_input.confidence:.2f}",
+            ", ".join(parsed_input.scpi_commands) or "None",
+            ", ".join(parsed_input.measurement_types) or "None",
+)
+
         
         # =====================================================================
         # Step 3: Check if this is a clarification response
@@ -520,8 +531,8 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
             not is_explanation and 
             not needs_clarification and
             opt_sequence and 
-            opt_sequence.strip() and
-            parsed_input.intent in [Intent.GENERATE_TEST, Intent.MODIFY_SEQUENCE]
+            opt_sequence.strip()
+            # parsed_input.intent in [Intent.GENERATE_TEST, Intent.MODIFY_SEQUENCE]
         )
         
         if should_save_optimization:
