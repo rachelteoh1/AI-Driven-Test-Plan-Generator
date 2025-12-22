@@ -112,8 +112,9 @@ const UserMessageBubble = styled.div`
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 1.5rem;
   border-bottom-right-radius: 0.25rem;
-  padding: 1rem 1.5rem;
+  padding: ${({ $isEditing }) => $isEditing ? '0.5rem' : '1rem 1.5rem'};  /* Less padding when editing */
   max-width: 70%;
+  min-width: 50px;  /* Add minimum width */
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
 `;
 
@@ -198,6 +199,7 @@ const MessageInputWrapper = styled.div`
 `;
 const EditContainer = styled.div`
   width: 100%;
+  min-height: 120px;  /* Match textarea min-height */
 `;
 
 const MessageTextArea = styled.textarea`
@@ -315,14 +317,30 @@ const ActionButton = styled(Button)`
 
 const EditTextArea = styled.textarea`
   width: 100%;
-  min-height: 80px;
-  padding: 0.5rem;
-  border: 1px solid ${({ theme }) => theme.conversation.editBorder};
-  border-radius: 0.5rem;
-  margin-bottom: 0.5rem;
+  min-height: 120px;  /* Increased from 80px */
+  max-height: 300px;  /* Add max height */
+  padding: 1rem 1.5rem;  /* Match the bubble padding */
+  border: 2px solid ${({ theme }) => theme.conversation.editBorder || '#667eea'};
+  border-radius: 1rem;  /* Match bubble border radius */
   resize: vertical;
   background: ${({ theme }) => theme.card};
   color: ${({ theme }) => theme.text};
+  font-family: inherit;
+  font-size: ${FONTSIZE.sm};
+  font-weight: ${FONTWEIGHT.normal};
+  line-height: 1.6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  }
+  
+  &::placeholder {
+    color: ${({ theme }) => theme.greys.light};
+  }
 `;
 
 const VersionHistoryIndicator = styled.div`
@@ -496,6 +514,10 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
   const [recognition, setRecognition] = useState(null);
   const textareaRef = useRef(null);
   const inputWrapperRef = useRef(null);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [savingEditForMessage, setSavingEditForMessage] = useState(null);
+ const [hiddenDuringEdit, setHiddenDuringEdit] = useState(() => new Set());
+
 
   // Prefix autocomplete states
   const [flattenedCommands, setFlattenedCommands] = useState([]);
@@ -503,6 +525,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
   const [showPrefixDropdown, setShowPrefixDropdown] = useState(false);
   const [selectedPrefixIndex, setSelectedPrefixIndex] = useState(0);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+
 
   const {
     data: instrumentsData,
@@ -860,31 +883,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
       });
     }
   };
-  // const handleSelectInstrument = async (instrument) => {
-  //   try {
-  //     const response = await selectMutation.mutateAsync({
-  //       instrument_id: instrument.id,
-  //       session_id: chat.session_id,
-  //     });
-  //     const instruments = instrumentsData?.instruments || [];
-  //     const fullInstrument = instruments.find(inst => inst.id === response.id);
-
-  //     setSelectedInstrument(fullInstrument || response);
-
-  //     if (onInstrumentChange) {
-  //       onInstrumentChange(fullInstrument || response);
-  //     }
-  //   } catch (err) {
-  //     console.error("Failed to select instrument:", err);
-  //   }
-  // };
-
-  // const handleDeleteInstrument = (instrumentId) => {
-  //   if (selectedInstrument?.id === instrumentId) {
-  //     setSelectedInstrument(null);
-  //   }
-  //   deleteInstrumentMutation.mutate({ instrument_id: instrumentId });
-  // };
+  
   const handleDeleteInstrument = (instrumentId) => {
     if (selectedInstrument?.id === instrumentId) {
       setSelectedInstrument(null);
@@ -926,20 +925,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
     });
   };
 
-  // const handleDeleteAllInstruments = () => {
-  //   setSelectedInstrument(null);
-  //   deleteAllInstrumentMutation.mutate();
-  // };
-
-  // const copyToClipboard = async (text, messageId) => {
-  //   try {
-  //     await navigator.clipboard.writeText(text);
-  //     setCopiedMessageId(messageId);
-  //     setTimeout(() => setCopiedMessageId(null), 2000);
-  //   } catch (err) {
-  //     console.error("Failed to copy text: ", err);
-  //   }
-  // };
+ 
   const copyToClipboard = useCallback(async (text, messageId) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -950,71 +936,113 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
     }
   }, []);
 
-  // const handleEditMessage = (messageId, content) => {
-  //   setEditingMessageId(messageId);
-  //   setEditContent(content);
-  // };
-  const handleEditMessage = useCallback((messageId, content) => {
-    setEditingMessageId(messageId);
-    setEditContent(content);
-  }, []);
+ const handleEditMessage = (messageId, content) => {
+  setEditingMessageId(messageId);
+  setEditContent(content);
+};
 
-  // const handleSaveEdit = async (message, editContent) => {
-  //   try {
-  //     await modifyChatLogMutation.mutateAsync({
-  //       message_id: message.message_id,
-  //       session_id: message.session_id,
-  //       role: message.role,
-  //       content: editContent,
-  //       has_been_modified: true,
-  //     });
 
-  //     setEditingMessageId(null);
-  //     setEditContent("");
-  //   } catch (err) {
-  //     console.error("Edit failed:", err);
-  //   }
-  // };
+ 
 
-  const handleSaveEdit = async (message, editContent) => {
-    try {
-        await modifyChatLogMutation.mutateAsync({
-        message_id: message.message_id,
-        session_id: message.session_id,
-        role: message.role,
-        content: editContent,
-        has_been_modified: true,
-      });
-      setEditingMessageId(null);
-      setEditContent("");
-    } catch (err) {
-      console.error("Edit failed:", err);
-      showModal({
-        modal: (
-          <CrossedModal
-            title="Failed to save edit"
-            description="Please try again later"
-            hideModal={hideModal}
-          />
-        ),
-      });
-    }
-  };
+//  const handleSaveEdit = async (message, newContent) => {
+//   try {
+//     setIsSavingEdit(true);  // NEW LINE
+     
+//     // Update the message - backend will regenerate response
+//     await modifyChatLogMutation.mutateAsync({
+//       message_id: message.message_id,
+//       session_id: message.session_id,
+//       role: message.role,
+//       content: newContent,
+//       has_been_modified: true,
+//     });
 
-  const handleCancelEdit = () => {
+  
+// setEditingMessageId(null);
+// setEditContent("");
+// setIsSavingEdit(false);
+
+//   } catch (err) {
+//     console.error("Edit failed:", err);
+//     setIsSavingEdit(false);
+//     showModal({
+//       modal: (
+//         <CrossedModal
+//           title="Failed to save edit"
+//           description="Please try again later"
+//           hideModal={hideModal}
+//         />
+//       ),
+//     });
+//   }
+// };
+
+
+const collectDescendants = (messages, rootId) => {
+  const idx = messages.findIndex(m => String(m.message_id) === String(rootId));
+  if (idx === -1) return new Set();
+
+  // hide everything after edited message (matches your backend deactivation behavior)
+  const result = new Set();
+  for (let i = idx + 1; i < messages.length; i++) {
+    result.add(String(messages[i].message_id));
+  }
+  return result;
+};
+
+
+
+
+
+const handleSaveEdit = async (message, newContent) => {
+  try {
+    setSavingEditForMessage(message.message_id);
+    setIsSavingEdit(true);
+
+    // ✅ OPTIMISTIC UI: hide all descendants immediately
+    const descendants = collectDescendants(chat.messages, message.message_id);
+    console.log("root:", String(message.message_id));
+console.log("descendants:", descendants.size, [...descendants]);
+console.log(
+  "sample pairs:",
+  chat.messages.slice(0, 5).map(m => ({
+    id: String(m.message_id),
+    parent: m.parent_id ? String(m.parent_id) : null,
+    role: m.role
+  }))
+);
+    setHiddenDuringEdit(descendants);
+
     setEditingMessageId(null);
     setEditContent("");
-  };
 
-  // const handleViewVersion = async (messageId) => {
-  //   try {
-  //     const data = await getVersionChatLogs(messageId);
-  //     setVersionData({ [messageId]: data || [] });
-  //     setViewingHistory(messageId);
-  //   } catch (err) {
-  //     console.error("Error fetching version:", err);
-  //   }
-  // };
+    await modifyChatLogMutation.mutateAsync({
+      message_id: message.message_id,
+      session_id: message.session_id,
+      role: message.role,
+      content: newContent,
+      has_been_modified: true,
+    });
+
+    // ✅ after refetch completes
+    setHiddenDuringEdit(new Set());
+    setSavingEditForMessage(null);
+    setIsSavingEdit(false);
+  } catch (err) {
+    setHiddenDuringEdit(new Set());
+    setSavingEditForMessage(null);
+    setIsSavingEdit(false);
+    // ...modal error
+  }
+};
+
+
+ const handleCancelEdit = () => {
+  setEditingMessageId(null);
+  setEditContent("");
+};
+
+
 
   const handleViewVersion = async (messageId) => {
     try {
@@ -1040,16 +1068,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
     setVersionData({});
   };
 
-  // const getMessageContent = (message) => {
-  //   if (viewingHistory === message.message_id) {
-  //     const versions = messageVersions[message.message_id] || [];
-  //     if (versions.length > 0) {
-  //       return versions[0].old_content;
-  //     }
-  //   }
-  //   return message.content;
-  // };
-  const getMessageContent = useCallback((message) => {
+  const getMessageContent = (message) => {
     if (viewingHistory === message.message_id) {
       const versions = messageVersions[message.message_id] || [];
       if (versions.length > 0) {
@@ -1057,7 +1076,16 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
       }
     }
     return message.content;
-  }, [viewingHistory, messageVersions]);
+  };
+  // const getMessageContent = useCallback((message) => {
+  //   if (viewingHistory === message.message_id) {
+  //     const versions = messageVersions[message.message_id] || [];
+  //     if (versions.length > 0) {
+  //       return versions[0].old_content;
+  //     }
+  //   }
+  //   return message.content;
+  // }, [viewingHistory, messageVersions]);
 
   const handleInputChange = (value) => {
     setInputValue(value);
@@ -1280,6 +1308,7 @@ function UserMessage({
   isEditing,
   editContent,
   setEditContent,
+  editContent: initialEditContent,
   onSaveEdit,
   onCancelEdit,
   onCopy,
@@ -1293,49 +1322,46 @@ function UserMessage({
   getMessageContent,
 }) {
   const messageContent = getMessageContent(message);
+  const editTextareaRef = useRef(null);
+  const hasInitialized = useRef(false);
+  const [localEditContent, setLocalEditContent] = useState(initialEditContent);
 
+
+  // Update local state when editing starts
+useEffect(() => {
+  if (isEditing) {
+    setLocalEditContent(initialEditContent);
+    if (editTextareaRef.current) {
+      editTextareaRef.current.focus();
+      
+      // Set cursor to the end
+      const length = initialEditContent.length;
+      editTextareaRef.current.setSelectionRange(length, length);
+    }
+  }
+}, [isEditing, initialEditContent]);
+
+
+// useEffect(() => {
+//   if (isEditing && editTextareaRef.current) {
+//     editTextareaRef.current.focus();
+//   }
+// }, [isEditing]);
   return (
     <UserMessageContainer>
       <UserMessageContent_Wrapper>
-        <UserMessageBubble>
+        <UserMessageBubble $isEditing={isEditing}>
           {isEditing ? (
-            <div>
-              <EditTextArea
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                autoFocus
+            <EditContainer>
+            <EditTextArea
+                ref={editTextareaRef}
+                value={localEditContent}  // Use LOCAL state
+                onChange={(e) => setLocalEditContent(e.target.value)}  // Update LOCAL state
               />
-              <ActionButtons>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <ActionButton onClick={onCancelEdit}>
-                        <X size={16} />
-                      </ActionButton>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Cancel</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <ActionButton
-                        onClick={() => onSaveEdit(message, editContent)}
-                      >
-                        <Check size={16} />
-                      </ActionButton>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Save changes</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </ActionButtons>
-            </div>
+            </EditContainer>
           ) : (
             <>
               <UserMessageContent>{messageContent}</UserMessageContent>
-
               {isViewingHistory && (
                 <VersionHistoryIndicator>
                   <span>Viewing previous version</span>
@@ -1343,7 +1369,7 @@ function UserMessage({
                     size="small"
                     onClick={() => onBackToCurrent(message.message_id)}
                     startIcon={<ArrowLeft size={14} />}
-                  ></Button>
+                  />
                 </VersionHistoryIndicator>
               )}
             </>
@@ -1352,59 +1378,87 @@ function UserMessage({
         <CircleUserRound size={32} />
       </UserMessageContent_Wrapper>
 
-      {/* Action buttons below the message */}
-      <ActionButtons>
+      {/* Action buttons - always rendered but with different content */}
+      <ActionButtons style={isEditing ? { opacity: 1, pointerEvents: 'auto' } : undefined}>
         <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <ActionButton onClick={() => onCopy(messageContent)}>
-                {copiedMessageId === message.message_id ? (
-                  <Check size={16} />
-                ) : (
-                  <Copy size={16} />
-                )}
-              </ActionButton>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Copy message</p>
-            </TooltipContent>
-          </Tooltip>
-          {!isViewingHistory && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <ActionButton
-                  onClick={() => onEdit(message.message_id, message.content)}
-                >
-                  <Edit3 size={16} />
-                </ActionButton>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Edit message</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-          {message.has_been_modified && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <ActionButton
-                  onClick={() =>
-                    isViewingHistory
-                      ? onBackToCurrent(message.message_id)
-                      : onViewVersion(message.message_id)
-                  }
-                >
-                  <History size={16} />
-                </ActionButton>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{isViewingHistory ? "Back to current" : "View history"}</p>
-              </TooltipContent>
-            </Tooltip>
+          {isEditing ? (
+            <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <ActionButton onClick={onCancelEdit}>
+                    <X size={16} />
+                  </ActionButton>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Cancel</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <ActionButton onClick={() => onSaveEdit(message, localEditContent)}>
+                    <Check size={16} />
+                  </ActionButton>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Save changes</p>
+                </TooltipContent>
+              </Tooltip>
+            </>
+          ) : (
+            <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <ActionButton onClick={() => onCopy(messageContent)}>
+                    {copiedMessageId === message.message_id ? (
+                      <Check size={16} />
+                    ) : (
+                      <Copy size={16} />
+                    )}
+                  </ActionButton>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Copy message</p>
+                </TooltipContent>
+              </Tooltip>
+              {!isViewingHistory && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <ActionButton
+                      onClick={() => onEdit(message.message_id, message.content)}
+                    >
+                      <Edit3 size={16} />
+                    </ActionButton>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Edit message</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              {message.has_been_modified && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <ActionButton
+                      onClick={() =>
+                        isViewingHistory
+                          ? onBackToCurrent(message.message_id)
+                          : onViewVersion(message.message_id)
+                      }
+                    >
+                      <History size={16} />
+                    </ActionButton>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{isViewingHistory ? "Back to current" : "View history"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </>
           )}
         </TooltipProvider>
       </ActionButtons>
     </UserMessageContainer>
   );
+
 }
   function BotMessage({
     message,
@@ -1527,8 +1581,9 @@ function UserMessage({
             onBack={handleBackToCurrent}
           />
         ) : (
-          chat.messages.map((message) => (
-
+          chat.messages
+            .filter(message => !hiddenDuringEdit.has(String(message.message_id)))
+            .map((message) => (
             <Message
               key={message.message_id}
               message={message}
@@ -1552,7 +1607,7 @@ function UserMessage({
           ))
         )}
 
-        {isLoading && <LoadingIndicator />}
+        {(isLoading || isSavingEdit) && <LoadingIndicator />}
         <div ref={messagesEndRef} />
       </MessagesContainer>
 

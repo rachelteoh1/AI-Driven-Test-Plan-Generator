@@ -118,12 +118,72 @@ export const useDetectIntent = () => {
     },
   });
 };
+// export const useModifyChatLog = () => {
+//   const queryClient = useQueryClient();
+//   return useMutation({
+//     mutationFn: service.modifyChatLog,
+//     onSuccess: (response, variables) => {
+//       // Invalidate and refetch the chat logs for this session
+//       queryClient.invalidateQueries({
+//         queryKey: ['chatLogs', variables.session_id],
+//       });
+//     },
+//     onError: (error) => {
+//       console.error("Modify chat log error:", error);
+//     },
+//   });
+// };
+
 export const useModifyChatLog = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: service.modifyChatLog,
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['chats', variables.session_id]);
+    onMutate: async (variables) => {
+      // Cancel any outgoing refetches for this session's chat logs
+      await queryClient.cancelQueries({
+        queryKey: ['chatLogs', variables.session_id],
+      });
+
+      // Get the previous data
+      const previousMessages = queryClient.getQueryData([
+        'chatLogs',
+        variables.session_id,
+      ]);
+
+      // Optimistically update the cache with the edited message
+      queryClient.setQueryData(['chatLogs', variables.session_id], (old) => {
+        if (!old) return old;
+        
+        return old.map((msg) =>
+          msg.message_id === variables.message_id
+            ? { 
+                ...msg, 
+                content: variables.content,
+                has_been_modified: true 
+              }
+            : msg
+        );
+      });
+
+      // Return context for rollback if needed
+      return { previousMessages };
+    },
+    onSuccess: (response, variables) => {
+      // Invalidate to force refetch from backend
+      // This will get the new bot response and remove the old one
+      queryClient.invalidateQueries({
+        queryKey: ['chatLogs', variables.session_id],
+        exact: true,  // ADD THIS to ensure exact match
+      });
+    },
+    onError: (_err, variables, context) => {
+      // Rollback to previous state on error
+      if (context?.previousMessages) {
+        queryClient.setQueryData(
+          ['chatLogs', variables.session_id],
+          context.previousMessages
+        );
+      }
     },
   });
 };

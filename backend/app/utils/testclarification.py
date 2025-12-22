@@ -9,11 +9,12 @@ import os
 import json
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+
 load_dotenv()
 logger = logging.getLogger(__name__)
 nlp = spacy.load("en_core_web_lg")
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY_INTENT2"))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY_INTENT"))
 model = genai.GenerativeModel('models/gemini-2.5-flash') 
 
 # ============================================================================
@@ -108,7 +109,6 @@ def is_likely_scpi(match_text: str, context: str = "") -> bool:
     
     return False
 
-
 def extract_scpi_commands_from_text(text: str) -> list:
     """
     Extract SCPI commands with improved validation.
@@ -119,25 +119,15 @@ def extract_scpi_commands_from_text(text: str) -> list:
     for match in SCPI_REGEX.finditer(text):
         matched_text = match.group(0).strip()
         
-        # Debug output
-        # print(f"  [DEBUG] Matched: '{matched_text}'")
-        
         # Validate if it's actually SCPI
         if is_likely_scpi(matched_text, text):
             # Normalize the command
             cmd = matched_text.upper().rstrip(',;')
             
-            # Add leading : if not present and not a * command
-            # if not cmd.startswith((':', '*')):
-            #     cmd = ':' + cmd
-            
             if cmd not in seen:
                 commands.append(cmd)
                 seen.add(cmd)
                 logger.debug(f"Extracted SCPI: {cmd}")
-                # print(f"  [DEBUG] Accepted: '{cmd}'")
-        # else:
-            # print("  [DEBUG] Rejected by validation")
     
     return commands
 
@@ -153,7 +143,7 @@ class Intent(Enum):
     TROUBLESHOOT = "troubleshoot"
     QUERY_CAPABILITY = "query_capability"
     UNCLEAR = "unclear"              # Ambiguous instrument-related query
-    OFF_TOPIC = "off_topic"  
+    OFF_TOPIC = "off_topic"          # Not about instruments/SCPI
 
 @dataclass
 class ParsedInput:
@@ -188,94 +178,6 @@ class ParsedInput:
             "temporal_info": self.temporal_info,
             "missing_info": self.missing_info
         }
-# ============================================================================
-# Enhanced Intent Detection
-# ============================================================================
-
-INTENT_PATTERNS = {
-    Intent.GENERATE_TEST: [
-        r"\b(generate|create|write|build|make|produce|develop)\b.*\b(test|sequence|script|program)\b",
-        r"\b(automate|automation)\b",
-        r"\b(measure|test|configure|setup|set\s+up)\b",
-        r"\b(enable|disable|turn\s+on|turn\s+off|activate|deactivate)\b",
-        r"\b(set|configure|adjust|change)\b.*\b(to|at)\b.*\d+",
-        r"\b(output|voltage|current|power)\b.*\b(to|at)\b",
-        r"\bfor\s+\w+\s+test\b",
-    ],
-    Intent.EXPLAIN_COMMAND: [
-        r"\b(explain|describe|what\s+(?:does|is|are)|meaning|clarify|interpret)\b",
-        r"\bhow\s+(?:does|do)\b.*\bwork\b",
-        r"\bwhat\s+(?:does|is)\b.*\b(?:command|do|mean)\b",
-        r"\bsyntax\s+(?:of|for)\b",
-    ],
-    Intent.MODIFY_SEQUENCE: [
-        r"\b(modify|change|update|edit|alter|adjust|revise)\b.*\b(sequence|script|test)\b",
-        r"\b(add|remove|delete|insert)\b.*\b(command|step|line)\b",
-        r"\breplace\b.*\bwith\b",
-    ],
-    Intent.TROUBLESHOOT: [
-        r"\b(error|fail|not\s+work|issue|problem|wrong|debug|fix)\b",
-        r"\b(troubleshoot|diagnose)\b",
-        r"\bwhy\s+(?:is|does|did)\b.*\bnot\b",
-    ],
-    Intent.QUERY_CAPABILITY: [
-        r"\b(can|could|able|possible)\b.*\b(do|measure|test|configure)\b",
-        r"\b(support|compatible|capability|feature)\b",
-    ]
-}
-
-INTENT_DETECTION_PROMPT = """You are an expert at classifying user intents for a test automation system that uses SCPI commands.
-
-Analyze the following user request and classify it into ONE of these intents:
-
-1. **generate_test**: User wants to create/generate a new test sequence, configure equipment, or automate measurements
-   - Examples: "measure voltage on channel 101", "set output to 12V on channel 6", "configure channel 1 for current measurement"
-   - CRITICAL: User MUST provide ALL required parameters (channel/value/range). If missing, classify as "unclear".
-
-2. **explain_command**: User wants to understand what a command does or how something works
-   - Examples: "what does :OUTP do?", "explain MEAS:VOLT?", "how does this command work?"
-
-3. **modify_sequence**: User wants to change/update an existing test sequence
-   - Examples: "change the voltage to 15V", "add a delay", "remove step 3", "replace with..."
-
-4. **troubleshoot**: User is reporting errors or problems
-   - Examples: "error on line 5", "command not working", "why is this failing?", "debug this"
-
-5. **query_capability**: User is asking if something is possible or supported
-   - Examples: "can I measure current?", "does it support frequency?", "is it possible to...?"
-
-6. **unclear**: Request is about instruments/testing but lacks critical details
-   - Examples: 
-     * "measure voltage" (no channel specified)
-     * "set output" (no value specified)
-     * "configure channel 5" (no measurement type)
-     * "set voltage on channel 6" (no voltage value like "12V" specified)
-     * "enable output on channel 3" (no specific action or value)
-   - **IMPORTANT**: If user says "set X" or "configure Y" but doesn't provide the actual value/range, classify as UNCLEAR.
-
-7. **off_topic**: Request is NOT about test automation, instruments, or SCPI
-   - Examples: "hello", "how are you?", "tell me a joke", "what's the weather?", "I'm feeling sad"
-
-User Request: "{user_text}"
-
-SCPI Commands Found: {scpi_commands}
-
-**Classification Rules:**
-- If user wants to SET/CONFIGURE/OUTPUT something but provides no numeric value (e.g., "12V", "100mA"), classify as "unclear"
-- If user wants to MEASURE but provides no channel/target, classify as "unclear"
-- Only classify as "generate_test" if ALL required parameters are present
-
-Respond ONLY with valid JSON in this exact format:
-{{
-  "intent": "generate_test",
-  "confidence": 0.95,
-  "reasoning": "Brief explanation of why you chose this intent",
-  "missing_info": ["voltage value (e.g., 12V)", "channel number"]
-}}
-
-Note: Only include "missing_info" array if intent is "unclear". Otherwise omit it or set to null.
-
-JSON Response:"""
 
 # ============================================================================
 # CONVERSATION CONTEXT MANAGEMENT
@@ -415,66 +317,83 @@ def is_new_query(text: str, original_query: str) -> bool:
     
     return False
 
-def clean_scpi_for_intent(scpi_commands: List[str], intent: Intent) -> List[str]:
-    """
-    Clean SCPI commands based on intent.
-    
-    For EXPLAIN_COMMAND intent: Remove leading colons for more natural explanations
-    For other intents: Keep commands as-is
-    
-    Args:
-        scpi_commands: List of extracted SCPI commands
-        intent: The detected intent
-        
-    Returns:
-        List of cleaned SCPI commands
-    """
-    if intent == Intent.EXPLAIN_COMMAND:
-        cleaned = []
-        for cmd in scpi_commands:
-            # Remove leading colon for explain intent
-            # ":MEAS:VOLT:DC?" -> "MEAS:VOLT:DC?"
-            if cmd.startswith(':'):
-                cleaned_cmd = cmd[1:]
-                logger.debug(f"[EXPLAIN MODE] Cleaned SCPI: '{cmd}' -> '{cleaned_cmd}'")
-                cleaned.append(cleaned_cmd)
-            else:
-                cleaned.append(cmd)
-        return cleaned
-    else:
-        # For other intents, keep commands as-is
-        return scpi_commands
+# ============================================================================
+# Enhanced Intent Detection
+# ============================================================================
 
-def clean_text_for_intent(text: str, scpi_commands: List[str], intent: Intent) -> str:
-    """
-    Clean the original text based on intent.
-    
-    For EXPLAIN_COMMAND: Remove leading colons from SCPI commands in text
-    For other intents: Keep text as-is
-    
-    Args:
-        text: Original user input text
-        scpi_commands: List of extracted SCPI commands
-        intent: The detected intent
-        
-    Returns:
-        Cleaned text
-    """
-    if intent == Intent.EXPLAIN_COMMAND:
-        cleaned_text = text
-        
-        # Replace each SCPI command that starts with : in the text
-        for cmd in scpi_commands:
-            if cmd.startswith(':'):
-                # Replace ":MEAS:VOLT?" with "MEAS:VOLT?" in the text
-                cleaned_text = cleaned_text.replace(cmd, cmd[1:])
-        
-        logger.debug(f"[EXPLAIN MODE] Original text: '{text}'")
-        logger.debug(f"[EXPLAIN MODE] Cleaned text: '{cleaned_text}'")
-        return cleaned_text
-    else:
-        return text
-    
+INTENT_PATTERNS = {
+    Intent.GENERATE_TEST: [
+        r"\b(generate|create|write|build|make|produce|develop)\b.*\b(test|sequence|script|program)\b",
+        r"\b(automate|automation)\b",
+        r"\b(measure|test|configure|setup|set\s+up)\b",
+        r"\b(enable|disable|turn\s+on|turn\s+off|activate|deactivate)\b",
+        r"\b(set|configure|adjust|change)\b.*\b(to|at)\b.*\d+",
+        r"\b(output|voltage|current|power)\b.*\b(to|at)\b",
+        r"\bfor\s+\w+\s+test\b",
+    ],
+    Intent.EXPLAIN_COMMAND: [
+        r"\b(explain|describe|what\s+(?:does|is|are)|meaning|clarify|interpret)\b",
+        r"\bhow\s+(?:does|do)\b.*\bwork\b",
+        r"\bwhat\s+(?:does|is)\b.*\b(?:command|do|mean)\b",
+        r"\bsyntax\s+(?:of|for)\b",
+    ],
+    Intent.MODIFY_SEQUENCE: [
+        r"\b(modify|change|update|edit|alter|adjust|revise)\b.*\b(sequence|script|test)\b",
+        r"\b(add|remove|delete|insert)\b.*\b(command|step|line)\b",
+        r"\breplace\b.*\bwith\b",
+    ],
+    Intent.TROUBLESHOOT: [
+        r"\b(error|fail|not\s+work|issue|problem|wrong|debug|fix)\b",
+        r"\b(troubleshoot|diagnose)\b",
+        r"\bwhy\s+(?:is|does|did)\b.*\bnot\b",
+    ],
+    Intent.QUERY_CAPABILITY: [
+        r"\b(can|could|able|possible)\b.*\b(do|measure|test|configure)\b",
+        r"\b(support|compatible|capability|feature)\b",
+    ]
+}
+
+INTENT_DETECTION_PROMPT = """You are an expert at classifying user intents for a test automation system that uses SCPI commands.
+
+Analyze the following user request and classify it into ONE of these intents:
+
+1. **generate_test**: User wants to create/generate a new test sequence, configure equipment, or automate measurements
+   - Examples: "measure voltage", "set output to 12V", "create a test for...", "configure channel 1"
+
+2. **explain_command**: User wants to understand what a command does or how something works
+   - Examples: "what does :OUTP do?", "explain MEAS:VOLT?", "how does this command work?"
+
+3. **modify_sequence**: User wants to change/update an existing test sequence
+   - Examples: "change the voltage to 15V", "add a delay", "remove step 3", "replace with..."
+
+4. **troubleshoot**: User is reporting errors or problems
+   - Examples: "error on line 5", "command not working", "why is this failing?", "debug this"
+
+5. **query_capability**: User is asking if something is possible or supported
+   - Examples: "can I measure current?", "does it support frequency?", "is it possible to...?"
+
+6. **unclear**: Request is about instruments/testing but lacks critical details
+   - Examples: "measure voltage" (no channel), "set output" (no value), "test the device" (no specifics)
+
+7. **off_topic**: Request is NOT about test automation, instruments, or SCPI
+   - Examples: "hello", "how are you?", "tell me a joke", "what's the weather?", "I'm feeling sad"
+
+User Request: "{user_text}"
+
+SCPI Commands Found: {scpi_commands}
+
+Respond ONLY with valid JSON in this exact format:
+{{
+  "intent": "generate_test",
+  "confidence": 0.95,
+  "reasoning": "Brief explanation of why you chose this intent",
+  "missing_info": ["channel number", "voltage range"]
+}}
+
+Note: Only include "missing_info" array if intent is "unclear". Otherwise omit it or set to null.
+
+JSON Response:"""
+
 def classify_intent_with_gemini(text: str, scpi_commands: List[str]) -> Tuple[Intent, float, str, Optional[List[str]]]:
     """
     Use Gemini to classify intent with reasoning.
@@ -537,46 +456,6 @@ def classify_intent_fallback(text: str, has_scpi: bool) -> Tuple[Intent, float, 
     intent_scores = {intent: 0.0 for intent in Intent}
     
     # ========================================================================
-    # STEP 0: EARLY MISSING VALUE DETECTION (NEW - HIGH PRIORITY)
-    # ========================================================================
-    # Check for actions that REQUIRE values but don't have them
-    set_actions = ['set', 'configure', 'output', 'source', 'apply']
-    measurement_keywords = ['voltage', 'current', 'resistance', 'frequency', 'temperature', 'power']
-    
-    has_set_action = any(action in text_lower for action in set_actions)
-    has_measurement_type = any(kw in text_lower for kw in measurement_keywords)
-    has_value = bool(re.search(r'\d+(?:\.\d+)?\s*[vVaAmMuUkKΩωW]', text_lower))
-    has_channel = bool(re.search(r'channel|ch\s*\d+|@\d{3}', text_lower))
-    
-    # CRITICAL CHECK: If user wants to SET a voltage/current/etc but provides NO VALUE
-    if has_set_action and has_measurement_type and not has_value:
-        missing_items = []
-        
-        # Determine what's missing
-        if not has_value:
-            if 'voltage' in text_lower:
-                missing_items.append("voltage value (e.g., '12V', '5.5V')")
-            elif 'current' in text_lower:
-                missing_items.append("current value (e.g., '100mA', '1A')")
-            elif 'frequency' in text_lower:
-                missing_items.append("frequency value (e.g., '1kHz', '10MHz')")
-            elif 'resistance' in text_lower:
-                missing_items.append("resistance value (e.g., '100Ω', '1kΩ')")
-            else:
-                missing_items.append("numeric value with unit")
-        
-        if not has_channel and ('channel' in text_lower or 'output' in text_lower):
-            missing_items.append("channel number (e.g., 'channel 6', '@101')")
-        
-        # If critical info is missing, immediately return UNCLEAR
-        if missing_items:
-            return (
-                Intent.UNCLEAR, 
-                0.85,
-                f"Action detected but missing: {', '.join(missing_items)}"
-            )
-    
-    # ========================================================================
     # STEP 1: Check for OFF_TOPIC first (highest priority)
     # ========================================================================
     off_topic_indicators = {
@@ -634,7 +513,7 @@ def classify_intent_fallback(text: str, has_scpi: bool) -> Tuple[Intent, float, 
     has_config = any(word in text_lower for word in config_keywords)
     has_context = has_scpi or any(word in text_lower for word in context_keywords)
     
-    if has_config and has_context and has_value:  # ← MODIFIED: Only boost if has_value
+    if has_config and has_context:
         intent_scores[Intent.GENERATE_TEST] += 0.5
     
     # ========================================================================
@@ -645,12 +524,14 @@ def classify_intent_fallback(text: str, has_scpi: bool) -> Tuple[Intent, float, 
     has_action = any(verb in text_lower for verb in action_verbs)
     
     # Check for critical details
+    has_channel = bool(re.search(r'channel|ch\s*\d+|@\d{3}', text_lower))
+    has_value = bool(re.search(r'\d+(?:\.\d+)?\s*[vVaAmMΩ]', text_lower))
     has_specific_measurement = any(word in text_lower for word in ['voltage', 'current', 'resistance', 'frequency', 'temperature'])
     
     # If user has action but missing details AND no strong pattern match
     max_pattern_score = max(intent_scores.values()) if intent_scores else 0
     
-    if has_action and max_pattern_score < 0.6:  # ← MODIFIED: Raised threshold from 0.4 to 0.6
+    if has_action and max_pattern_score < 0.4:
         # Determine what's missing
         missing_count = 0
         
@@ -666,9 +547,11 @@ def classify_intent_fallback(text: str, has_scpi: bool) -> Tuple[Intent, float, 
             if not has_channel and 'output' in text_lower:
                 missing_count += 1
         
-        # If missing 1+ critical pieces of info, mark as UNCLEAR
-        if missing_count >= 1:  # ← MODIFIED: Changed from 2 to 1
-            intent_scores[Intent.UNCLEAR] = 0.75
+        # If missing 2+ critical pieces of info, mark as UNCLEAR
+        if missing_count >= 2:
+            intent_scores[Intent.UNCLEAR] = 0.7
+        elif missing_count == 1:
+            intent_scores[Intent.UNCLEAR] = 0.5
     
     # Special case: Very vague requests
     vague_patterns = [
@@ -717,6 +600,7 @@ def classify_intent_fallback(text: str, has_scpi: bool) -> Tuple[Intent, float, 
         reasoning = "Fallback: Pattern-based classification"
     
     return best_intent[0], confidence, reasoning
+
 
 # ============================================================================
 # CLARIFICATION QUESTION GENERATION
@@ -854,7 +738,16 @@ def _dedup_targets(targets: List[str]) -> List[str]:
 # ============================================================================
 
 def preprocess_input(text: str, use_gemini: bool = True) -> ParsedInput:
- 
+    """
+    Preprocess user input and extract structured information.
+    
+    Args:
+        text: Raw user input
+        use_gemini: Whether to use Gemini for intent classification (default True)
+    
+    Returns:
+        ParsedInput object with all extracted information
+    """
     original = text.strip()
     
     # 1) Extract measurements FIRST (before any text modification)
@@ -864,7 +757,6 @@ def preprocess_input(text: str, use_gemini: bool = True) -> ParsedInput:
     # 2) Extract SCPI commands (with improved detection)
     scpi_cmds = extract_scpi_commands_from_text(original)
     
-    
     # 3) Classify intent
     missing_info = None
     if use_gemini:
@@ -872,8 +764,6 @@ def preprocess_input(text: str, use_gemini: bool = True) -> ParsedInput:
     else:
         intent, confidence, reasoning = classify_intent_fallback(original, bool(scpi_cmds))
     
-    scpi_cmds = clean_scpi_for_intent(scpi_cmds, intent)
-    cleaned_original = clean_text_for_intent(original, scpi_cmds, intent)
     # 4) Remove SCPI commands for further NLP processing
     text_wo_scpi = original
     for cmd in scpi_cmds:
@@ -898,7 +788,7 @@ def preprocess_input(text: str, use_gemini: bool = True) -> ParsedInput:
     logger.debug(f"Measurements: {measurement_types}, Conditions: {conditions}")
     
     return ParsedInput(
-        original_text=cleaned_original ,
+        original_text=original,
         lemmatized_text=lemmatized,
         intent=intent,
         confidence=confidence,
@@ -911,8 +801,8 @@ def preprocess_input(text: str, use_gemini: bool = True) -> ParsedInput:
         temporal_info=temporal_info,
         intent_reasoning=reasoning,
         missing_info=missing_info
-    )
-
+        )
+    
 def should_send_to_llm(intent: Intent) -> bool:
     """Decide if this request should go to your main LLM."""
     return intent in [
@@ -922,6 +812,7 @@ def should_send_to_llm(intent: Intent) -> bool:
     Intent.TROUBLESHOOT,
     Intent.QUERY_CAPABILITY
     ]
+    
 def process_user_input(text: str, session_id: str = "default") -> dict:
     """
     Main processing flow with context-aware clarification.
@@ -1038,42 +929,113 @@ def process_user_input(text: str, session_id: str = "default") -> dict:
             "parsed_data": parsed.to_dict(),
             "send_to_llm": True
         }
-# ============================================================================
-# TESTING
-# ============================================================================
-
+        
 if __name__ == "__main__":
-    test_cases = [
-        # Without leading colon
-        "Enable output OUTP ON, set voltage to 12 V on channel 6 for fan test.",
-        "Measure voltage using MEAS:VOLT? on channel 101",
-        "Configure CONF:VOLT:DC 10,0.001 and read",
-        "Set SOUR:VOLT 5.0 then enable OUTP ON",
+    print("="*80)
+    print("CONVERSATION FLOW DEMONSTRATION")
+    print("="*80)
+    # Scenario 1: Unclear -> Clarification -> Success
+    print("\n📌 Scenario 1: User provides incomplete info, then clarifies")
+    print("-" * 60)
+
+    session = "user_123"
+
+    # result1 = process_user_input("measure voltage", session)
+    # print(f"User: 'measure voltage'")
+    # print(f"Bot Action: {result1['action']}")
+    # if result1['action'] == 'ask_clarification':
+    #     print(f"Bot: {result1['question']}\n")
+
+    # result2 = process_user_input("channel 101, 10V range", session)
+    # print(f"User: 'channel 101, 10V range'")
+    # print(f"Action: {result2['action']}")
+    # if result2.get('combined_query'):
+    #     print(f"Combined Query: '{result2['combined_query']}'")
+    # print(f"Send to LLM: {result2['send_to_llm']}")
+
+    # # Scenario 2: Multiple clarifications
+    # print("\n\n📌 Scenario 2: Multiple clarification rounds")
+    # print("-" * 60)
+
+    # session2 = "user_456"
+
+    # result1 = process_user_input("set output", session2)
+    # print(f"User: 'set output'")
+    # if result1['action'] == 'ask_clarification':
+    #     print(f"Bot: {result1['question']}\n")
+
+    # result2 = process_user_input("12V", session2)
+    # print(f"User: '12V'")
+    # if result2['action'] == 'ask_clarification':
+    #     print(f"Bot: {result2['question']}\n")
         
-        # # With leading colon
-        # "Enable output :OUTP ON, set voltage to 12 V",
-        # "Use :MEAS:VOLT? to measure",
+    #     result3 = process_user_input("channel 6", session2)
+    #     print(f"User: 'channel 6'")
+    #     print(f"Action: {result3['action']}")
+    #     if result3.get('combined_query'):
+    #         print(f"Combined Query: '{result3['combined_query']}'")
+    #     print(f"Send to LLM: {result3['send_to_llm']}")
+
+    # Scenario 3: Clear from the start
+    # print("\n\n📌 Scenario 3: Complete info provided immediately")
+    # print("-" * 60)
+
+    # session3 = "user_789"
+    # result = process_user_input("measure voltage on channel 101 with 10V range", session3)
+    # print(f"User: 'measure voltage on channel 101 with 10V range'")
+    # print(f"Action: {result['action']}")
+    # print(f"Send to LLM: {result['send_to_llm']}")
+    # print(f"Intent: {result['parsed_data']['intent']}")
+
+    # # Scenario 4: Off-topic
+    # print("\n\n📌 Scenario 4: Off-topic conversation")
+    # print("-" * 60)
+
+    # session4 = "user_abc"
+    # result = process_user_input("Hello! How are you?", session4)
+    # print(f"User: 'Hello! How are you?'")
+    # print(f"Action: {result['action']}")
+    # print(f"Bot: {result['response'][:100]}...")
+
+    # # Scenario 5: User ignores clarification and asks new question
+    # print("\n\n📌 Scenario 5: User ignores clarification (starts new query)")
+    # print("-" * 60)
+
+    # session5 = "user_xyz"
+
+    # result1 = process_user_input("measure voltage", session5)
+    # print(f"User: 'measure voltage'")
+    # if result1['action'] == 'ask_clarification':
+    #     print(f"Bot: {result1['question']}\n")
+
+    # # User ignores the clarification and asks something completely different
+    # result2 = process_user_input("explain what :OUTP ON does", session5)
+    # print(f"User: 'explain what :OUTP ON does' (NEW QUERY - ignored clarification)")
+    # print(f"Action: {result2['action']}")
+    # print(f"Intent: {result2['parsed_data']['intent']}")
+    # print(f"Send to LLM: {result2['send_to_llm']}")
+    # print(f"Context was reset: {result2.get('combined_query') is None}")
+
+    # Scenario 6: User provides partial clarification, then asks new question
+    print("\n\n📌 Scenario 6: Partial clarification, then new query")
+    print("-" * 60)
+
+    session6 = "user_def"
+
+    result1 = process_user_input("set output", session6)
+    print(f"User: 'set output'")
+    if result1['action'] == 'ask_clarification':
+        print(f"Bot: {result1['question']}\n")
+
+    result2 = process_user_input("12V", session6)
+    print(f"User: '12V' (clarification answer)")
+    if result2['action'] == 'ask_clarification':
+        print(f"Bot: {result2['question']}\n")
         
-        # # Common commands
-        # "Send *RST and *CLS before testing",
-        # "Query *IDN? to identify device",
-        
-        # # Mixed
-        # "CONF:VOLT:DC then MEAS:VOLT? and log to file",
-        # "Set voltage SOUR:VOLT 3.3, read current MEAS:CURR?",
-    ]
-    
-    print("SCPI Command Extraction Tests")
-    print("=" * 80)
-    
-    for test in test_cases:
-        print(f"\n{'='*60}")
-        print(f"Input: {test}")
-        result = preprocess_input(test)
-        print(f"Intent: {result.intent.value} ({result.confidence:.2f})")
-        print(f"Reasoning: {result.intent_reasoning}")
-        print(f"SCPI: {result.scpi_commands}")
-        print(f"Measurements: {result.measurement_types}")
-        print(f"Conditions: {result.conditions}")
-        print(f"Target: {result.targets}")
-        
+        # User gets impatient and asks something else
+        result3 = process_user_input("can you measure current instead?", session6)
+        print(f"User: 'can you measure current instead?' (NEW QUERY)")
+        print(f"Action: {result3['action']}")
+        print(f"Intent: {result3['parsed_data']['intent']}")
+        combined_query = result3.get('combined_query', '')
+        print(f"Context was reset: {not combined_query.startswith('set output')}")
