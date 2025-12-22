@@ -13,7 +13,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 nlp = spacy.load("en_core_web_lg")
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY_INTENT2"))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY_INTENT"))
 model = genai.GenerativeModel('models/gemini-2.5-flash') 
 
 # ============================================================================
@@ -228,9 +228,29 @@ INTENT_DETECTION_PROMPT = """You are an expert at classifying user intents for a
 
 Analyze the following user request and classify it into ONE of these intents:
 
-1. **generate_test**: User wants to create/generate a new test sequence, configure equipment, or automate measurements
-   - Examples: "measure voltage on channel 101", "set output to 12V on channel 6", "configure channel 1 for current measurement"
-   - CRITICAL: User MUST provide ALL required parameters (channel/value/range). If missing, classify as "unclear".
+1. **generate_test**: User wants to create/generate a new test sequence, configure equipment,
+or automate measurements.
+
+Examples:
+- "measure voltage on channel 101"
+- "set output to 12 V on channel 6"
+- "configure channel 1 for current measurement"
+- "measure voltage"
+- "turn output on"
+
+CRITICAL RULE:
+Classify as "generate_test" ONLY when the request includes enough information
+to generate a valid SCPI sequence WITHOUT guessing any critical parameter.
+
+Important clarifications:
+- A channel is required ONLY if the user explicitly mentions or implies one
+  (e.g., channel, scan, route, mux, multi-output).
+- A numeric value is required ONLY for set/configure actions that change a quantity.
+- Ranges/modes (e.g., AC/DC, autorange) are NOT required unless explicitly implied
+  or necessary to avoid ambiguity.
+
+If generating SCPI would require guessing a value, measurement type, or target,
+classify as "unclear".
 
 2. **explain_command**: User wants to understand what a command does or how something works
    - Examples: "what does :OUTP do?", "explain MEAS:VOLT?", "how does this command work?"
@@ -245,13 +265,34 @@ Analyze the following user request and classify it into ONE of these intents:
    - Examples: "can I measure current?", "does it support frequency?", "is it possible to...?"
 
 6. **unclear**: Request is about instruments/testing but lacks critical details
-   - Examples: 
-     * "measure voltage" (no channel specified)
-     * "set output" (no value specified)
-     * "configure channel 5" (no measurement type)
-     * "set voltage on channel 6" (no voltage value like "12V" specified)
-     * "enable output on channel 3" (no specific action or value)
-   - **IMPORTANT**: If user says "set X" or "configure Y" but doesn't provide the actual value/range, classify as UNCLEAR.
+   Classify as "unclear" when the request is related to instruments or testing
+but lacks a complete, actionable structure.
+
+This includes cases where:
+- No clear action is specified
+- An action is implied but has no target
+- Parameters appear in isolation without an action
+
+Examples:
+- "do something"
+- "test it"
+- "configure"
+- "help"
+- "12 V" (value with no action)
+- "channel 6" (target with no action)
+- "voltage" (measurement type with no action)
+- "measure this" 
+
+IMPORTANT:
+- The presence of a value, channel, or measurement type alone is NOT sufficient.
+- A request qualifies as "generate_test" ONLY when ALL are present:
+  1) A clear action (set / measure / enable / configure / acquire)
+  2) A clear target or measurement type
+  3) Enough parameters to avoid guessing
+
+RULE OF PREFERENCE:
+- Prefer "generate_test" only when a complete SCPI intent can be formed.
+- Prefer "unclear" whenever generating SCPI would require assumptions.
 
 7. **off_topic**: Request is NOT about test automation, instruments, or SCPI
    - Examples: "hello", "how are you?", "tell me a joke", "what's the weather?", "I'm feeling sad"
@@ -524,96 +565,90 @@ def classify_intent_with_gemini(text: str, scpi_commands: List[str]) -> Tuple[In
 
 def classify_intent_fallback(text: str, has_scpi: bool) -> Tuple[Intent, float, str]:
     """
-    Enhanced fallback intent classification with UNCLEAR and OFF_TOPIC detection.
+    BALANCED fallback intent classification.
     
-    Args:
-        text: User input text
-        has_scpi: Whether SCPI commands were detected
-    
-    Returns:
-        (Intent, confidence_score, reasoning)
+    Philosophy: Catch missing critical parameters (values, channels) but allow
+                requests with sufficient context to proceed.
     """
     text_lower = text.lower()
     intent_scores = {intent: 0.0 for intent in Intent}
     
     # ========================================================================
-    # STEP 0: EARLY MISSING VALUE DETECTION (NEW - HIGH PRIORITY)
+    # STEP 0: CRITICAL PARAMETER DETECTION (NEW - HIGH PRIORITY)
     # ========================================================================
-    # Check for actions that REQUIRE values but don't have them
+    # Check for actions that REQUIRE specific values/channels
     set_actions = ['set', 'configure', 'output', 'source', 'apply']
-    measurement_keywords = ['voltage', 'current', 'resistance', 'frequency', 'temperature', 'power']
+    measurement_actions = ['measure', 'read', 'monitor', 'test']
     
     has_set_action = any(action in text_lower for action in set_actions)
-    has_measurement_type = any(kw in text_lower for kw in measurement_keywords)
-    has_value = bool(re.search(r'\d+(?:\.\d+)?\s*[vVaAmMuUkKΩωW]', text_lower))
-    has_channel = bool(re.search(r'channel|ch\s*\d+|@\d{3}', text_lower))
+    has_measurement_action = any(action in text_lower for action in measurement_actions)
     
-    # CRITICAL CHECK: If user wants to SET a voltage/current/etc but provides NO VALUE
+    # Check what's present
+    has_value = bool(re.search(r'\d+(?:\.\d+)?\s*[vVaAmMuUkKΩωWHz]', text_lower))
+    has_channel = bool(re.search(r'channel\s+\d+|ch\s*\d+|@\d{3}', text_lower))
+    has_measurement_type = any(kw in text_lower for kw in 
+                               ['voltage', 'current', 'resistance', 'frequency', 'temperature', 'power'])
+    
+    missing_items = []
+    
+    # RULE 1: "set/configure/output X" without VALUE
     if has_set_action and has_measurement_type and not has_value:
-        missing_items = []
+        if 'voltage' in text_lower:
+            missing_items.append("voltage value (e.g., '12V', '5.5V')")
+        elif 'current' in text_lower:
+            missing_items.append("current value (e.g., '100mA', '1A')")
+        elif 'frequency' in text_lower:
+            missing_items.append("frequency value (e.g., '1kHz', '10MHz')")
+        elif 'resistance' in text_lower:
+            missing_items.append("resistance value (e.g., '100Ω', '1kΩ')")
+    
+    # RULE 2: "measure X" without CHANNEL (unless measuring general capability)
+    if has_measurement_action and not has_channel:
+        # Check if this is asking about capability vs actual measurement
+        capability_words = ['can', 'able', 'support', 'possible', 'capability']
+        is_capability_query = any(word in text_lower for word in capability_words)
         
-        # Determine what's missing
-        if not has_value:
-            if 'voltage' in text_lower:
-                missing_items.append("voltage value (e.g., '12V', '5.5V')")
-            elif 'current' in text_lower:
-                missing_items.append("current value (e.g., '100mA', '1A')")
-            elif 'frequency' in text_lower:
-                missing_items.append("frequency value (e.g., '1kHz', '10MHz')")
-            elif 'resistance' in text_lower:
-                missing_items.append("resistance value (e.g., '100Ω', '1kΩ')")
-            else:
-                missing_items.append("numeric value with unit")
-        
-        if not has_channel and ('channel' in text_lower or 'output' in text_lower):
-            missing_items.append("channel number (e.g., 'channel 6', '@101')")
-        
-        # If critical info is missing, immediately return UNCLEAR
-        if missing_items:
-            return (
-                Intent.UNCLEAR, 
-                0.85,
-                f"Action detected but missing: {', '.join(missing_items)}"
-            )
+        if not is_capability_query and has_measurement_type:
+            missing_items.append("channel number (e.g., 'channel 101', '@101')")
+    
+    # RULE 3: "set/configure" with channel but no target
+    if has_set_action and has_channel and not has_measurement_type and not has_value:
+        missing_items.append("what to configure (voltage/current/etc.) and value")
+    
+    # RULE 4: "configure channel X" without measurement type
+    if ('configure' in text_lower or 'setup' in text_lower) and has_channel and not has_measurement_type:
+        missing_items.append("measurement type (e.g., 'voltage', 'current', 'resistance')")
+    
+    # RULE 5: "enable/disable output" without channel
+    if ('enable' in text_lower or 'disable' in text_lower) and 'output' in text_lower and not has_channel:
+        missing_items.append("output/channel number (e.g., 'channel 6')")
+    
+    # If critical info is missing, return UNCLEAR
+    if missing_items:
+        return (
+            Intent.UNCLEAR, 
+            0.85,
+            f"Action detected but missing: {', '.join(missing_items)}"
+        )
     
     # ========================================================================
-    # STEP 1: Check for OFF_TOPIC first (highest priority)
+    # STEP 1: Check for OFF_TOPIC
     # ========================================================================
     off_topic_indicators = {
-        'greetings': ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'],
-        'personal': ['how are you', 'what\'s up', 'how\'s it going', 'feeling', 'tired', 'hungry'],
-        'chitchat': ['joke', 'story', 'weather', 'news', 'tell me about'],
-        'general_questions': ['who are you', 'what can you do', 'help me with'],
+        'greetings': ['hello', 'hi', 'hey', 'good morning'],
+        'personal': ['how are you', 'feeling', 'tired'],
+        'chitchat': ['joke', 'story', 'weather'],
     }
     
-    # Count off-topic matches
-    off_topic_count = 0
-    for category, phrases in off_topic_indicators.items():
-        for phrase in phrases:
-            if phrase in text_lower:
-                off_topic_count += 1
+    off_topic_count = sum(
+        1 for phrases in off_topic_indicators.values() 
+        for phrase in phrases if phrase in text_lower
+    )
     
-    # Check if text is very short and generic
-    words = text_lower.split()
-    is_very_short = len(words) <= 3
-    
-    # Strong off-topic indicators
     if off_topic_count >= 1 and not has_scpi:
-        # Check if it contains any instrument-related keywords
-        instrument_keywords = [
-            'measure', 'voltage', 'current', 'channel', 'output', 'input',
-            'configure', 'set', 'test', 'scpi', 'instrument', 'dmm', 'multimeter',
-            'resistance', 'frequency', 'temperature', 'power'
-        ]
-        
-        has_instrument_context = any(kw in text_lower for kw in instrument_keywords)
-        
-        if not has_instrument_context:
-            return Intent.OFF_TOPIC, 0.95, "Fallback: No instrument/testing context detected"
-    
-    # Very short generic phrases without context
-    if is_very_short and off_topic_count > 0:
-        return Intent.OFF_TOPIC, 0.90, "Fallback: Generic greeting/chitchat"
+        instrument_keywords = ['measure', 'voltage', 'current', 'channel', 'test', 'configure']
+        if not any(kw in text_lower for kw in instrument_keywords):
+            return Intent.OFF_TOPIC, 0.95, "Fallback: No instrument/testing context"
     
     # ========================================================================
     # STEP 2: Check existing intent patterns
@@ -626,95 +661,70 @@ def classify_intent_fallback(text: str, has_scpi: bool) -> Tuple[Intent, float, 
                 intent_scores[intent] += weight * len(matches)
     
     # ========================================================================
-    # STEP 3: Boost GENERATE_TEST for configuration requests
+    # STEP 3: BOOST generate_test for complete actions
     # ========================================================================
-    config_keywords = ['enable', 'set', 'configure', 'turn', 'measure', 'output', 'source']
-    context_keywords = ['channel', 'output', 'voltage', 'current', 'resistance', 'frequency']
+    action_verbs = ['measure', 'set', 'configure', 'test', 'enable', 'disable', 
+                    'output', 'read', 'check', 'monitor', 'scan']
+    context_keywords = ['channel', 'voltage', 'current', 'resistance', 'frequency', 
+                       'temperature', 'power', 'output', 'input']
     
-    has_config = any(word in text_lower for word in config_keywords)
-    has_context = has_scpi or any(word in text_lower for word in context_keywords)
-    
-    if has_config and has_context and has_value:  # ← MODIFIED: Only boost if has_value
-        intent_scores[Intent.GENERATE_TEST] += 0.5
-    
-    # ========================================================================
-    # STEP 4: Detect UNCLEAR intent (missing critical information)
-    # ========================================================================
-    # Check for action verbs that require details
-    action_verbs = ['measure', 'set', 'configure', 'test', 'enable', 'disable', 'output']
     has_action = any(verb in text_lower for verb in action_verbs)
+    has_context = has_scpi or any(kw in text_lower for kw in context_keywords)
     
-    # Check for critical details
-    has_specific_measurement = any(word in text_lower for word in ['voltage', 'current', 'resistance', 'frequency', 'temperature'])
+    # Boost generate_test if action + context + sufficient params
+    if has_action and has_context:
+        # Check if it's a complete action (already passed param checks above)
+        intent_scores[Intent.GENERATE_TEST] += 0.6
     
-    # If user has action but missing details AND no strong pattern match
+    # ========================================================================
+    # STEP 4: Check for extremely vague requests
+    # ========================================================================
+    extremely_vague_patterns = [
+    r'^\s*(do|make|create|help|test)\s*$',  # Single word only
+    r'^\s*(do|test)\s+(it|this|that|something)\s*$',  # "test it"
+    r'^\s*help\s+me\s*$',  # "help me" with no context
+]
+
+    
+    is_extremely_vague = any(
+        re.match(pattern, text_lower) 
+        for pattern in extremely_vague_patterns
+    )
+    
     max_pattern_score = max(intent_scores.values()) if intent_scores else 0
     
-    if has_action and max_pattern_score < 0.6:  # ← MODIFIED: Raised threshold from 0.4 to 0.6
-        # Determine what's missing
-        missing_count = 0
-        
-        if 'measure' in text_lower or 'test' in text_lower:
-            if not has_channel:
-                missing_count += 1
-            if not has_specific_measurement:
-                missing_count += 1
-        
-        if 'set' in text_lower or 'configure' in text_lower or 'output' in text_lower:
-            if not has_value:
-                missing_count += 1
-            if not has_channel and 'output' in text_lower:
-                missing_count += 1
-        
-        # If missing 1+ critical pieces of info, mark as UNCLEAR
-        if missing_count >= 1:  # ← MODIFIED: Changed from 2 to 1
-            intent_scores[Intent.UNCLEAR] = 0.75
-    
-    # Special case: Very vague requests
-    vague_patterns = [
-        r'^(measure|test|set|configure|enable|disable)\s*$',  # Single word only
-        r'^(measure|test|set)\s+(it|this|that|something)\s*$',  # "measure it"
-    ]
-    
-    for pattern in vague_patterns:
-        if re.search(pattern, text_lower):
-            intent_scores[Intent.UNCLEAR] = 0.8
-            break
+    if is_extremely_vague and not has_action and not has_context and max_pattern_score < 0.3:
+        intent_scores[Intent.UNCLEAR] = 0.7
     
     # ========================================================================
     # STEP 5: Determine final intent
     # ========================================================================
     max_score = max(intent_scores.values()) if intent_scores else 0
     
-    # If no pattern matched well and has instrument context but vague
-    if max_score < 0.2:
-        # Check if it's instrument-related but incomplete
-        instrument_keywords = ['measure', 'voltage', 'current', 'channel', 'output', 
-                             'configure', 'set', 'test', 'instrument']
-        has_instrument_mention = any(kw in text_lower for kw in instrument_keywords)
+    # If no strong match but has action/context, check completeness
+    if max_score < 0.3:
+        if has_action and has_context:
+            return Intent.GENERATE_TEST, 0.5, "Fallback: Action with context detected"
         
-        if has_instrument_mention:
-            return Intent.UNCLEAR, 0.6, "Fallback: Instrument-related but missing details"
+        instrument_keywords = ['measure', 'voltage', 'current', 'channel', 'test', 'instrument']
+        if any(kw in text_lower for kw in instrument_keywords):
+            return Intent.GENERATE_TEST, 0.4, "Fallback: Instrument-related request"
         else:
-            return Intent.OFF_TOPIC, 0.7, "Fallback: No clear instrument/testing context"
+            return Intent.OFF_TOPIC, 0.7, "Fallback: No clear context"
     
     # Get best intent
     best_intent = max(intent_scores.items(), key=lambda x: x[1])
     confidence = min(best_intent[1], 1.0)
     
     # Generate reasoning
-    if best_intent[0] == Intent.GENERATE_TEST:
-        reasoning = "Fallback: Detected configuration keywords and context"
-    elif best_intent[0] == Intent.EXPLAIN_COMMAND:
-        reasoning = "Fallback: Detected explanation/query keywords"
-    elif best_intent[0] == Intent.TROUBLESHOOT:
-        reasoning = "Fallback: Detected error/problem keywords"
-    elif best_intent[0] == Intent.UNCLEAR:
-        reasoning = "Fallback: Action detected but missing critical details"
-    elif best_intent[0] == Intent.OFF_TOPIC:
-        reasoning = "Fallback: No instrument/testing context found"
-    else:
-        reasoning = "Fallback: Pattern-based classification"
+    reasoning_map = {
+        Intent.GENERATE_TEST: "Fallback: Complete configuration/measurement action",
+        Intent.EXPLAIN_COMMAND: "Fallback: Explanation requested",
+        Intent.TROUBLESHOOT: "Fallback: Error/problem reported",
+        Intent.UNCLEAR: "Fallback: Missing critical parameters",
+        Intent.OFF_TOPIC: "Fallback: No instrument/testing context"
+    }
+    reasoning = reasoning_map.get(best_intent[0], "Fallback: Pattern-based classification")
     
     return best_intent[0], confidence, reasoning
 
@@ -912,6 +922,23 @@ def preprocess_input(text: str, use_gemini: bool = True) -> ParsedInput:
         intent_reasoning=reasoning,
         missing_info=missing_info
     )
+    
+def is_skip_command(text: str) -> bool:
+    """
+    Detect if user wants to skip clarification and proceed anyway.
+    """
+    skip_patterns = [
+        r'^\s*skip\s*$',
+        r'^\s*skip\s+clarification\s*$',
+        r'^\s*continue\s*$',
+        r'^\s*proceed\s*$',
+        r'^\s*go\s+ahead\s*$',
+        r'^\s*just\s+proceed\s*$',
+        r'^\s*use\s+defaults?\s*$',
+    ]
+    
+    text_lower = text.lower().strip()
+    return any(re.match(pattern, text_lower) for pattern in skip_patterns)
 
 def should_send_to_llm(intent: Intent) -> bool:
     """Decide if this request should go to your main LLM."""
@@ -935,7 +962,31 @@ def process_user_input(text: str, session_id: str = "default") -> dict:
     """
     ctx = context_manager.get_context(session_id)
     ctx.update_timestamp()
-
+    if is_skip_command(text):
+        if ctx.awaiting_clarification:
+            logger.info(f"User requested skip clarification for session {session_id}")
+            
+            # Force classify as generate_test and proceed
+            combined_text = ctx.original_query  # Use original incomplete query
+            parsed = preprocess_input(combined_text, use_gemini=False)  # Use fallback
+            
+            # Override intent to generate_test
+            parsed.intent = Intent.GENERATE_TEST
+            parsed.confidence = 0.6  # Lower confidence since info is missing
+            parsed.intent_reasoning = "User skipped clarification, proceeding with available info"
+            
+            ctx.reset()
+            
+            return {
+                "action": "process_with_llm",
+                "parsed_data": parsed.to_dict(),
+                "combined_query": combined_text,
+                "send_to_llm": True,
+                "skipped_clarification": True  # Flag for LLM to know
+            }
+        else:
+            # No clarification pending, treat as normal input
+            logger.info("Skip command received but no clarification pending")
     # If we're awaiting clarification, check if user is answering or asking something new
     if ctx.awaiting_clarification:
         # Detect if this is a NEW query instead of clarification answer
@@ -1023,6 +1074,7 @@ def process_user_input(text: str, session_id: str = "default") -> dict:
             parsed.missing_info,
             parsed.to_dict()
         )
+        question += "\n\n_Type **'skip'** if you want to proceed without these details._"
         
         return {
             "action": "ask_clarification",
