@@ -272,9 +272,22 @@ export const Home = ({
   const handleNewChat = async () => {
   try {
     const loginSessionId = localStorage.getItem("login_session_id");
+    
+    // Calculate next chat number based on the highest existing number
+    let nextChatNumber = 1;
+    if (chats.length > 0) {
+      const chatNumbers = chats
+        .map(chat => {
+          const match = chat.title.match(/Chat (\d+)/);
+          return match ? parseInt(match[1], 10) : 0;
+        })
+        .filter(num => num > 0);
+      nextChatNumber = Math.max(...chatNumbers, 0) + 1;
+    }
+    
     const newSession = await newChatMutation.mutateAsync({
       id: user.id,
-      title: `Chat ${chats.length + 1}`,
+      title: `Chat ${nextChatNumber}`,
       login_session_id: loginSessionId,
     });
     setActiveChatId(newSession.session_id);

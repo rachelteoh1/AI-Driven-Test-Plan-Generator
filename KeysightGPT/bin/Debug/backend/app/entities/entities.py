@@ -1,6 +1,7 @@
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Integer, Boolean, Date
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Integer, Boolean, Date, Float, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.sql import func
 import uuid
 from ..database import Base 
 from datetime import datetime,timezone
@@ -56,11 +57,12 @@ class ChatLog(Base):
     is_active = Column(Boolean, default=True)
     has_been_modified = Column(Boolean, default=False)
     updated_at  = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
-   
+
 
     children = relationship("ChatLog", cascade="all, delete-orphan", backref=backref("parent", remote_side=[message_id]))
     test_sequence = relationship("OptimizedTestSequence", cascade="all, delete-orphan", backref="chat_log")
     versions = relationship("ChatLogVersion",cascade="all, delete-orphan",backref="chat_log",foreign_keys="ChatLogVersion.message_id",passive_deletes=True)
+    intent_metadata = relationship("IntentMetadata", back_populates="chat_log", uselist=False)
 # -------------------------------
 # ChatLogVersion Model
 # -------------------------------
@@ -139,6 +141,15 @@ class DetectedInstrument(Base):
     last_seen = Column(DateTime, default=datetime.now(timezone.utc))
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
 
+class PDFImport(Base):
+    __tablename__ = "pdf_imports"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    instrument_filename = Column(String, nullable=False, unique=True)  # e.g., "N6705C.json"
+    json_url_manual = Column(String, nullable=False)  # Supabase URL
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+
 class SelectedInstrument(Base):
     __tablename__ = "selected_instruments"
 
@@ -156,3 +167,69 @@ class SelectedInstrument(Base):
     instrument_filename = Column(String, nullable=True)
     json_url_manual = Column(String, nullable=True)  # uploaded user manual pdf
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
+
+
+# -------------------------------
+# Intent
+# -------------------------------    
+class IntentMetadata(Base):
+    """
+    Store intent classification and NLP metadata for analytics and improvement.
+    """
+    __tablename__ = "intent_metadata"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    message_id = Column(UUID(as_uuid=True), ForeignKey("chat_logs.message_id", ondelete="CASCADE"), nullable=True)
+    
+    # Intent classification
+    intent = Column(String(50), nullable=False, index=True)
+    confidence = Column(Float, nullable=False)
+    
+    # Extracted entities (stored as JSON for flexibility)
+    scpi_commands = Column(JSON, nullable=True)  # List of SCPI commands found
+    measurement_types = Column(JSON, nullable=True)  # Types of measurements
+    conditions = Column(JSON, nullable=True)  # Measurement conditions (voltages, etc.)
+    targets = Column(JSON, nullable=True)  # Target channels, equipment
+    equipment_refs = Column(JSON, nullable=True)  # Equipment references
+    action_verbs = Column(JSON, nullable=True)  # Action verbs from user
+    temporal_info = Column(JSON, nullable=True)  # Timing information
+    
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    
+    # Relationships
+    chat_log = relationship("ChatLog", back_populates="intent_metadata")
+    
+    def __repr__(self):
+        return f"<IntentMetadata(id={self.id}, message_id={self.message_id}, intent={self.intent}, confidence={self.confidence})>"
+
+
+
+
+
+class IntentFeedback(Base):
+    """
+    Store user feedback on intent classification for improvement.
+    Useful for tracking when the system misunderstood user intent.
+    """
+    __tablename__ = "intent_feedback"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    message_id = Column(UUID(as_uuid=True), ForeignKey("chat_logs.message_id", ondelete="CASCADE"), nullable=True)
+    intent_metadata_id = Column(Integer, ForeignKey("intent_metadata.id"), nullable=False)
+    
+    # Feedback
+    detected_intent = Column(String(50), nullable=False)
+    correct_intent = Column(String(50), nullable=True)  # User's correction
+    was_correct = Column(Integer, nullable=False)  # 1 = correct, 0 = incorrect, -1 = unsure
+    
+    # Optional user comments
+    user_comment = Column(Text, nullable=True)
+    
+    # Metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    
+    def __repr__(self):
+        return f"<IntentFeedback(id={self.id}, detected={self.detected_intent}, correct={self.correct_intent}, was_correct={self.was_correct})>"
+
+

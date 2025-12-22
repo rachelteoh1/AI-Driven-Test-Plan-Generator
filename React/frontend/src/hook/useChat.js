@@ -15,7 +15,7 @@ export const useNewChat = () => {
   return useMutation({
     mutationFn: service.newChat,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['chats', variables.session_id]);
+      queryClient.invalidateQueries(['chats', variables.id]);
     },
   });
 };
@@ -24,8 +24,8 @@ export const useRenameChat = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: service.renameChat,
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries(['chats', variables.session_id]);
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries(['chats', data.id]);
     },
   });
 };
@@ -35,9 +35,7 @@ export const useDeleteChat = () => {
   return useMutation({
     mutationFn: service.deleteChat,
     onSuccess: (_, variables) => {
-      // Invalidate logs for the session
-      //After it succeeds, it tells React Query to refetch chat logs for that session (invalidateQueries) 
-      queryClient.invalidateQueries(['chats', variables.session_id]);
+      queryClient.invalidateQueries(['chats']);
     },
   });
 };

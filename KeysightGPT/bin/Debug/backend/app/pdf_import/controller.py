@@ -1,7 +1,7 @@
 from fastapi import APIRouter, File, UploadFile, Depends, HTTPException
 from fastapi.responses import JSONResponse
-from ..database import get_db
-from sqlalchemy.orm import Session
+from ..database import get_db  # Ensure `get_db` is imported correctly
+from sqlalchemy.orm import Session  # Use `Session` instead of `DbSession`
 from .service import process_pdf_upload
 from .models import PDFUploadResponse
 import logging

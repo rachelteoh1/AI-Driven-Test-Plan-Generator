@@ -27,32 +27,72 @@ namespace KeysightGPT
                 InitializeWebView();
             }
 
-            private async void InitializeWebView()
+        private async void InitializeWebView()
+        {
+            StartWebServices();
+
+            webView = new WebView2
             {
-                StartWebServices();
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch
+            };
 
-                webView = new WebView2
-                {
-                    HorizontalAlignment = HorizontalAlignment.Stretch,
-                    VerticalAlignment = VerticalAlignment.Stretch
-                };
+            var grid = new Grid();
+            grid.Children.Add(webView);
+            Content = grid;
 
-                var grid = new Grid();
-                grid.Children.Add(webView);
-                Content = grid;
+            await webView.EnsureCoreWebView2Async();
 
-                await webView.EnsureCoreWebView2Async();
+            Debug.WriteLine("[KeysightGPT] Waiting for backend to become available...");
+            bool backendReady = await WaitForBackendAsync("http://localhost:8000/health");
 
-                Debug.WriteLine("[KeysightGPT] Waiting for React dev server to boot...");
-            await Task.Delay(15000);
-
-                webView.Source = new Uri("http://localhost:3000");
-                webView.WebMessageReceived += OnWebMessageReceived;
-
-                Debug.WriteLine("[KeysightGPTPanel] WebView navigated to localhost:3000.");
-
-                this.Unloaded += (s, e) => Dispose();
+            if (!backendReady)
+            {
+                Debug.WriteLine("[KeysightGPT] Backend failed to start within timeout.");
+                return;
             }
+
+            Debug.WriteLine("[KeysightGPT] Waiting for frontend to become available...");
+            bool frontendReady = await WaitForFrontendAsync("http://localhost:3000");
+
+            if (!frontendReady)
+            {
+                Debug.WriteLine("[KeysightGPT] Frontend failed to start within timeout.");
+                return;
+            }
+
+            webView.Source = new Uri("http://localhost:3000");
+            webView.WebMessageReceived += OnWebMessageReceived;
+
+            Debug.WriteLine("[KeysightGPTPanel] WebView navigated to localhost:3000.");
+
+            this.Unloaded += (s, e) => Dispose();
+        }
+
+        private async Task<bool> WaitForBackendAsync(string url, int timeoutMs = 30000)
+        {
+            var sw = Stopwatch.StartNew();
+
+            while (sw.ElapsedMilliseconds < timeoutMs)
+            {
+                try
+                {
+                    var request = System.Net.WebRequest.Create(url);
+                    request.Timeout = 2000;
+
+                    using (var response = await request.GetResponseAsync())
+                    {
+                        return true; // backend is up
+                    }
+                }
+                catch
+                {
+                    await Task.Delay(500); // wait and retry
+                }
+            }
+
+            return false; // timeout
+        }
 
         private void StartWebServices()
         {
@@ -189,6 +229,31 @@ namespace KeysightGPT
             }
             _managedProcesses.Clear();
         }
+        private async Task<bool> WaitForFrontendAsync(string url, int timeoutMs = 30000)
+        {
+            var sw = Stopwatch.StartNew();
+
+            while (sw.ElapsedMilliseconds < timeoutMs)
+            {
+                try
+                {
+                    var request = System.Net.WebRequest.Create(url);
+                    request.Timeout = 2000;
+
+                    using (var response = await request.GetResponseAsync())
+                    {
+                        return true; // frontend is up
+                    }
+                }
+                catch
+                {
+                    await Task.Delay(500);
+                }
+            }
+
+            return false; // timeout
+        }
+
     }
 
     public class ScpiCommand { public string command { get; set; } public string type { get; set; } public int order { get; set; } }

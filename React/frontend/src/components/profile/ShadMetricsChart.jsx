@@ -5,7 +5,7 @@ export function ShadMetricsChart({ data }) {
     <ResponsiveContainer width="100%" height={200}>
       <LineChart data={data}>
         <XAxis dataKey="week" />
-        <YAxis />
+        <YAxis allowDecimals={false} />
         <Tooltip />
         <Line type="monotone" dataKey="value" stroke="#ec4899" strokeWidth={2} />
       </LineChart>

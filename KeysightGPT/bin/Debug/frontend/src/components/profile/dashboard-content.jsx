@@ -11,7 +11,7 @@ const Container = styled.div`
   align-items: center;
   min-height: 100%;
   width: 100%;
-  background-color: ${({ theme }) => theme.background};
+  background: ${({ theme }) => theme.home.pageGradient};
 `
 
 const Wrapper = styled.div`
@@ -37,9 +37,14 @@ const TwoColGrid = styled(Grid)`
 
 const StyledCard = styled.div`
   background-color: ${({ theme }) => theme.card};
-  border: 1px solid ${({ theme }) => theme.greys.medium};
-  border-radius: 0.375rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid ${({ theme }) => theme.conversation.actionBorder};
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s ease;
+  
+  &:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  }
 `
 
 const CardContent = styled.div`
@@ -118,7 +123,7 @@ export function DashboardContent() {
   } = data
 
   // Weekly data for line chart (SCPI Generated)
-  const scpiGeneratedWeeklyData = [...weekly_stats].reverse().map((item, index) => ({
+  const scpiGeneratedWeeklyData = weekly_stats.map((item, index) => ({
     week: `Week ${index + 1}`,
     value: item.scpi_generated,
   }))
@@ -199,7 +204,7 @@ export function DashboardContent() {
                     {weekly_stats.reduce((sum, item) => sum + item.scpi_generated, 0)}
                   </StatValue>
                   <p style={{ fontSize: FONTSIZE.sm, color: COLORS.medium }}>
-                    Last 4 Weeks Total
+                    This Month Total
                   </p>
                 </div>
 

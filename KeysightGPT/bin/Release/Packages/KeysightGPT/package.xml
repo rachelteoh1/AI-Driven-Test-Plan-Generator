@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Package InfoLink="" Date="12/18/2025 16:49:32" Name="KeysightGPT" Version="0.1.0-alpha" Architecture="AnyCPU" OS="Windows,Linux" xmlns="http://opentap.io/schemas/package">
-  <Hash>o1jJ9aKD8yc8RKOCwtRKRrblg6Q</Hash>
+<Package InfoLink="" Date="12/22/2025 13:28:04" Name="KeysightGPT" Version="0.1.0-alpha" Architecture="AnyCPU" OS="Windows,Linux" xmlns="http://opentap.io/schemas/package">
+  <Hash>rw4h-8P4hdQhgh05M3ocVzd5oTc</Hash>
   <Description>This is my OpenTAP plugin package.</Description>
   <Dependencies>
     <PackageDependency Package="OpenTAP" Version="^9.28.2+504225fd" />
@@ -17,7 +17,7 @@
           <Groups />
         </Plugin>
       </Plugins>
-      <Hash>1EA7EB881725AEF622A5816D65470C37E986FCEF</Hash>
+      <Hash>0D0578A1899A2B86B48B1582B46B9D03DD2CA3F2</Hash>
     </File>
     <File Path="Dependencies/Keysight.OpenTap.Wpf.9.17.5.0/Keysight.OpenTap.Wpf.dll">
       <Hash>67D4C767962AE37D1789FF6C21F55546FB46806F</Hash>

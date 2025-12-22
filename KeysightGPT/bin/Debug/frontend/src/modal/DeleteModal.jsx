@@ -68,7 +68,7 @@ export default function DeleteModal({ chat, onDelete ,hideModal}) {
 
   if (status === "fail") {
     return (
-      <CrossedModal title="Error Occured. Please try again later."  hideModal={hideModal}/>
+      <CrossedModal title="Unable to delete chat. Please try again later."  hideModal={hideModal}/>
     );
   }
 

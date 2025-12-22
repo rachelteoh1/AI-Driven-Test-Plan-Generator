@@ -123,8 +123,8 @@ export function DashboardContent() {
   } = data
 
   // Weekly data for line chart (SCPI Generated)
-  const scpiGeneratedWeeklyData = [...weekly_stats].reverse().map((item, index) => ({
-    week: `Week ${index + 1}`,
+  const scpiGeneratedWeeklyData = weekly_stats.map((item, index) => ({
+    week: index + 1,
     value: item.scpi_generated,
   }))
 
@@ -204,7 +204,7 @@ export function DashboardContent() {
                     {weekly_stats.reduce((sum, item) => sum + item.scpi_generated, 0)}
                   </StatValue>
                   <p style={{ fontSize: FONTSIZE.sm, color: COLORS.medium }}>
-                    Last 4 Weeks Total
+                    This Month Total
                   </p>
                 </div>
 

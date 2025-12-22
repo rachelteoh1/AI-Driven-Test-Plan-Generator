@@ -200,7 +200,7 @@ export default function PdfModal({ hideModal, onUploadSuccess, selectedInstrumen
     return (
       <CrossedModal
         title="Upload Failed"
-        description="There was an error uploading your PDF. Please try again."
+        description="Please upload a related PDF."
         hideModal={handleCloseModals}
       />
     );

@@ -477,8 +477,8 @@ import { useUserProfile } from "../hook/useProfile";
 const SidebarContainer = styled.div`
   width: ${({ $collapsed }) => ($collapsed ? '4rem' : '18rem')};
   height: 100vh;
-  background: white;
-  border-right: 1px solid #e5e7eb;
+  background: ${({ theme }) => theme.card};
+  border-right: 1px solid ${({ theme }) => theme.sidebar.border};
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -491,8 +491,8 @@ const SidebarContainer = styled.div`
 
 const Header = styled.div`
   padding: ${({ $collapsed }) => ($collapsed ? '1rem 0.5rem' : '1.5rem')};
-  border-bottom: 1px solid #e5e7eb;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: 1px solid ${({ theme }) => theme.sidebar.border};
+  background: ${({ theme }) => theme.sidebar.gradient};
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -547,8 +547,8 @@ const NewChatButton = styled.button`
   justify-content: ${({ $collapsed }) => ($collapsed ? 'center' : 'flex-start')};
   gap: 0.75rem;
   padding: ${({ $collapsed }) => ($collapsed ? '0.75rem' : '0.75rem 1rem')};
-  background: white;
-  color: #667eea;
+  background: ${({ theme }) => theme.card};
+  color: ${({ theme }) => theme.sidebar.accentPurple};
   border: none;
   border-radius: 0.75rem;
   font-size: ${FONTSIZE.sm};
@@ -577,19 +577,19 @@ const Content = styled.div`
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #d1d5db;
+    background: ${({ theme }) => theme.sidebar.scrollbarThumb};
     border-radius: 3px;
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
+    background: ${({ theme }) => theme.sidebar.scrollbarThumbHover};
   }
 `;
 
 const SectionLabel = styled.div`
   font-size: ${FONTSIZE.xs};
   font-weight: ${FONTWEIGHT.semibold};
-  color: #9ca3af;
+  color: ${({ theme }) => theme.greys.light};
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.75rem;
@@ -605,14 +605,14 @@ const ChatItem = styled.div`
   padding: ${({ $collapsed }) => ($collapsed ? '0.75rem' : '0.75rem 1rem')};
   margin-bottom: 0.5rem;
   border-radius: 0.75rem;
-  background: ${({ $isActive }) => ($isActive ? '#f3f4f6' : 'transparent')};
-  border-left: ${({ $isActive }) => ($isActive ? '3px solid #667eea' : '3px solid transparent')};
+  background: ${({ $isActive, theme }) => ($isActive ? theme.backgroundMedium : 'transparent')};
+  border-left: ${({ $isActive, theme }) => ($isActive ? `3px solid ${theme.sidebar.accentPurple}` : '3px solid transparent')};
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
 
   &:hover {
-    background: ${({ $isActive }) => ($isActive ? '#f3f4f6' : '#f9fafb')};
+    background: ${({ $isActive, theme }) => ($isActive ? theme.backgroundMedium : theme.background)};
   }
 `;
 
@@ -626,12 +626,12 @@ const ChatItemContent = styled.div`
 
 const ChatIcon = styled(MessageSquare)`
   flex-shrink: 0;
-  color: ${({ $isActive }) => ($isActive ? '#667eea' : '#9ca3af')};
+  color: ${({ $isActive, theme }) => ($isActive ? theme.sidebar.accentPurple : theme.greys.light)};
 `;
 
 const ChatTitle = styled.span`
   font-size: ${FONTSIZE.sm};
-  color: ${({ $isActive }) => ($isActive ? '#1f2937' : '#6b7280')};
+  color: ${({ $isActive, theme }) => ($isActive ? theme.text : theme.greys.medium)};
   font-weight: ${({ $isActive }) => ($isActive ? FONTWEIGHT.medium : FONTWEIGHT.normal)};
   white-space: nowrap;
   overflow: hidden;
@@ -643,7 +643,7 @@ const ChatActions = styled.button`
   opacity: 0;
   background: transparent;
   border: none;
-  color: #9ca3af;
+  color: ${({ theme }) => theme.greys.light};
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 0.375rem;
@@ -655,8 +655,8 @@ const ChatActions = styled.button`
   }
 
   &:hover {
-    background: #e5e7eb;
-    color: #6b7280;
+    background: ${({ theme }) => theme.backgroundMedium};
+    color: ${({ theme }) => theme.greys.medium};
   }
 
   display: ${({ $collapsed }) => ($collapsed ? 'none' : 'block')};
@@ -664,8 +664,8 @@ const ChatActions = styled.button`
 
 const Footer = styled.div`
   padding: ${({ $collapsed }) => ($collapsed ? '0.5rem' : '1rem')};
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
+  border-top: 1px solid ${({ theme }) => theme.sidebar.border};
+  background: ${({ theme }) => theme.sidebar.footerBg};
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -680,7 +680,7 @@ const FooterButton = styled.button`
   padding: ${({ $collapsed }) => ($collapsed ? '0.75rem' : '0.75rem 1rem')};
   background: transparent;
   border: none;
-  color: ${({ $danger }) => ($danger ? '#ef4444' : '#6b7280')};
+  color: ${({ $danger, theme }) => ($danger ? theme.status.delete : theme.greys.medium)};
   font-size: ${FONTSIZE.sm};
   border-radius: 0.5rem;
   cursor: pointer;
@@ -688,7 +688,7 @@ const FooterButton = styled.button`
   text-align: left;
 
   &:hover {
-    background: ${({ $danger }) => ($danger ? '#fee2e2' : '#f3f4f6')};
+    background: ${({ $danger, theme }) => ($danger ? theme.sidebar.dangerHover : theme.backgroundMedium)};
   }
 
   &:disabled {
@@ -698,8 +698,8 @@ const FooterButton = styled.button`
 `;
 
 const DropdownMenuContent = styled(Dropdown.Content)`
-  background-color: white;
-  border: 1px solid #e5e7eb;
+  background-color: ${({ theme }) => theme.card};
+  border: 1px solid ${({ theme }) => theme.sidebar.border};
   border-radius: 0.5rem;
   padding: 0.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -712,13 +712,13 @@ const DropdownMenuItem = styled(Dropdown.Item)`
   gap: 0.75rem;
   padding: 0.625rem 0.75rem;
   font-size: ${FONTSIZE.sm};
-  color: #374151;
+  color: ${({ theme }) => theme.text};
   cursor: pointer;
   border-radius: 0.375rem;
   outline: none;
 
   &:hover {
-    background-color: #f3f4f6;
+    background-color: ${({ theme }) => theme.backgroundMedium};
   }
 
   &[data-disabled] {
