@@ -59,7 +59,7 @@ const RowDiv = styled.div`
 `;
 
 export default function RenameModal({ chat, onRename, hideModal }) {
-  const [newTitle, setNewTitle] = useState(chat.name || ""); // see wan leave chatname not
+  const [newTitle, setNewTitle] = useState(chat.name || ""); 
   const [isLoading, setIsLoading] = useState(false);
 const [status, setStatus] = useState('editing');
   const handleDone = async () => {
@@ -88,7 +88,7 @@ const [status, setStatus] = useState('editing');
   if (status === 'error') {
     return (
       <CrossedModal 
-        title="Error occurred" 
+        title="Unable to rename chat" 
         subtitle="Please try again later"
         hideModal={hideModal}
       />

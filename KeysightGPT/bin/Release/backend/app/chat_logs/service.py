@@ -1,15 +1,17 @@
 from datetime import timedelta, datetime, timezone
+import time
 from typing import Annotated
 from uuid import UUID, uuid4
 from fastapi import Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
+
+from ..chat_logs import monitoring_service
 from ..entities.entities import ChatLog, ChatLogVersion, SelectedInstrument
 import logging
 from ..exceptions import (
     InternalServerError)
 from .models import LogCreate, LogResponse, InstrumentResponse
 from ..utils.intent_classifier import classify_intent_ml
-from ..utils.nlp_utils import preprocess_input
 from ..exceptions import ChatCreationError, ChatNotFoundError,ChatRenameError
 from ..pdf_import.utils.suggest_intent import extract_scpi_from_pdf
 from ..instrument import service
@@ -19,7 +21,10 @@ from ..optimized_test_sequence import service as opt_service
 from sentence_transformers import SentenceTransformer
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-
+from . import monitoring_service  # Import monitoring service\
+import time
+from ..utils.nlp_utils import Intent,process_user_input, context_manager
+from ..utils.intent_service import save_intent_metadata
 logger = logging.getLogger(__name__)
 
 # Initialize embedding model (loaded once at startup)
@@ -278,20 +283,206 @@ def _keyword_search_fallback(commands_data, query, top_k=5):
 
 
 def detect_intent(db: Session, request: LogCreate) -> LogResponse:
+    """
+    Detect user intent and generate AI response with enhanced NLP preprocessing,
+    RAG semantic search, and clarification handling.
+    
+    Now properly handles:
+    - Multiple questions in one session
+    - Clarification flow with context preservation
+    - New query detection (user ignores clarification)
+    - Off-topic conversation
+    """
+    start_time = time.time()
     try:
         logger.info(f"Detecting intent for session: {request.session_id}")
+
+        # =====================================================================
+        # Step 1: Retrieve the selected instrument(s) for this session
+        # =====================================================================
         instruments = service.get_selected_instruments(db, request.session_id)
         if instruments:
             selected_instrument = instruments[-1]
+            instrument_context = f"Keysight {selected_instrument.model}"
+            instrument_model = selected_instrument.model
             instrument_prefix = f"Keysight {selected_instrument.model}: "
+            logger.info(f"Selected instrument: {instrument_context}")
         else:
             selected_instrument = None
+            instrument_context = "Generic SCPI Instrument"
+            instrument_model = None
             instrument_prefix = ""
+            logger.warning("No instrument selected for session")
 
-        user_msg = f"{instrument_prefix}{request.content.strip()}"
-        logger.info(f"Constructed user message: {user_msg}")
+        # =====================================================================
+        # Step 2: Enhanced NLP Preprocessing
+        # =====================================================================
+        user_input = request.content.strip()
+        
+        # Use session_id for context tracking (THIS IS THE KEY!)
+        # This allows the system to remember clarification state
+        result = process_user_input(user_input, session_id=str(request.session_id))
+        
+        logger.info(
+            "\n"
+            "┌───────────────────────── PREPROCESSING RESULT ─────────────────────┐\n"
+            "│ Raw User Input        │ %-45s │\n"
+            "│ Action                │ %-45s │\n"
+            "│ Send to LLM           │ %-45s │\n"
+            "└────────────────────────────────────────────────────────────────────┘",
+            user_input[:45],
+            result['action'],
+            result['send_to_llm']
+        )
 
-        # Perform semantic search on instrument's SCPI commands (server-side RAG)
+        # =====================================================================
+        # Step 3: Handle different preprocessing outcomes
+        # =====================================================================
+        
+        # Case 1: OFF_TOPIC - respond directly without LLM
+        if result['action'] == 'respond_directly':
+            logger.info("Handling off-topic conversation")
+            
+            # Save user message
+            # user_log = create_chat_log(db, request)
+            
+            # Save bot response
+            bot_response = result['response']
+            bot_log = LogCreate(
+                session_id=request.session_id,
+                role="llm_response",
+                content=bot_response
+            )
+            saved_log = create_chat_log(db, bot_log)
+            
+            return LogResponse(
+                message_id=saved_log.message_id,
+                session_id=saved_log.session_id,
+                role=saved_log.role,
+                content=saved_log.content,
+                timestamp=saved_log.timestamp,
+                has_been_modified=False,
+                has_optimization=False,
+                selected_instrument=InstrumentResponse(
+                    manufacturer=selected_instrument.manufacturer,
+                    model=selected_instrument.model,
+                    serial=selected_instrument.serial,
+                ) if selected_instrument else None,
+            )
+        
+        # Case 2: UNCLEAR - ask for clarification
+        elif result['action'] == 'ask_clarification':
+            logger.info("User input unclear, requesting clarification")
+            
+            # # Save user message
+            # user_log = create_chat_log(db, request)
+            
+            # Save clarification question with special marker
+            clarification_question = f"[CLARIFICATION_NEEDED]\n\n{result['question']}"
+            bot_log = LogCreate(
+                session_id=request.session_id,
+                role="llm_response",
+                content=clarification_question
+            )
+            saved_log = create_chat_log(db, bot_log)
+            
+            # Save context metadata (optional - for debugging)
+            try:
+                save_intent_metadata(
+                    db=db,
+                    message_id=saved_log.message_id,
+                    intent="unclear",
+                    confidence=0.0,
+                    scpi_commands=[],
+                    measurement_types=[],
+                    conditions=[],
+                    targets=[]
+                )
+            except Exception as e:
+                logger.warning(f"Failed to save intent metadata: {str(e)}")
+            
+            return LogResponse(
+                message_id=saved_log.message_id,
+                session_id=saved_log.session_id,
+                role=saved_log.role,
+                content=saved_log.content,
+                timestamp=saved_log.timestamp,
+                has_been_modified=False,
+                has_optimization=False,
+                selected_instrument=InstrumentResponse(
+                    manufacturer=selected_instrument.manufacturer,
+                    model=selected_instrument.model,
+                    serial=selected_instrument.serial,
+                ) if selected_instrument else None,
+            )
+        
+        # Case 3: CLARIFICATION_FAILED - too many attempts
+        elif result['action'] == 'clarification_failed':
+            logger.warning("Clarification loop failed after multiple attempts")
+            
+            # Save user message
+            # user_log = create_chat_log(db, request)
+            
+            # Save failure response
+            bot_log = LogCreate(
+                session_id=request.session_id,
+                role="llm_response",
+                content=result['response']
+            )
+            saved_log = create_chat_log(db, bot_log)
+            
+            return LogResponse(
+                message_id=saved_log.message_id,
+                session_id=saved_log.session_id,
+                role=saved_log.role,
+                content=saved_log.content,
+                timestamp=saved_log.timestamp,
+                has_been_modified=False,
+                has_optimization=False,
+                selected_instrument=InstrumentResponse(
+                    manufacturer=selected_instrument.manufacturer,
+                    model=selected_instrument.model,
+                    serial=selected_instrument.serial,
+                ) if selected_instrument else None,
+            )
+        
+        # Case 4: PROCESS_WITH_LLM - continue to LLM
+        elif result['action'] == 'process_with_llm':
+            logger.info("Processing with LLM")
+            
+            # Extract parsed data
+            parsed_input = result['parsed_data']
+            
+            # If this was a combined query (from clarification), use the combined text
+            actual_user_input = result.get('combined_query', user_input)
+            
+            logger.info(
+                "\n"
+                "┌───────────────────────── NLP PARSE RESULT ─────────────────────────┐\n"
+                "│ Original Input        │ %-45s │\n"
+                "│ Final Input           │ %-45s │\n"
+                "│ Intent Detected       │ %-45s │\n"
+                "│ Confidence            │ %-45s │\n"
+                "│ Intent Reasoning      │ %-45s │\n"
+                "│ SCPI Commands         │ %-45s │\n"
+                "│ Measurement Types     │ %-45s │\n"
+                "│ Conditions            │ %-45s │\n"
+                "│ Targets               │ %-45s │\n"
+                "└─────────────────────────────────────────────────────────────────────┘",
+                user_input[:45],
+                actual_user_input[:45],
+                parsed_input['intent'],
+                f"{parsed_input['confidence']:.2f}",
+                parsed_input.get('intent_reasoning', 'N/A')[:45],
+                ", ".join(parsed_input['scpi_commands'])[:45] or "None",
+                ", ".join(parsed_input['measurement_types'])[:45] or "None",
+                ", ".join(parsed_input['conditions'])[:45] or "None",
+                ", ".join(parsed_input['targets'])[:45] or "None",
+            )
+
+        # =====================================================================
+        # Step 4: Perform RAG Semantic Search on SCPI Commands
+        # =====================================================================
         rag_context_text = ""
         if selected_instrument and selected_instrument.json_url_manual:
             try:
@@ -311,7 +502,7 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
                     logger.info(f"Loaded {len(scpi_data)} SCPI commands")
                     
                     # Perform semantic search
-                    relevant_commands = perform_semantic_search(scpi_data, request.content, top_k=5)
+                    relevant_commands = perform_semantic_search(scpi_data, user_input, top_k=5)
                     
                     # Build RAG context text
                     if relevant_commands:
@@ -335,16 +526,82 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
             except Exception as e:
                 logger.error(f"Error performing semantic search: {str(e)}")
 
-        # Combine user message with RAG context
+        # =====================================================================
+        # Step 5: Construct enhanced user message with RAG context
+        # =====================================================================
+        user_msg = f"{instrument_prefix}{actual_user_input}"
         enhanced_prompt = user_msg + rag_context_text
+        logger.info(f"Constructed user message: {user_msg}")
         logger.info(f"Enhanced prompt with RAG: {enhanced_prompt[:200]}...")
 
+        # =====================================================================
+        # Step 6: Build metadata payload for Flask API
+        # =====================================================================
+        metadata = {
+            "intent": parsed_input['intent'],
+            "confidence": float(parsed_input['confidence']),
+            "scpi_commands": parsed_input['scpi_commands'],
+            "measurement_types": parsed_input['measurement_types'],
+            "conditions": parsed_input['conditions'],
+            "targets": parsed_input['targets'],
+            "equipment_refs": parsed_input['equipment_refs'],
+            "action_verbs": parsed_input['action_verbs'],
+            "temporal_info": parsed_input['temporal_info'],
+            "instrument_model": instrument_model,
+            "original_text": user_input,
+            "combined_query": result.get('combined_query')  # Include if clarification was combined
+        }
+        
+        # =====================================================================
+        # Step 7: Determine routing parameters based on intent
+        # =====================================================================
+        intent_routing = {
+            "generate_test": {
+                "temperature": 0.3,
+                "max_tokens": 256
+            },
+            "explain_command": {
+                "temperature": 0.2,
+                "max_tokens": 256
+            },
+            "modify_sequence": {
+                "temperature": 0.3,
+                "max_tokens": 256
+            },
+            "troubleshoot": {
+                "temperature": 0.2,
+                "max_tokens": 256
+            },
+            "query_capability": {
+                "temperature": 0.2,
+                "max_tokens": 200
+            },
+            "unclear": {
+                "temperature": 0.3,
+                "max_tokens": 256
+            }
+        }
+        
+        routing_params = intent_routing.get(
+            parsed_input['intent'], 
+            intent_routing["unclear"]
+        )
+        
+        # =====================================================================
+        # Step 8: Send request to Flask API
+        # =====================================================================
         payload = {
             "prompt": enhanced_prompt,
-            "max_tokens": 512,
-            "temperature": 0.2
+            "session_id": str(request.session_id), 
+            "max_tokens": routing_params["max_tokens"],
+            "temperature": routing_params["temperature"],
+            "metadata": metadata,
+            
         }
-        response = requests.post(MISTRAL_API_URL, json=payload, timeout=120)
+        
+        logger.info(f"Sending to Flask API with intent: {parsed_input['intent']}")
+        
+        response = requests.post(MISTRAL_API_URL, json=payload, timeout=(5, 120))
 
         if response.status_code != 200:
             logger.error(f"Flask API Error: {response.text}")
@@ -352,8 +609,10 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
 
         data = response.json()
         logger.info(f"Flask API response: {json.dumps(data, indent=2)}")
-
-        # --- Step 4: Extract response directly from Flask ---
+        
+        # =====================================================================
+        # Step 9: Extract response from Flask
+        # =====================================================================
         formatted_output = data.get("response", "")
         opt_sequence = data.get("opt_sequence", "")
         is_explanation = data.get("is_explanation", False)
@@ -361,33 +620,63 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
         if not formatted_output:
             raise Exception("Flask API returned empty response")
 
-        logger.info(f"Formatted output length: {len(formatted_output)}")
+        logger.info(f"Response length: {len(formatted_output)}")
         logger.info(f"Is explanation: {is_explanation}")
         logger.info(f"Optimized sequence: {opt_sequence}")
 
-        # --- Step 5: Save chat log ---
-        new_log = LogCreate(
+        # =====================================================================
+        # Step 10: Save chat logs (user message + bot response)
+        # =====================================================================
+        # Save user message
+        # user_log = create_chat_log(db, request)
+        
+        # Save bot response
+        bot_log = LogCreate(
             session_id=request.session_id,
             role="llm_response",
             content=formatted_output,
         )
-        saved_log = create_chat_log(db, new_log)
+        saved_log = create_chat_log(db, bot_log)
+        
+        # Save intent metadata
+        try:
+            save_intent_metadata(
+                db=db,
+                message_id=saved_log.message_id,
+                intent=parsed_input['intent'],
+                confidence=parsed_input['confidence'],
+                scpi_commands=parsed_input['scpi_commands'],
+                measurement_types=parsed_input['measurement_types'],
+                conditions=parsed_input['conditions'],
+                targets=parsed_input['targets']
+            )
+        except Exception as e:
+            logger.warning(f"Failed to save intent metadata: {str(e)}")
 
-        # --- Step 6: Save optimized sequence ONLY if NOT explanation ---
-        if not is_explanation and opt_sequence and opt_sequence.strip():
+        # =====================================================================
+        # Step 11: Save optimized sequence (only if appropriate)
+        # =====================================================================
+        should_save_optimization = (
+            not is_explanation and 
+            opt_sequence and 
+            opt_sequence.strip() and
+            parsed_input['intent'] in ['generate_test', 'modify_sequence']
+        )
+        
+        if should_save_optimization:
             try:
                 opt_service.save_optimized_sequence(db, saved_log.message_id, opt_sequence)
                 logger.info(f"Saved optimized sequence for message {saved_log.message_id}")
             except Exception as e:
                 logger.exception(f"Failed to save optimized sequence: {str(e)}")
-        elif is_explanation:
-            logger.info(f"Skipping optimization save - this is an explanation response")
         else:
-            logger.info(f"Skipping optimization save - empty sequence")
+            logger.info(f"Skipping optimization save - conditions not met")
 
         has_optimization = opt_service.has_optimized_sequence(db, saved_log.message_id)
         
-        # --- Step 7: Build LogResponse object ---
+        # =====================================================================
+        # Step 12: Build LogResponse
+        # =====================================================================
         log_response = LogResponse(
             message_id=saved_log.message_id,
             session_id=saved_log.session_id,
@@ -403,9 +692,74 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
             ) if selected_instrument else None,
         )
 
-        logger.info(f"Returning LogResponse")
+        # =====================================================================
+        # Step 13: Record metrics and return
+        # =====================================================================
+        elapsed_time = time.time() - start_time
+        monitoring_service.record_response_time(elapsed_time)
+        monitoring_service.intent_monitor.record_intent_classification(
+            intent=parsed_input['intent'],
+            confidence=parsed_input['confidence'],
+            response_time=elapsed_time
+        )
+        logger.info(
+        "\n"
+        "┌───────────────────────── PREPROCESSING RESULT ─────────────────────┐\n"
+        "│ Request completed in        │ %-45.3f │s\n"
+        "└────────────────────────────────────────────────────────────────────┘",
+        elapsed_time
+)
+
+        logger.info(f"Request completed in {elapsed_time:.3f}s")
+        logger.info(f"Returning LogResponse with intent: {parsed_input['intent']}")
+        
         return log_response
 
+    except requests.Timeout:
+        response_time = time.time() - start_time
+        monitoring_service.record_response_time(response_time)
+        logger.error("Flask API request timed out")
+        raise HTTPException(
+            status_code=504, 
+            detail="Request timed out. Please try again."
+        )
     except Exception as e:
+        response_time = time.time() - start_time
+        monitoring_service.record_response_time(response_time)
         logger.exception("Intent detection failed")
-        raise HTTPException(status_code=500, detail=f"Failed to detect intent: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Failed to detect intent: {str(e)}"
+        )
+
+
+# ============================================================================
+# OPTIONAL: Explicit session management endpoints
+# ============================================================================
+
+def reset_session_context(session_id: UUID):
+    """
+    Explicitly reset clarification context for a session.
+    Call this when user clicks "New Chat" or "Reset" button.
+    """
+    session_id_str = str(session_id)
+    if session_id_str in context_manager.contexts:
+        context_manager.contexts[session_id_str].reset()
+        logger.info(f"Reset context for session {session_id}")
+    return {"status": "success", "message": "Session context reset"}
+
+def get_session_context_status(session_id: UUID) -> dict:
+    """
+    Get current context status for debugging.
+    """
+    session_id_str = str(session_id)
+    ctx = context_manager.get_context(session_id_str)
+    
+    return {
+        "session_id": session_id_str,
+        "awaiting_clarification": ctx.awaiting_clarification,
+        "clarification_count": ctx.clarification_count,
+        "original_query": ctx.original_query,
+        "last_interaction": ctx.last_interaction.isoformat() if ctx.last_interaction else None
+    }
+    

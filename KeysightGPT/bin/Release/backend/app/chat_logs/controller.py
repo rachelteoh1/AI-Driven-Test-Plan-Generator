@@ -39,3 +39,4 @@ async def modify_chat_log(request:  models.ModifyLog, db: DbSession):
 @router.post("/detect-intent", response_model = models.LogResponse)
 async def detect_intent(request: models.LogCreate , db: DbSession):
     return service.detect_intent(db, request)
+

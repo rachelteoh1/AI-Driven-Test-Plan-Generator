@@ -8,7 +8,6 @@ except Exception as e:
 
 try:
     print("Creating ResourceManager with explicit DLL path...")
-    #rm = pyvisa.ResourceManager(r"C:\Windows\System32\visa64.dll")
     rm = pyvisa.ResourceManager()
 
     print("VISA lib path:", rm.visalib.library_path)

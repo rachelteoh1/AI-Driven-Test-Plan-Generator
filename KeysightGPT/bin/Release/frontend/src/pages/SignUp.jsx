@@ -125,7 +125,6 @@ export default function SignInPage() {
             },
             onError: (error) => {
               const msg = error.response?.data?.detail || "Sign Up failed";
-               // alert("Sign Up failed: " + error.message);
                 showModal({
                     modal: (
                         <CrossedModal

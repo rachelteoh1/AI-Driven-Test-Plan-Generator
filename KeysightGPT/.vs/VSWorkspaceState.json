@@ -1,10 +1,7 @@
 {
   "ExpandedNodes": [
     "",
-    "\\bin",
-    "\\obj",
-    "\\obj\\Debug",
-    "\\obj\\Release"
+    "\\bin"
   ],
   "PreviewInSolutionExplorer": false
 }

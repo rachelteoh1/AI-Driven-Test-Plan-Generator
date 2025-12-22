@@ -1,8 +1,0 @@
-﻿2025-08-28 22:58:06.164589 ; Session        ; Debug       ; Session log loaded as 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT\bin\Debug\SessionLogs\MSBuild.27676 2025-08-28 22-52-05 (1).txt'. [21.6 ms]
-2025-08-28 22:58:06.164589 ; Session        ; Debug       ; Running '"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\amd64\MSBuild.exe" /nologo /nodemode:1 /nodeReuse:true /low:false' in 'C:\Users\Rachel\OneDrive\Documents\GitHub\AI-Driven-Test-Plan-Generator(1)\AI-Driven-Test-Plan-Generator\KeysightGPT'.
-2025-08-28 22:58:06.206015 ; FilePackageRepository ; Debug       ; Rebuilding cache: .PackageCache.C83F5A61.17.xml [29.6 ms]
-2025-08-28 22:58:06.206015 ; Package Query  ; Debug       ; Read 17 packages from [FilePackageRepository: file:///C:/Users/Rachel/AppData/Local/OpenTap/PackageCache] [30.7 ms]
-2025-08-28 22:58:08.336589 ; HttpPackageRepository ; Debug       ; {"type":"TapPackage","directory":"/Packages/","version":"","architecture":"x64","os":"Windows"} -> found 1752 packages. [2.13 s]
-2025-08-28 22:58:09.485346 ; HttpPackageRepository ; Debug       ; {"type":"TapPackage","directory":"/Packages/","name":"Keysight IO Libraries Suite","version":"beta","architecture":"x64","os":"Windows"} -> found 0 packages. [1.13 s]
-2025-08-28 22:58:09.485346 ; image          ; Debug       ; Resolved image: TUI:1, OpenTAP:9.28.2+504225fd, Keysight Fixed License Manager:^1.6.2+d58f8a89, Keysight IO Libraries Suite:^18.4.30319-beta.2.5+a2799c9d, PathWave License Manager:^7.4.1+efeba870 [1.13 s]
-2025-08-28 22:58:11.625423 ; OpenTAP        ; Information ; Target installation is already up to date.

@@ -11,7 +11,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: ${({ theme }) => theme.background};
+  background: ${({ theme }) => theme.home.pageGradient};
 `
 
 const TabWrapper = styled.div`
@@ -44,7 +44,7 @@ const Content = styled.div`
   flex: 1;
   padding: ${SPACING["2xl"]};
   overflow: auto;
-  background-color: ${({ theme }) => theme.background};
+  background: transparent;
 `
 
 export function MainDashboard() {

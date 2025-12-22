@@ -13,6 +13,7 @@ namespace KeysightGPT
         public double? DesiredWidth => null;
         public double? DesiredHeight => null;
 
+
         public void Dispose() { }
 
         public FrameworkElement CreateElement(ITapDockContext context)

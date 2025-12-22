@@ -102,15 +102,38 @@ def update_selected_instrument(db: Session, selected_id: UUID, message_id: UUID)
     try:
         selected = db.query(SelectedInstrument).filter_by(id=selected_id).first()
         if not selected:
-            raise HTTPException(status_code=404, detail=f"SelectedInstrument {id} not found")
+            raise HTTPException(status_code=404, detail=f"SelectedInstrument {selected_id} not found")
 
-        selected.message_id = message_id 
-
-        db.commit()
-        db.refresh(selected)
-
-        logger.info(f"Updated message_id for SelectedInstrument {id} → {message_id}")
-        return selected
+        if selected.message_id is not None:
+            logger.info(f"SelectedInstrument {selected_id} already has message_id {selected.message_id}, creating new record")
+            
+            new_selected = SelectedInstrument(
+                instrument_id=selected.instrument_id,
+                session_id=selected.session_id,
+                message_id=message_id,
+                resource_string=selected.resource_string,
+                idn=selected.idn,
+                manufacturer=selected.manufacturer,
+                model=selected.model,
+                serial=selected.serial,
+                firmware=selected.firmware,
+                json_url=selected.json_url,
+                instrument_filename=selected.instrument_filename,
+                json_url_manual=selected.json_url_manual,
+            )
+            db.add(new_selected)
+            db.commit()
+            db.refresh(new_selected)
+            logger.info(f"Created new SelectedInstrument {new_selected.id} with message_id {message_id}")
+            return new_selected
+        else:
+            # Update the existing one if message_id is NULL
+            selected.message_id = message_id 
+            db.commit()
+            db.refresh(selected)
+            logger.info(f"Updated message_id for SelectedInstrument {selected_id} → {message_id}")
+            return selected
+            
     except HTTPException:
         db.rollback()
         raise
@@ -119,13 +142,29 @@ def update_selected_instrument(db: Session, selected_id: UUID, message_id: UUID)
         logger.error(f"Error updating selected instrument: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to update selected instrument")
 
-# --- Get all selected instruments for session ---
 def get_selected_instruments(db: Session, session_id: UUID):
     try:
-        # Return instruments that are:
-        # 1. Previously selected in this session (regardless of current detection status)
-        # OR already filtered by session_id, so just return all for this session
+        from ..entities.entities import PDFImport
+        
         instruments = db.query(SelectedInstrument).filter_by(session_id=session_id).all()
+        
+        # Dynamically add PDF info from PDFImport table WITHOUT saving to database
+        pdf_imports = db.query(PDFImport).all()
+        
+        for instrument in instruments:
+            if instrument.model and not instrument.json_url_manual:
+                # Check if there's a matching PDF
+                for pdf in pdf_imports:
+                    filename_base = pdf.instrument_filename.replace(".json", "").lower()
+                    models_in_filename = filename_base.split("_")
+                    
+                    if instrument.model.lower() in models_in_filename:
+                        # Add PDF info to the object but don't commit to database
+                        instrument.json_url_manual = pdf.json_url_manual
+                        instrument.instrument_filename = pdf.instrument_filename
+                        logger.info(f"Dynamically added PDF info for {instrument.model}: {pdf.instrument_filename}")
+                        break
+        
         logger.info(f"Retrieved {len(instruments)} selected instruments for session {session_id}")
         return instruments
     except Exception as e:
@@ -145,56 +184,56 @@ def get_all_instrument(db: Session):
         logger.error(f"Error retrieving all instrument: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to retrieve all instrument")
     
-SIMULATED_INSTRUMENTS = [
-    {
-        "resource": "USB0::0x2A8D::00000001::INSTR",
-        "idn": "Keysight Technologies,34450A,MY00000001,5.0.0.0",
-        "manufacturer": "Keysight Technologies",
-        "model": "34450A",
-        "serial": "MY00000001",
-        "firmware": "5.0.0.0",
-    },
-    {
-        "resource": "USB0::0x2A8D::00000002::INSTR",
-        "idn": "Keysight Technologies,N6705B,MY00000002,1.1.0",
-        "manufacturer": "Keysight Technologies",
-        "model": "N6705B",
-        "serial": "MY00000002",
-        "firmware": "1.1.0",
-    },
-    {
-        "resource": "USB0::0x2A8D::00000003::INSTR",
-        "idn": "Keysight Technologies,MSOX3034T,MY00000003,02.41.2017042600",
-        "manufacturer": "Keysight Technologies",
-        "model": "MSOX3034T",
-        "serial": "MY00000003",
-        "firmware": "02.41.2017042600",
-    },
-    {
-        "resource": "TCPIP0::127.0.0.1::inst0::INSTR",
-        "idn": "Keysight Technologies,E5071C,MY00000004,A.09.33",
-        "manufacturer": "Keysight Technologies",
-        "model": "E5071C",
-        "serial": "MY00000004",
-        "firmware": "A.09.33",
-    },
-    {
-        "resource": "USB0::0x2A8D::00000004::INSTR",
-        "idn": "Keysight Technologies,E5071C,MY00000005,A.09.33",
-        "manufacturer": "Keysight Technologies",
-        "model": "PZ2100A",
-        "serial": "MY00000005",
-        "firmware": "0.16.29.0",
-    },
-    {
-        "resource": "USB0::0x2A8D::00000005::INSTR",
-        "idn": "Keysight Technologies,E5071C,MY00000006,A.09.34",
-        "manufacturer": "Keysight Technologies",
-        "model": "53220A",
-        "serial": "MY00000006",
-        "firmware": "0.16.29.1",
-    },
-]
+# SIMULATED_INSTRUMENTS = [
+#     {
+#         "resource": "USB0::0x2A8D::00000001::INSTR",
+#         "idn": "Keysight Technologies,34450A,MY00000001,5.0.0.0",
+#         "manufacturer": "Keysight Technologies",
+#         "model": "34450A",
+#         "serial": "MY00000001",
+#         "firmware": "5.0.0.0",
+#     },
+#     {
+#         "resource": "USB0::0x2A8D::00000002::INSTR",
+#         "idn": "Keysight Technologies,N6705B,MY00000002,1.1.0",
+#         "manufacturer": "Keysight Technologies",
+#         "model": "N6705B",
+#         "serial": "MY00000002",
+#         "firmware": "1.1.0",
+#     },
+#     {
+#         "resource": "USB0::0x2A8D::00000003::INSTR",
+#         "idn": "Keysight Technologies,MSOX3034T,MY00000003,02.41.2017042600",
+#         "manufacturer": "Keysight Technologies",
+#         "model": "MSOX3034T",
+#         "serial": "MY00000003",
+#         "firmware": "02.41.2017042600",
+#     },
+#     {
+#         "resource": "TCPIP0::127.0.0.1::inst0::INSTR",
+#         "idn": "Keysight Technologies,E5071C,MY00000004,A.09.33",
+#         "manufacturer": "Keysight Technologies",
+#         "model": "33220A",
+#         "serial": "MY00000004",
+#         "firmware": "A.09.33",
+#     },
+#     {
+#         "resource": "USB0::0x2A8D::00000004::INSTR",
+#         "idn": "Keysight Technologies,E5071C,MY00000005,A.09.33",
+#         "manufacturer": "Keysight Technologies",
+#         "model": "PZ2100A",
+#         "serial": "MY00000005",
+#         "firmware": "0.16.29.0",
+#     },
+#     {
+#         "resource": "USB0::0x2A8D::00000005::INSTR",
+#         "idn": "Keysight Technologies,E5071C,MY00000006,A.09.34",
+#         "manufacturer": "Keysight Technologies",
+#         "model": "53220A",
+#         "serial": "MY00000006",
+#         "firmware": "0.16.29.1",
+#     },
+# ]
 
 # --- Scan and update DB 
 def scan_instruments(db: Session, timeout_ms: int = 800):
