@@ -1,6 +1,5 @@
 export default function Validation(values) {
     const errors = {};
-
     // email tel
     if ('emailTel' in values) {
         const emailTelPattern =
@@ -12,7 +11,6 @@ export default function Validation(values) {
             errors.emailTel = 'Please enter a valid email address.';
         }
     }
-
     // password
     if ('password' in values) {
         if (values.password === '') {
@@ -31,7 +29,6 @@ export default function Validation(values) {
             errors.password = 'Password cannot exceed 64 characters.';
         }
     }
-
     // confirm password
     if ('confirmPassword' in values) {
         if (values.confirmPassword === '') {
@@ -40,6 +37,5 @@ export default function Validation(values) {
             errors.confirmPassword = 'Passwords do not match.';
         }
     }
-
     return errors;
 }

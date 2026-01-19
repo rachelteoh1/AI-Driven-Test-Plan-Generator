@@ -46,96 +46,96 @@ const RowContainer = styled.div`
 `;
 
 export default function ResetPwPage() {
-    const [submitted, setSubmitted] = useState(false);
-    const navigate = useNavigate();
-    const { showModal, hideModal } = useModal();
-    const [values, setValues] = useState({ emailTel: '' });
-    const [errors, setErrors] = useState({});
-    const { mutate: requestResetPassword } = useRequestResetPassword();
+  const [submitted, setSubmitted] = useState(false);
+  const navigate = useNavigate();
+  const { showModal, hideModal } = useModal();
+  const [values, setValues] = useState({ emailTel: '' });
+  const [errors, setErrors] = useState({});
+  const { mutate: requestResetPassword } = useRequestResetPassword();
 
-    const handleInput = (e) => {
-        const { name, value } = e.target;
-        setValues((prevValues) => ({ ...prevValues, [name]: value }));
-        if (submitted) {
-            const fieldErrors = FormValidation({ ...values, [name]: value });
-            setErrors((prevErrors) => ({ ...prevErrors, [name]: fieldErrors[name] }));
-        }
-    };
+  const handleInput = (e) => {
+    const { name, value } = e.target;
+    setValues((prevValues) => ({ ...prevValues, [name]: value }));
+    if (submitted) {
+      const fieldErrors = FormValidation({ ...values, [name]: value });
+      setErrors((prevErrors) => ({ ...prevErrors, [name]: fieldErrors[name] }));
+    }
+  };
 
-    const handleSubmit = async (e) => {
-  e.preventDefault();
-  setSubmitted(true);
-  const formErrors = FormValidation(values);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitted(true);
+    const formErrors = FormValidation(values);
 
-  if (Object.keys(formErrors).length === 0) {
-    requestResetPassword(
-  { email: values.emailTel },
-  {
-    onSuccess: async (data) => {
-      const resetLink = data.reset_link;
+    if (Object.keys(formErrors).length === 0) {
+      requestResetPassword(
+        { email: values.emailTel },
+        {
+          onSuccess: async (data) => {
+            const resetLink = data.reset_link;
 
-      // Send email using EmailJS
-      try {
-        await emailjs.send(
-          'service_63nau9x',
-          'template_35ew39a',
-          {
-            email: values.emailTel,
-            link: resetLink,
+            // Send email using EmailJS
+            try {
+              await emailjs.send(
+                'service_63nau9x',
+                'template_35ew39a',
+                {
+                  email: values.emailTel,
+                  link: resetLink,
+                },
+                '47DlTb1FiYID9hN9p'
+              );
+
+              showModal({
+                modal: (
+                  <TickedModal
+                    title="Reset Link Sent!"
+                    description="Please check your email to reset your password."
+                  />
+                ),
+              });
+
+              setTimeout(() => {
+                hideModal();
+                navigate('/signin');
+              }, 3000);
+            } catch (error) {
+              console.error("EmailJS error:", error);
+              setErrors({ emailTel: "Failed to send reset email." });
+            }
           },
-          '47DlTb1FiYID9hN9p'
-        );
+          onError: () => {
+            setErrors({ emailTel: "Email not found." });
+          },
+        }
+      );
 
-        showModal({
-          modal: (
-            <TickedModal
-              title="Reset Link Sent!"
-              description="Please check your email to reset your password."
-            />
-          ),
-        });
+    } else {
+      setErrors(formErrors);
+    }
+  };
 
-        setTimeout(() => {
-          hideModal();
-          navigate('/signin');
-        }, 3000);
-      } catch (error) {
-        console.error("EmailJS error:", error);
-        setErrors({ emailTel: "Failed to send reset email." });
-      }
-    },
-    onError: () => {
-      setErrors({ emailTel: "Email not found." });
-    },
-  }
-);
-
-  } else {
-    setErrors(formErrors);
-  }
-};
-
-    return (
-        <AuthLayout>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <img src={Logo} alt="Logo" style={{ width: '50px' }} />
-                <TextMdSemiBold>Reset Password</TextMdSemiBold>
-            </div>
-            <RowContainer>
-                <TextSmRegular>We will email you a link to reset your password.</TextSmRegular>
-            </RowContainer>
-            <form onSubmit={handleSubmit}>
-                <div style={{ maxWidth: '35rem', padding: '3rem', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    <TextField
-                        required fullWidth id="email" label="Email Address" name="emailTel"
-                        autoComplete="email tel" autoFocus
-                        onChange={handleInput}
-                        error={!!errors.emailTel}
-                        helperText={errors.emailTel}
-                    />
-                    <StyledButton>Submit</StyledButton>
-                </div>
-            </form>
-        </AuthLayout>
-    );
+  return (
+    <AuthLayout>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <img src={Logo} alt="Logo" style={{ width: '50px' }} />
+        <TextMdSemiBold>Reset Password</TextMdSemiBold>
+      </div>
+      <RowContainer>
+        <TextSmRegular>We will email you a link to reset your password.</TextSmRegular>
+      </RowContainer>
+      <form onSubmit={handleSubmit}>
+        <div style={{ maxWidth: '35rem', padding: '3rem', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <TextField
+            required fullWidth id="email" label="Email Address" name="emailTel"
+            autoComplete="email tel" autoFocus
+            onChange={handleInput}
+            error={!!errors.emailTel}
+            helperText={errors.emailTel}
+          />
+          <StyledButton>Submit</StyledButton>
+        </div>
+      </form>
+    </AuthLayout>
+  );
 }

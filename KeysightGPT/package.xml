@@ -6,11 +6,17 @@ Version: The version of the package. Must be in a semver 2.0 compatible format. 
 For Version the following macro is available (Only works if the project directory is under Git source control):
 $(GitVersion) - Gets the version from Git in the recommended format Major.Minor.Build-PreRelease+CommitHash.BranchName.
 -->
-<Package Name="KeysightGPT" xmlns="http://opentap.io/schemas/package" InfoLink="" Version="0.1.0-alpha" OS="Windows,Linux">
+<Package Name="KeysightGPT" xmlns="http://opentap.io/schemas/package" InfoLink="" Version="0.1.5-alpha" OS="Windows,Linux">
   <Description>This is my OpenTAP plugin package.</Description>
   <Files>
-    <File Path="Packages/KeysightGPT/KeysightGPT.dll" SourcePath="KeysightGPT.dll">
-        <SetAssemblyInfo Attributes="Version"/>
-    </File>
+    <File Path="Packages/KeysightGPT/KeysightGPT.dll" SourcePath="KeysightGPT.dll" />
+	<File Path="Packages/KeysightGPT/WebView2Loader.dll" SourcePath="runtimes/win-x64/native/WebView2Loader.dll" />
+	  
+	<File Path="Packages/KeysightGPT/Newtonsoft.Json.dll" SourcePath="Newtonsoft.Json.dll" />
+	<File Path="Packages/KeysightGPT/Microsoft.Web.WebView2.Core.dll" SourcePath="Microsoft.Web.WebView2.Core.dll" />
+	<File Path="Packages/KeysightGPT/Microsoft.Web.WebView2.Wpf.dll" SourcePath="Microsoft.Web.WebView2.Wpf.dll" />
+	<File Path="Packages/KeysightGPT/Microsoft.Web.WebView2.WinForms.dll" SourcePath="Microsoft.Web.WebView2.WinForms.dll" />
+	<File Path="Packages/KeysightGPT/backend" SourcePath="backend/**/*.*" />
+	<File Path="Packages/KeysightGPT/frontend" SourcePath="frontend/**/*.*" />
   </Files>
 </Package>

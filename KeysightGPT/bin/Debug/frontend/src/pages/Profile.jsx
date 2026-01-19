@@ -63,14 +63,13 @@ export const Profile = ({ chats, onSelectChat }) => {
            collapsed={sidebarCollapsed}
             onCollapsedChange={setSidebarCollapsed}
         />
-         <MainContent $sidebarCollapsed={sidebarCollapsed}>
-                   
-                     <ContentContainer>
-                        <main className="flex-1 bg-gray-50">
-          <MainDashboard />
-        </main>
-                     </ContentContainer></MainContent>
-      
+        <MainContent $sidebarCollapsed={sidebarCollapsed}>
+            <ContentContainer>
+                <main className="flex-1 bg-gray-50">
+            <MainDashboard />
+              </main>
+            </ContentContainer>
+        </MainContent>
       </div>
     </SidebarProvider>
   );

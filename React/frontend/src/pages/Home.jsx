@@ -423,9 +423,9 @@ export const Home = ({
   const hasConversation = activeChatLogs.length > 0;
 
   const examples = [
-    "Generate test case to measure the voltage on channel 1.",
-    "Enable output :OUTP ON, set voltage to 12 V on channel 6 for fan test.",
-    "Explain ROUT:SCAN (@101:110)",
+    "Generate a SCPI test sequence to measure frequency on input 2 with a 0.1 s gate time.",
+    "Generate a SCPI test sequence to measure time interval with start delay 0 s.",
+    "Explain MEASure:FREQuency?",
   ];
   
 //     useEffect(() => {

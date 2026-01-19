@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-    baseURL : 'http://localhost:8000',
+    baseURL : 'http://localhost:9000',
 })
 // Add token to headers if exists
 api.interceptors.request.use((config) => {

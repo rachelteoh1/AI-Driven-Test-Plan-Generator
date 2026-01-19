@@ -320,7 +320,7 @@ export function Profile() {
                 type="email"
                 placeholder="Your Email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                disabled
               />
             </FieldWrapper>
           </FieldRow>

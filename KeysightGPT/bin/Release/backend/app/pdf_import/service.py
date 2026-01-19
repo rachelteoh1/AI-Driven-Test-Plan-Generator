@@ -17,6 +17,10 @@ def process_pdf_upload(db: Session, file: UploadFile):
         instrument_name = extracted_data["instrument_name"]
         scpi_commands = extracted_data["scpi_commands"]
         
+        # Validate that SCPI commands were extracted
+        if not scpi_commands or extracted_data.get("total_scpi_commands_extracted", 0) == 0:
+            raise HTTPException(status_code=400, detail="No SCPI commands found in PDF. Please upload a valid device manual.")
+        
         # Upload JSON to Supabase
         bucket_name = "scpi-json"
         json_file_name = f"{instrument_name}.json"

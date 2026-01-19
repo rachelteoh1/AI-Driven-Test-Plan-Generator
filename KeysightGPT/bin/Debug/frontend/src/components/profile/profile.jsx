@@ -313,6 +313,7 @@ export function Profile() {
               <StyledLabel htmlFor="name">Name</StyledLabel>
               <StyledInput id="name" value={name} onChange={(e) => setName(e.target.value)} />
             </FieldWrapper>
+            
             <FieldWrapper>
               <StyledLabel htmlFor="email">Email</StyledLabel>
               <StyledInput

@@ -20,7 +20,7 @@ EMAILJS_SERVICE_ID = os.getenv("EMAILJS_SERVICE_ID")
 EMAILJS_TEMPLATE_ID = os.getenv("EMAILJS_TEMPLATE_ID")
 EMAILJS_PUBLIC_KEY = os.getenv("EMAILJS_PUBLIC_KEY")
 
-RESET_SECRET_KEY = os.getenv("RESET_SECRET_KEY", "fallback_reset_key")  # fallback for dev
+RESET_SECRET_KEY = os.getenv("RESET_SECRET_KEY", "fallback_reset_key")
 RESET_TOKEN_EXPIRY_MINUTES = 30
 ALGORITHM = "HS256"
 
@@ -91,3 +91,5 @@ def delete_user_account(db: Session, user_id):
     except Exception as e:
         logging.error(">>> Error during deletion:\n" + traceback.format_exc())
         raise HTTPException(status_code=500, detail="Failed to delete user.")
+    
+    

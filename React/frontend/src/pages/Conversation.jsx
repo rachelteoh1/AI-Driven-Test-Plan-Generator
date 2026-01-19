@@ -716,10 +716,6 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
         });
     } else {
       setScpiSuggestions([]);
-      showModal({
-        modal: <InstrumentNotFoundModal hideModal={hideModal} />
-      });
-      console.warn("Instrument not found. Upload a PDF to get started.");
     }
   }, [instrumentsData, instrumentsLoading, selectedInstrument]);
 
@@ -731,7 +727,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
       setShowPrefixDropdown(false);
       return;
     }
-    const intentPattern = /^(explain|generate|create|optimize|analyze|show|list|get|set|configure|test|debug|help|what is)\s+(.+)/i;
+    const intentPattern = /^(explain|generate|create|optimize|analyze|show|list|get|set|configure|test|debug|help|what is|explain the command)\s+(.+)/i;
     const match = prefix.match(intentPattern);
     const scpiPart = match ? match[2] : prefix;
 
@@ -855,9 +851,7 @@ export default function ChatInterface({ chat, onSendMessage, isLoading, onInstru
         console.log('[SELECT] No PDF manual found, showing modal');
         showModal({
           modal: (
-            <CrossedModal
-              title="Manual not uploaded."
-              description="Import a user manual to get started."
+            <InstrumentNotFoundModal
               hideModal={hideModal}
             />
           ),
@@ -1713,7 +1707,6 @@ useEffect(() => {
           </InstrumentBar>
 
           <MessageInputWrapper ref={inputWrapperRef}>
-            {/* Prefix Autocomplete Dropdown (SCPI Commands) */}
             {(() => {
               if (showPrefixDropdown && prefixSuggestions.length > 0 && inputWrapperRef.current) {
                 const rect = inputWrapperRef.current.getBoundingClientRect();

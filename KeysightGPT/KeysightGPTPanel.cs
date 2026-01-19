@@ -6,26 +6,30 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using Microsoft.Web.WebView2.Wpf;
 using Newtonsoft.Json;
 using OpenTap.Plugins.BasicSteps;
 using Keysight.OpenTap.Wpf;
 using Keysight.OpenTap.Gui;
+using OpenTap;
 
 namespace KeysightGPT
 {
-        public class KeysightGPTPanel : UserControl, IDisposable
+    public class KeysightGPTPanel : UserControl, IDisposable
+    {
+        private readonly ITapDockContext _context;
+        private WebView2 webView;
+        private readonly List<Process> _managedProcesses = new List<Process>();
+        public KeysightGPTPanel(ITapDockContext context)
         {
-            private readonly ITapDockContext _context;
-            private WebView2 webView;
-            private readonly List<Process> _managedProcesses = new List<Process>();
 
-            public KeysightGPTPanel(ITapDockContext context)
-            {
-                _context = context;
-                InitializeWebView();
-            }
+
+            _context = context;
+            InitializeWebView();
+        }
+
+        private static readonly global::OpenTap.TraceSource Log = global::OpenTap.Log.CreateSource("Your Source Name");
+
 
         private async void InitializeWebView()
         {
@@ -43,33 +47,33 @@ namespace KeysightGPT
 
             await webView.EnsureCoreWebView2Async();
 
-            Debug.WriteLine("[KeysightGPT] Waiting for backend to become available...");
-            bool backendReady = await WaitForBackendAsync("http://localhost:8000/health");
+            Log.Info("[KeysightGPT] Waiting for backend to become available...");
+            bool backendReady = await WaitForBackendAsync("http://localhost:9000/health");
 
             if (!backendReady)
             {
-                Debug.WriteLine("[KeysightGPT] Backend failed to start within timeout.");
+                Log.Info("[KeysightGPT] Backend failed to start within timeout.");
                 return;
             }
 
-            Debug.WriteLine("[KeysightGPT] Waiting for frontend to become available...");
+            Log.Info("[KeysightGPT] Waiting for frontend to become available...");
             bool frontendReady = await WaitForFrontendAsync("http://localhost:3000");
 
             if (!frontendReady)
             {
-                Debug.WriteLine("[KeysightGPT] Frontend failed to start within timeout.");
+                Log.Info("[KeysightGPT] Frontend failed to start within timeout.");
                 return;
             }
 
             webView.Source = new Uri("http://localhost:3000");
             webView.WebMessageReceived += OnWebMessageReceived;
 
-            Debug.WriteLine("[KeysightGPTPanel] WebView navigated to localhost:3000.");
+            Log.Info("[KeysightGPTPanel] WebView navigated to localhost:3000.");
 
             this.Unloaded += (s, e) => Dispose();
         }
 
-        private async Task<bool> WaitForBackendAsync(string url, int timeoutMs = 30000)
+        private async Task<bool> WaitForBackendAsync(string url, int timeoutMs = 300000)
         {
             var sw = Stopwatch.StartNew();
 
@@ -78,33 +82,74 @@ namespace KeysightGPT
                 try
                 {
                     var request = System.Net.WebRequest.Create(url);
-                    request.Timeout = 2000;
+                    request.Timeout = 300000;
 
                     using (var response = await request.GetResponseAsync())
                     {
-                        return true; // backend is up
+                        return true;
                     }
                 }
                 catch
                 {
-                    await Task.Delay(500); // wait and retry
+                    await Task.Delay(500);
                 }
             }
 
-            return false; // timeout
+            return false;
+        }
+
+        private async Task<bool> WaitForFrontendAsync(string url, int timeoutMs = 300000)
+        {
+            var sw = Stopwatch.StartNew();
+
+            while (sw.ElapsedMilliseconds < timeoutMs)
+            {
+                try
+                {
+                    var request = System.Net.WebRequest.Create(url);
+                    request.Timeout = 300000;
+
+                    using (var response = await request.GetResponseAsync())
+                    {
+                        return true;
+                    }
+                }
+                catch
+                {
+                    await Task.Delay(500);
+                }
+            }
+
+            return false;
+        }
+
+        private bool IsPortOpen(int port)
+        {
+            var props = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties();
+            var listeners = props.GetActiveTcpListeners();
+
+            foreach (var ep in listeners)
+            {
+                if (ep.Port == port)
+                    return true;
+            }
+
+            return false;
         }
 
         private void StartWebServices()
         {
             string pluginDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string backendDir = Path.Combine(pluginDir, "backend");
-            string frontendDir = Path.Combine(pluginDir, "frontend");
+            string opentapRoot = Directory.GetParent(pluginDir).Parent.FullName;
+            string backendDir = Path.Combine(opentapRoot, "backend");
+            string frontendDir = Path.Combine(opentapRoot, "frontend");
 
             string frontendMarker = Path.Combine(frontendDir, ".frontend_installed");
 
             if (!File.Exists(frontendMarker))
             {
-                Debug.WriteLine("[KeysightGPT] Installing frontend dependencies (one-time)...");
+                Log.Info("[KeysightGPT] Installing frontend dependencies (one-time)...");
+
                 var installProc = Process.Start(new ProcessStartInfo
                 {
                     FileName = "cmd.exe",
@@ -112,8 +157,8 @@ namespace KeysightGPT
                     WorkingDirectory = frontendDir,
                     CreateNoWindow = false
                 });
-                installProc?.WaitForExit();
 
+                installProc?.WaitForExit();
                 File.WriteAllText(frontendMarker, "ok");
             }
 
@@ -121,7 +166,8 @@ namespace KeysightGPT
 
             if (!File.Exists(backendMarker))
             {
-                Debug.WriteLine("[KeysightGPT] Installing backend dependencies (one-time)...");
+                Log.Info("[KeysightGPT] Installing backend dependencies (one-time)...");
+
                 var pipProc = Process.Start(new ProcessStartInfo
                 {
                     FileName = "cmd.exe",
@@ -129,38 +175,54 @@ namespace KeysightGPT
                     WorkingDirectory = backendDir,
                     CreateNoWindow = false
                 });
-                pipProc?.WaitForExit();
 
+                pipProc?.WaitForExit();
                 File.WriteAllText(backendMarker, "ok");
             }
 
-            LaunchProcess("cmd.exe", "/c uvicorn app.main:app --reload", backendDir);
-            LaunchProcess("cmd.exe", "/c npm start", frontendDir, new Dictionary<string, string> { { "BROWSER", "none" } });
-        }
-
-
-        private void LaunchProcess(string fileName, string args, string workingDir, Dictionary<string, string> env = null)
+            if (!IsPortOpen(9000))
             {
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = fileName,
-                    Arguments = args,
-                    WorkingDirectory = workingDir,
-                    CreateNoWindow = true, // Set to false temporarily if you need to debug errors
-                    UseShellExecute = false
-                };
-
-                if (env != null)
-                {
-                    foreach (var item in env)
-                        startInfo.EnvironmentVariables[item.Key] = item.Value;
-                }
-
-                var proc = Process.Start(startInfo);
-                if (proc != null) _managedProcesses.Add(proc);
+                LaunchProcess("cmd.exe", "/c uvicorn app.main:app --port 9000", backendDir);
+            }
+            else
+            {
+                Log.Info("[KeysightGPT] Backend already running.");
             }
 
-            private void OnWebMessageReceived(object sender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs e)
+            if (!IsPortOpen(3000))
+            {
+                LaunchProcess("cmd.exe", "/c npm start", frontendDir,
+                    new Dictionary<string, string> { { "BROWSER", "none" } });
+            }
+            else
+            {
+                Log.Info("[KeysightGPT] Frontend already running.");
+            }
+        }
+
+        private void LaunchProcess(string fileName, string args, string workingDir, Dictionary<string, string> env = null)
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = fileName,
+                Arguments = args,
+                WorkingDirectory = workingDir,
+                CreateNoWindow = false,
+                UseShellExecute = false
+            };
+
+            if (env != null)
+            {
+                foreach (var item in env)
+                    startInfo.EnvironmentVariables[item.Key] = item.Value;
+            }
+
+            var proc = Process.Start(startInfo);
+            if (proc != null)
+                _managedProcesses.Add(proc);
+        }
+
+        private void OnWebMessageReceived(object sender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs e)
         {
             try
             {
@@ -175,7 +237,7 @@ namespace KeysightGPT
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("[Panel] WebMessage error: " + ex.Message);
+                Log.Info("[Panel] WebMessage error: " + ex.Message);
             }
         }
 
@@ -184,7 +246,8 @@ namespace KeysightGPT
             try
             {
                 var plan = _context.Plan;
-                if (plan == null || block?.commands == null) return;
+                if (plan == null || block?.commands == null)
+                    return;
 
                 plan.Steps.Clear();
 
@@ -198,12 +261,13 @@ namespace KeysightGPT
                         AddToLog = true,
                         Name = cmd.command
                     };
+
                     plan.Steps.Add(step);
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("[Panel] Apply Error: " + ex.Message);
+                Log.Info("[Panel] Apply Error: " + ex.Message);
             }
         }
 
@@ -215,47 +279,39 @@ namespace KeysightGPT
                 {
                     if (!proc.HasExited)
                     {
-                        // Kill the process tree (kills cmd.exe and the child node/python process)
-                        Process.Start(new ProcessStartInfo
+                        var killer = Process.Start(new ProcessStartInfo
                         {
                             FileName = "taskkill",
                             Arguments = $"/T /F /PID {proc.Id}",
-                            CreateNoWindow = true,
+                            CreateNoWindow = false,
                             UseShellExecute = false
                         });
-                    }
-                }
-                catch { /* Ignore cleanup errors */ }
-            }
-            _managedProcesses.Clear();
-        }
-        private async Task<bool> WaitForFrontendAsync(string url, int timeoutMs = 30000)
-        {
-            var sw = Stopwatch.StartNew();
 
-            while (sw.ElapsedMilliseconds < timeoutMs)
-            {
-                try
-                {
-                    var request = System.Net.WebRequest.Create(url);
-                    request.Timeout = 2000;
-
-                    using (var response = await request.GetResponseAsync())
-                    {
-                        return true; // frontend is up
+                        killer?.WaitForExit(2000);
                     }
                 }
                 catch
                 {
-                    await Task.Delay(500);
+                }
+                finally
+                {
+                    proc.Dispose();
                 }
             }
 
-            return false; // timeout
+            _managedProcesses.Clear();
         }
-
     }
 
-    public class ScpiCommand { public string command { get; set; } public string type { get; set; } public int order { get; set; } }
-    public class ScpiCommandBlock { public List<ScpiCommand> commands { get; set; } }
+    public class ScpiCommand
+    {
+        public string command { get; set; }
+        public string type { get; set; }
+        public int order { get; set; }
+    }
+
+    public class ScpiCommandBlock
+    {
+        public List<ScpiCommand> commands { get; set; }
+    }
 }
