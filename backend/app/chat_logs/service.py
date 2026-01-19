@@ -4,26 +4,26 @@ from typing import Annotated
 from uuid import UUID, uuid4
 from fastapi import Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
+import re
+import requests
+import json
+import logging
+import certifi
 
 from ..chat_logs import monitoring_service
 from ..entities.entities import ChatLog, ChatLogVersion, SelectedInstrument
-import logging
 from ..exceptions import (
     InternalServerError)
 from .models import LogCreate, LogResponse, InstrumentResponse
 from ..utils.intent_classifier import classify_intent_ml
-from ..exceptions import ChatCreationError, ChatNotFoundError,ChatRenameError
+from ..exceptions import ChatCreationError, ChatNotFoundError, ChatRenameError
 from ..pdf_import.utils.suggest_intent import extract_scpi_from_pdf
 from ..instrument import service
-import requests
-import json
 from ..optimized_test_sequence import service as opt_service
 from sentence_transformers import SentenceTransformer
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from . import monitoring_service  # Import monitoring service\
-import time
-from ..utils.nlp_utils import Intent,process_user_input, context_manager
+from ..utils.nlp_utils import Intent, process_user_input, context_manager
 from ..utils.intent_service import save_intent_metadata
 logger = logging.getLogger(__name__)
 
@@ -183,10 +183,7 @@ MISTRAL_API_URL = "https://cofinal-semierectly-mignon.ngrok-free.dev/generate"
 
 
 def perform_semantic_search(commands_data, query, top_k=5):
-    """
-    Perform semantic search on SCPI commands using vector embeddings.
-    Returns top-k commands ranked by cosine similarity.
-    """
+   
     if not commands_data or len(commands_data) == 0:
         logger.info("[RAG] No commands available for semantic search")
         return []
@@ -234,9 +231,7 @@ def perform_semantic_search(commands_data, query, top_k=5):
 
 
 def _keyword_search_fallback(commands_data, query, top_k=5):
-    """
-    Fallback keyword-based search when vector embeddings are unavailable.
-    """
+ 
     logger.info(f"[RAG] Using keyword search for: '{query}'")
     query_lower = query.lower()
     query_tokens = [t for t in query_lower.split() if len(t) > 2]
@@ -282,24 +277,111 @@ def _keyword_search_fallback(commands_data, query, top_k=5):
     return top_results
 
 
-def detect_intent(db: Session, request: LogCreate) -> LogResponse:
-    """
-    Detect user intent and generate AI response with enhanced NLP preprocessing,
-    RAG semantic search, and clarification handling.
+def extract_valid_commands_from_pdf(json_url_manual: str) -> set:
+
+    if not json_url_manual:
+        logger.warning("No JSON URL provided for PDF manual")
+        return set()
     
-    Now properly handles:
-    - Multiple questions in one session
-    - Clarification flow with context preservation
-    - New query detection (user ignores clarification)
-    - Off-topic conversation
-    """
+    try:
+        logger.info(f"[FILTER] Fetching valid commands from: {json_url_manual}")
+        import requests as req
+        json_response = req.get(json_url_manual, timeout=10)
+        
+        if json_response.status_code != 200:
+            logger.warning(f"[FILTER] Failed to fetch SCPI commands: {json_response.status_code}")
+            return set()
+        
+        scpi_data = json_response.json()
+        
+        # Extract command strings from the data
+        valid_commands = set()
+        if isinstance(scpi_data, list):
+            for cmd_obj in scpi_data:
+                if isinstance(cmd_obj, dict):
+                    cmd = cmd_obj.get('command', '').strip()
+                    if cmd:
+                        # Normalize: remove extra spaces, handle both formats
+                        normalized_cmd = re.sub(r'\s+', ' ', cmd.upper())
+                        valid_commands.add(normalized_cmd)
+        
+        logger.info(f"[FILTER] Loaded {len(valid_commands)} valid commands from PDF manual")
+        return valid_commands
+        
+    except Exception as e:
+        logger.error(f"[FILTER] Error fetching PDF commands: {str(e)}")
+        return set()
+
+
+def filter_optimized_sequence(opt_sequence: str, valid_commands: set) -> tuple:
+    
+    if not opt_sequence or not opt_sequence.strip():
+        logger.info("[FILTER] Empty optimized sequence provided")
+        return "", "", []
+    
+    logger.info("[FILTER] Starting sequence filtering")
+    
+    lines = opt_sequence.split('\n')
+    filtered_lines = []
+    removed_commands = []
+    
+
+    actual_commands = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped and not stripped.startswith('#') and not stripped.startswith('//'):
+            actual_commands.append(stripped)
+    
+  
+    error_after_rst = False
+    for i, cmd in enumerate(actual_commands):
+        if '*RST' in cmd.upper() and i + 1 < len(actual_commands):
+            next_cmd = actual_commands[i + 1]
+            if ':SYSTEM:ERROR?' in next_cmd.upper() or ':SYSTem:ERRor?' in next_cmd:
+                error_after_rst = True
+                logger.info("[FILTER] Found :SYSTEM:ERROR? right after *RST - will NOT remove subsequent commands")
+                break
+    
+   
+    found_error_stop_point = False
+    for line in lines:
+        stripped_line = line.strip()
+        
+    
+        if not stripped_line or stripped_line.startswith('#') or stripped_line.startswith('//'):
+            filtered_lines.append(line)
+            continue
+        
+       
+        if ':SYSTEM:HEADER OFF' in stripped_line.upper():
+            removed_commands.append(stripped_line)
+            logger.info("[FILTER] Removing :SYSTEM:HEADER OFF command")
+            continue
+      
+        if (':SYSTEM:ERROR?' in stripped_line.upper() or ':SYSTem:ERRor?' in stripped_line) and not error_after_rst:
+            filtered_lines.append(line)
+            logger.info("[FILTER] Found :SYSTEM:ERROR? command - keeping it and stopping (not after *RST)")
+            found_error_stop_point = True
+            break
+        
+     
+        filtered_lines.append(line)
+    
+    result = '\n'.join(filtered_lines).strip()
+
+    explanation = "\n\nRemoved unnecessary commands." if (removed_commands or found_error_stop_point) else ""
+    
+    logger.info(f"[FILTER] Removed {len(removed_commands)} commands. Sequence reduced from {len(opt_sequence)} to {len(result)} characters")
+    
+    return result, explanation, removed_commands
+
+
+def detect_intent(db: Session, request: LogCreate) -> LogResponse:
+
     start_time = time.time()
     try:
         logger.info(f"Detecting intent for session: {request.session_id}")
 
-        # =====================================================================
-        # Step 1: Retrieve the selected instrument(s) for this session
-        # =====================================================================
         instruments = service.get_selected_instruments(db, request.session_id)
         if instruments:
             selected_instrument = instruments[-1]
@@ -314,9 +396,6 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
             instrument_prefix = ""
             logger.warning("No instrument selected for session")
 
-        # =====================================================================
-        # Step 2: Enhanced NLP Preprocessing
-        # =====================================================================
         user_input = request.content.strip()
         
         # Use session_id for context tracking (THIS IS THE KEY!)
@@ -335,9 +414,6 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
             result['send_to_llm']
         )
 
-        # =====================================================================
-        # Step 3: Handle different preprocessing outcomes
-        # =====================================================================
         
         # Case 1: OFF_TOPIC - respond directly without LLM
         if result['action'] == 'respond_directly':
@@ -480,9 +556,6 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
                 ", ".join(parsed_input['targets'])[:45] or "None",
             )
 
-        # =====================================================================
-        # Step 4: Perform RAG Semantic Search on SCPI Commands
-        # =====================================================================
         rag_context_text = ""
         if selected_instrument and selected_instrument.json_url_manual:
             try:
@@ -502,7 +575,7 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
                     logger.info(f"Loaded {len(scpi_data)} SCPI commands")
                     
                     # Perform semantic search
-                    relevant_commands = perform_semantic_search(scpi_data, user_input, top_k=5)
+                    relevant_commands = perform_semantic_search(scpi_data, actual_user_input, top_k=5)
                     
                     # Build RAG context text
                     if relevant_commands:
@@ -526,17 +599,15 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
             except Exception as e:
                 logger.error(f"Error performing semantic search: {str(e)}")
 
-        # =====================================================================
-        # Step 5: Construct enhanced user message with RAG context
-        # =====================================================================
         user_msg = f"{instrument_prefix}{actual_user_input}"
-        enhanced_prompt = user_msg + rag_context_text
-        logger.info(f"Constructed user message: {user_msg}")
-        logger.info(f"Enhanced prompt with RAG: {enhanced_prompt[:200]}...")
+        
 
-        # =====================================================================
-        # Step 6: Build metadata payload for Flask API
-        # =====================================================================
+        logger.info(f"Enhanced prompt with RAG: {rag_context_text[:600]}...")
+        logger.info(f"Constructed user message: {user_msg}")
+
+
+        rag_for_metadata = rag_context_text if parsed_input['intent'] == 'generate_test' else ""
+        
         metadata = {
             "intent": parsed_input['intent'],
             "confidence": float(parsed_input['confidence']),
@@ -549,15 +620,13 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
             "temporal_info": parsed_input['temporal_info'],
             "instrument_model": instrument_model,
             "original_text": user_input,
-            "combined_query": result.get('combined_query')  # Include if clarification was combined
+            "combined_query": result.get('combined_query'),  # Include if clarification was combined
+            "RAG_content": rag_for_metadata
         }
         
-        # =====================================================================
-        # Step 7: Determine routing parameters based on intent
-        # =====================================================================
         intent_routing = {
             "generate_test": {
-                "temperature": 0.3,
+                "temperature": 0.0,
                 "max_tokens": 256
             },
             "explain_command": {
@@ -587,11 +656,8 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
             intent_routing["unclear"]
         )
         
-        # =====================================================================
-        # Step 8: Send request to Flask API
-        # =====================================================================
         payload = {
-            "prompt": enhanced_prompt,
+            "prompt": user_msg,
             "session_id": str(request.session_id), 
             "max_tokens": routing_params["max_tokens"],
             "temperature": routing_params["temperature"],
@@ -602,6 +668,8 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
         logger.info(f"Sending to Flask API with intent: {parsed_input['intent']}")
         
         response = requests.post(MISTRAL_API_URL, json=payload, timeout=(5, 120))
+        # response = requests.post(MISTRAL_API_URL, json=payload, timeout=(5, 120), verify=False)
+        
 
         if response.status_code != 200:
             logger.error(f"Flask API Error: {response.text}")
@@ -610,27 +678,63 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
         data = response.json()
         logger.info(f"Flask API response: {json.dumps(data, indent=2)}")
         
-        # =====================================================================
-        # Step 9: Extract response from Flask
-        # =====================================================================
-        formatted_output = data.get("response", "")
+        gen_response = data.get("gen_response", "")
         opt_sequence = data.get("opt_sequence", "")
+        explanation = data.get("explanation", "")
         is_explanation = data.get("is_explanation", False)
         
-        if not formatted_output:
-            raise Exception("Flask API returned empty response")
+        # Handle if opt_sequence is a JSON string containing the actual sequence
+        if isinstance(opt_sequence, str) and opt_sequence.strip().startswith('{'):
+            try:
+                opt_dict = json.loads(opt_sequence)
+                if isinstance(opt_dict, dict) and "optimized_sequence" in opt_dict:
+                    opt_sequence = opt_dict["optimized_sequence"]
+                    logger.info("[EXTRACT] Parsed opt_sequence from JSON wrapper")
+            except json.JSONDecodeError:
+                # If it's not valid JSON, keep as is
+                logger.warning("[EXTRACT] opt_sequence looks like JSON but failed to parse, using as-is")
+        
+        if not gen_response:
+            raise Exception("Flask API returned empty gen_response")
 
-        logger.info(f"Response length: {len(formatted_output)}")
+        logger.info(f"Gen response length: {len(gen_response)}")
         logger.info(f"Is explanation: {is_explanation}")
         logger.info(f"Optimized sequence: {opt_sequence}")
 
-        # =====================================================================
-        # Step 10: Save chat logs (user message + bot response)
-        # =====================================================================
+        filtered_sequence = opt_sequence
+        filter_explanation = ""
+        removed_commands = []
+        
+        # Only filter if we have an optimization and it's not an explanation
+        if (not is_explanation and opt_sequence and opt_sequence.strip() and
+            parsed_input['intent'] in ['generate_test', 'modify_sequence']):
+            
+            # Filter the sequence (removes :SYSTem:ERRor? and subsequent commands, and :SYSTem:HEADer OFF)
+            filtered_sequence, filter_explanation, removed_commands = filter_optimized_sequence(opt_sequence, set())
+            logger.info(
+                f"[FILTER] Sequence filtering completed. "
+                f"Original: {len(opt_sequence)} chars, "
+                f"Filtered: {len(filtered_sequence)} chars, "
+                f"Removed: {len(removed_commands)} commands"
+            )
+        
+        # Build formatted output with all components
+        formatted_output = gen_response
+        if not is_explanation and opt_sequence:
+            formatted_output += f"\n\nOptimized Sequence:\n{filtered_sequence}"
+            
+            # If explanation is "Already Optimized" and filter_explanation exists, replace it
+            if filter_explanation and explanation.strip() == "Already optimized.":
+                formatted_output += f"\n\nExplanation: \n{filter_explanation.strip()}"
+            else:
+                formatted_output += f"\n\nExplanation: \n{explanation}"
+                if filter_explanation:
+                    formatted_output += f"\n{filter_explanation.strip()}"
+
         # Save user message
         # user_log = create_chat_log(db, request)
         
-        # Save bot response
+        # Save bot response with the complete formatted output
         bot_log = LogCreate(
             session_id=request.session_id,
             role="llm_response",
@@ -653,9 +757,6 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
         except Exception as e:
             logger.warning(f"Failed to save intent metadata: {str(e)}")
 
-        # =====================================================================
-        # Step 11: Save optimized sequence (only if appropriate)
-        # =====================================================================
         should_save_optimization = (
             not is_explanation and 
             opt_sequence and 
@@ -665,8 +766,9 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
         
         if should_save_optimization:
             try:
-                opt_service.save_optimized_sequence(db, saved_log.message_id, opt_sequence)
-                logger.info(f"Saved optimized sequence for message {saved_log.message_id}")
+                # Save the filtered sequence (already filtered in Step 10)
+                opt_service.save_optimized_sequence(db, saved_log.message_id, filtered_sequence)
+                logger.info(f"Saved filtered optimized sequence for message {saved_log.message_id}")
             except Exception as e:
                 logger.exception(f"Failed to save optimized sequence: {str(e)}")
         else:
@@ -674,9 +776,6 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
 
         has_optimization = opt_service.has_optimized_sequence(db, saved_log.message_id)
         
-        # =====================================================================
-        # Step 12: Build LogResponse
-        # =====================================================================
         log_response = LogResponse(
             message_id=saved_log.message_id,
             session_id=saved_log.session_id,
@@ -692,9 +791,6 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
             ) if selected_instrument else None,
         )
 
-        # =====================================================================
-        # Step 13: Record metrics and return
-        # =====================================================================
         elapsed_time = time.time() - start_time
         monitoring_service.record_response_time(elapsed_time)
         monitoring_service.intent_monitor.record_intent_classification(
@@ -733,9 +829,6 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
         )
 
 
-# ============================================================================
-# OPTIONAL: Explicit session management endpoints
-# ============================================================================
 
 def reset_session_context(session_id: UUID):
     """

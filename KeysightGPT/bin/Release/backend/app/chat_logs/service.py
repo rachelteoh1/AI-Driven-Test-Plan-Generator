@@ -4,26 +4,25 @@ from typing import Annotated
 from uuid import UUID, uuid4
 from fastapi import Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
+import re
+import requests
+import json
+import logging
 
 from ..chat_logs import monitoring_service
 from ..entities.entities import ChatLog, ChatLogVersion, SelectedInstrument
-import logging
 from ..exceptions import (
     InternalServerError)
 from .models import LogCreate, LogResponse, InstrumentResponse
 from ..utils.intent_classifier import classify_intent_ml
-from ..exceptions import ChatCreationError, ChatNotFoundError,ChatRenameError
+from ..exceptions import ChatCreationError, ChatNotFoundError, ChatRenameError
 from ..pdf_import.utils.suggest_intent import extract_scpi_from_pdf
 from ..instrument import service
-import requests
-import json
 from ..optimized_test_sequence import service as opt_service
 from sentence_transformers import SentenceTransformer
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from . import monitoring_service  # Import monitoring service\
-import time
-from ..utils.nlp_utils import Intent,process_user_input, context_manager
+from ..utils.nlp_utils import Intent, process_user_input, context_manager
 from ..utils.intent_service import save_intent_metadata
 logger = logging.getLogger(__name__)
 
@@ -280,6 +279,153 @@ def _keyword_search_fallback(commands_data, query, top_k=5):
     
     logger.info(f"[RAG] Found {len(top_results)} relevant commands: {[(r.get('command'), r.get('score')) for r in top_results]}")
     return top_results
+
+
+def extract_valid_commands_from_pdf(json_url_manual: str) -> set:
+    """
+    Fetch SCPI commands from the instrument's PDF JSON and return as a set.
+    Returns empty set if URL is invalid or request fails.
+    """
+    if not json_url_manual:
+        logger.warning("No JSON URL provided for PDF manual")
+        return set()
+    
+    try:
+        logger.info(f"[FILTER] Fetching valid commands from: {json_url_manual}")
+        import requests as req
+        json_response = req.get(json_url_manual, timeout=10)
+        
+        if json_response.status_code != 200:
+            logger.warning(f"[FILTER] Failed to fetch SCPI commands: {json_response.status_code}")
+            return set()
+        
+        scpi_data = json_response.json()
+        
+        # Extract command strings from the data
+        valid_commands = set()
+        if isinstance(scpi_data, list):
+            for cmd_obj in scpi_data:
+                if isinstance(cmd_obj, dict):
+                    cmd = cmd_obj.get('command', '').strip()
+                    if cmd:
+                        # Normalize: remove extra spaces, handle both formats
+                        normalized_cmd = re.sub(r'\s+', ' ', cmd.upper())
+                        valid_commands.add(normalized_cmd)
+        
+        logger.info(f"[FILTER] Loaded {len(valid_commands)} valid commands from PDF manual")
+        return valid_commands
+        
+    except Exception as e:
+        logger.error(f"[FILTER] Error fetching PDF commands: {str(e)}")
+        return set()
+
+
+def filter_optimized_sequence(opt_sequence: str, valid_commands: set) -> tuple:
+    """
+    Filter the optimized sequence by:
+    1. Removing all commands after :SYSTem:ERRor?
+    2. Removing commands that are not in the valid_commands set (from PDF manual)
+    3. Preserving overall structure and formatting
+    
+    Returns a tuple of (cleaned_sequence, explanation_text, removed_commands_list)
+    """
+    if not opt_sequence or not opt_sequence.strip():
+        logger.info("[FILTER] Empty optimized sequence provided")
+        return "", "", []
+    
+    logger.info(f"[FILTER] Starting sequence filtering with {len(valid_commands)} valid commands")
+    
+    # Step 1: Remove everything after :SYSTem:ERRor? (but keep the error command itself)
+    lines = opt_sequence.split('\n')
+    filtered_lines = []
+    error_command_found = False
+    
+    for line in lines:
+        # Check if this line contains the error command
+        if ':SYSTEM:ERROR?' in line.upper() or ':SYSTem:ERRor?' in line:
+            error_command_found = True
+            filtered_lines.append(line)  # Keep the :SYSTem:ERRor? command itself
+            logger.info("[FILTER] Found :SYSTem:ERRor? command - keeping it and removing all subsequent commands")
+            break
+        filtered_lines.append(line)
+    
+    # Step 2: If no valid commands set provided, return the truncated sequence
+    if not valid_commands:
+        logger.warning("[FILTER] No valid commands to validate against, returning truncated sequence")
+        result = '\n'.join(filtered_lines).strip()
+        explanation = "\n\nRemoved unnecessary commands."
+        return result, explanation, []
+    
+    # Step 3: Filter out commands not in the PDF manual
+    validated_lines = []
+    removed_commands = []
+    commands_removed = 0
+    
+    for line in filtered_lines:
+        stripped_line = line.strip()
+        
+        # Skip empty lines and non-command content
+        if not stripped_line or stripped_line.startswith('#') or stripped_line.startswith('//'):
+            validated_lines.append(line)
+            continue
+        
+        # Always keep :SYSTem:ERRor? command regardless of PDF validation
+        if ':SYSTEM:ERROR?' in stripped_line.upper() or ':SYSTem:ERRor?' in stripped_line:
+            validated_lines.append(line)
+            logger.debug(f"[FILTER] Keeping :SYSTem:ERRor? command (no validation)")
+            continue
+        
+        # Skip :SYSTem:HEADer OFF command
+        if ':SYSTEM:HEADER OFF' in stripped_line.upper():
+            commands_removed += 1
+            removed_commands.append(stripped_line)
+            logger.info(f"[FILTER] Removing :SYSTem:HEADer OFF command")
+            continue
+        
+        # Extract command part (before space) and normalize
+        command_part = stripped_line.split()[0].upper() if stripped_line.split() else stripped_line.upper()
+        # Remove leading : for comparison
+        command_to_check = command_part.lstrip(':')
+        
+        # Helper function to normalize command by removing numbers, |, and {}
+        def normalize_command(cmd):
+            # Remove curly braces, pipes, and numbers
+            normalized = re.sub(r'[{}|0-9]', '', cmd)
+            return normalized
+        
+        # Check if command exists in valid set (also check without leading :)
+        is_valid = False
+        if valid_commands:
+            normalized_to_check = normalize_command(command_to_check)
+            for valid_cmd in valid_commands:
+                valid_cmd_normalized = normalize_command(valid_cmd.lstrip(':'))
+                
+                # Check for exact match or prefix match (after normalization)
+                if normalized_to_check == valid_cmd_normalized or normalized_to_check.startswith(valid_cmd_normalized + ':'):
+                    is_valid = True
+                    break
+        else:
+            # If no valid commands set, keep the line
+            is_valid = True
+        
+        if is_valid:
+            validated_lines.append(line)
+            logger.debug(f"[FILTER] Command valid: {command_to_check}")
+        else:
+            commands_removed += 1
+            removed_commands.append(stripped_line)
+            logger.info(f"[FILTER] Removing invalid command: {command_to_check}")
+    
+    result = '\n'.join(validated_lines).strip()
+    
+    # Build explanation of removed commands
+    explanation = ""
+    if removed_commands:
+        explanation = "\n\nRemoved unnecessary commands."
+    
+    logger.info(f"[FILTER] Removed {commands_removed} invalid commands. Sequence reduced from {len(opt_sequence)} to {len(result)} characters")
+    
+    return result, explanation, removed_commands
 
 
 def detect_intent(db: Session, request: LogCreate) -> LogResponse:
@@ -611,26 +757,81 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
         logger.info(f"Flask API response: {json.dumps(data, indent=2)}")
         
         # =====================================================================
-        # Step 9: Extract response from Flask
+        # Step 9: Extract response from Flask (now returns separate fields)
         # =====================================================================
-        formatted_output = data.get("response", "")
+        gen_response = data.get("gen_response", "")
         opt_sequence = data.get("opt_sequence", "")
+        explanation = data.get("explanation", "")
         is_explanation = data.get("is_explanation", False)
         
-        if not formatted_output:
-            raise Exception("Flask API returned empty response")
+        if not gen_response:
+            raise Exception("Flask API returned empty gen_response")
 
-        logger.info(f"Response length: {len(formatted_output)}")
+        logger.info(f"Gen response length: {len(gen_response)}")
         logger.info(f"Is explanation: {is_explanation}")
         logger.info(f"Optimized sequence: {opt_sequence}")
 
         # =====================================================================
-        # Step 10: Save chat logs (user message + bot response)
+        # Step 10: Filter optimized sequence BEFORE saving chat logs
+        # =====================================================================
+        filtered_sequence = opt_sequence
+        filter_explanation = ""
+        removed_commands = []
+        
+        # Only filter if we have an optimization and it's not an explanation
+        if (not is_explanation and opt_sequence and opt_sequence.strip() and
+            parsed_input['intent'] in ['generate_test', 'modify_sequence']):
+            
+            if selected_instrument and selected_instrument.json_url_manual:
+                # Get valid commands from the PDF manual
+                valid_commands = extract_valid_commands_from_pdf(
+                    selected_instrument.json_url_manual
+                )
+                
+                # Filter the sequence
+                if valid_commands:
+                    filtered_sequence, filter_explanation, removed_commands = filter_optimized_sequence(
+                        opt_sequence,
+                        valid_commands
+                    )
+                    logger.info(
+                        f"[FILTER] Sequence filtering completed. "
+                        f"Original: {len(opt_sequence)} chars, "
+                        f"Filtered: {len(filtered_sequence)} chars, "
+                        f"Removed: {len(removed_commands)} commands"
+                    )
+                else:
+                    # If we couldn't get valid commands, still remove :SYSTem:ERRor? part
+                    filtered_sequence, filter_explanation, removed_commands = filter_optimized_sequence(opt_sequence, set())
+                    logger.warning(
+                        "[FILTER] Could not validate against PDF manual, "
+                        "removing :SYSTem:ERRor? section only"
+                    )
+            else:
+                # No instrument or JSON URL, still filter for :SYSTem:ERRor?
+                filtered_sequence, filter_explanation, removed_commands = filter_optimized_sequence(opt_sequence, set())
+                logger.info("[FILTER] No instrument manual available, removing :SYSTem:ERRor? section only")
+        
+        # Build formatted output with all components
+        formatted_output = gen_response
+        if not is_explanation and opt_sequence:
+            formatted_output += f"\n\nOptimized Sequence:\n{filtered_sequence}"
+            
+            # If explanation is "Already Optimized" and filter_explanation exists, replace it
+            if filter_explanation and explanation.strip() == "Already optimized.":
+                formatted_output += f"\n\nExplanation: \n{filter_explanation.strip()}"
+            else:
+                formatted_output += f"\n\nExplanation: \n{explanation}"
+                if filter_explanation:
+                    formatted_output += f"\n{filter_explanation.strip()}"
+
+        # =====================================================================
+        # Step 11: Save chat logs (user message + bot response)
         # =====================================================================
         # Save user message
         # user_log = create_chat_log(db, request)
         
-        # Save bot response
+        # Save bot response with the complete formatted output
         bot_log = LogCreate(
             session_id=request.session_id,
             role="llm_response",
@@ -654,7 +855,7 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
             logger.warning(f"Failed to save intent metadata: {str(e)}")
 
         # =====================================================================
-        # Step 11: Save optimized sequence (only if appropriate)
+        # Step 12: Save optimized sequence (only if appropriate)
         # =====================================================================
         should_save_optimization = (
             not is_explanation and 
@@ -665,8 +866,9 @@ def detect_intent(db: Session, request: LogCreate) -> LogResponse:
         
         if should_save_optimization:
             try:
-                opt_service.save_optimized_sequence(db, saved_log.message_id, opt_sequence)
-                logger.info(f"Saved optimized sequence for message {saved_log.message_id}")
+                # Save the filtered sequence (already filtered in Step 10)
+                opt_service.save_optimized_sequence(db, saved_log.message_id, filtered_sequence)
+                logger.info(f"Saved filtered optimized sequence for message {saved_log.message_id}")
             except Exception as e:
                 logger.exception(f"Failed to save optimized sequence: {str(e)}")
         else:

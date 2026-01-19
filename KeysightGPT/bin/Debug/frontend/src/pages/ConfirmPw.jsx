@@ -96,7 +96,6 @@ export default function ConfirmPwPage() {
                     />
                 ),
             });
-
             setTimeout(() => {
                 hideModal();
                 navigate('/resetpw');
@@ -118,20 +117,15 @@ export default function ConfirmPwPage() {
             const token = new URLSearchParams(location.search).get("token");
 
             confirmResetPassword(
-                {
-                    token,
+                {token,
                     new_password: values.password,
-                    confirm_password: values.confirmPassword,
-                },
-                {
-                    onSuccess: () => {
+                    confirm_password: values.confirmPassword,},
+                {onSuccess: () => {
                         showModal({
                             modal: (
                                 <TickedModal
                                     title="Reset Password Success!"
-                                    description="Sign in with your new password."
-                                />
-                            ),
+                                    description="Sign in with your new password."/>),
                         });
                         setTimeout(() => {
                             hideModal();

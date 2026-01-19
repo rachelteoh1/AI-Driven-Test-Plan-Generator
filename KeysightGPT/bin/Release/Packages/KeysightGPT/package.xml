@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Package InfoLink="" Date="12/22/2025 13:28:04" Name="KeysightGPT" Version="0.1.0-alpha" Architecture="AnyCPU" OS="Windows,Linux" xmlns="http://opentap.io/schemas/package">
-  <Hash>rw4h-8P4hdQhgh05M3ocVzd5oTc</Hash>
+<Package InfoLink="" Date="01/09/2026 13:49:20" Name="KeysightGPT" Version="0.1.5-alpha" Architecture="AnyCPU" OS="Windows,Linux" xmlns="http://opentap.io/schemas/package">
+  <Hash>KJlbHRI_Z_xpAnrrZY9wWrEkqiA</Hash>
   <Description>This is my OpenTAP plugin package.</Description>
   <Dependencies>
     <PackageDependency Package="OpenTAP" Version="^9.28.2+504225fd" />
+    <PackageDependency Package="WPF Controls" Version="^9.17.5+6f353459" />
   </Dependencies>
   <Files>
     <File Path="Packages/KeysightGPT/KeysightGPT.dll">
@@ -17,16 +18,871 @@
           <Groups />
         </Plugin>
       </Plugins>
-      <Hash>0D0578A1899A2B86B48B1582B46B9D03DD2CA3F2</Hash>
+      <Hash>E967B19DA68BB4BC688E610B40AA9423505F926A</Hash>
     </File>
-    <File Path="Dependencies/Keysight.OpenTap.Wpf.9.17.5.0/Keysight.OpenTap.Wpf.dll">
-      <Hash>67D4C767962AE37D1789FF6C21F55546FB46806F</Hash>
+    <File Path="Packages/KeysightGPT/WebView2Loader.dll">
+      <Hash>F0ACE56F45AF1356968DF164A975B7D7C1791131</Hash>
     </File>
-    <File Path="Dependencies/Microsoft.Web.WebView2.Wpf.1.0.3405.78/Microsoft.Web.WebView2.Wpf.dll">
+    <File Path="Packages/KeysightGPT/Newtonsoft.Json.dll">
+      <Hash>1E76E6099570EDE620B76ED47CF8D03A936D49F8</Hash>
+    </File>
+    <File Path="Packages/KeysightGPT/Microsoft.Web.WebView2.Core.dll">
+      <Hash>7DC11E191874D13B33750DC2F9AAB7AF1D74B984</Hash>
+    </File>
+    <File Path="Packages/KeysightGPT/Microsoft.Web.WebView2.Wpf.dll">
       <Hash>75CDBF86A7E099E617B00CA412EB10C7B01DAFF4</Hash>
     </File>
-    <File Path="Dependencies/Microsoft.Web.WebView2.Core.1.0.3405.78/Microsoft.Web.WebView2.Core.dll">
-      <Hash>7DC11E191874D13B33750DC2F9AAB7AF1D74B984</Hash>
+    <File Path="Packages/KeysightGPT/Microsoft.Web.WebView2.WinForms.dll">
+      <Hash>64DE0F85B3705AEE604521F74DDF4333CBDF21A3</Hash>
+    </File>
+    <File Path="backend/.dockerignore">
+      <Hash>625CDE48A39A17FD010B9DE66187A465FE89696F</Hash>
+    </File>
+    <File Path="backend/.DS_Store">
+      <Hash>05AF63E80FFD5AD8859D686AAC09E2434DDB113E</Hash>
+    </File>
+    <File Path="backend/.env">
+      <Hash>7C2B132253CBB5DA53ACFBA56307FE4AD548E9F2</Hash>
+    </File>
+    <File Path="backend/alembic.ini">
+      <Hash>7315123246D572C86C334918CCF593F66985E8FB</Hash>
+    </File>
+    <File Path="backend/pytest.ini">
+      <Hash>2E63312A715F024D62FB9BA523ED39EAB82C3F0F</Hash>
+    </File>
+    <File Path="backend/README.md">
+      <Hash>3B4553038D39584FDD6E43B5748767CF55AF0EB2</Hash>
+    </File>
+    <File Path="backend/requirements-dev.txt">
+      <Hash>6B54A0E06DF14F8AACB9CC954EA83242E1DA4D30</Hash>
+    </File>
+    <File Path="backend/requirements.txt">
+      <Hash>06FD0A87280E55F81BAC4EBC94572F78786016E4</Hash>
+    </File>
+    <File Path="backend/.vs/slnx.sqlite">
+      <Hash>92077FD265A80E34D3B39CFD1E7A29895EEFEE70</Hash>
+    </File>
+    <File Path="backend/.vs/VSWorkspaceState.json">
+      <Hash>F4F80EC1B233E04DD77925856230368E0E850EF7</Hash>
+    </File>
+    <File Path="backend/.vs/backend/CopilotIndices/17.13.444.19527/CodeChunks.db">
+      <Hash>094D48D9FF217117C1BF8A5CCE77A993FA009A9F</Hash>
+    </File>
+    <File Path="backend/.vs/backend/CopilotIndices/17.13.444.19527/SemanticSymbols.db">
+      <Hash>EA99EA47F4809E50AA0CEB58F81A247938E7B5E5</Hash>
+    </File>
+    <File Path="backend/.vs/backend/FileContentIndex/bb47975f-782b-4503-9c61-ca65a409b2fe.vsidx">
+      <Hash>D351447DFB52A4F16C54E3EE905613C8E4548EBB</Hash>
+    </File>
+    <File Path="backend/.vs/backend/v17/.wsuo">
+      <Hash>42E00C519856F090D0322099D7AA2DF77C5C8FDC</Hash>
+    </File>
+    <File Path="backend/.vs/backend/v17/DocumentLayout.json">
+      <Hash>2DD3CB86E622418E672E0E0C68EFF0E8EE4F5F2C</Hash>
+    </File>
+    <File Path="backend/alembic/env.py">
+      <Hash>9E19B6AB15CD4FB2FE732EA415920C3BA0BF353B</Hash>
+    </File>
+    <File Path="backend/alembic/script.py.mako">
+      <Hash>B9E5A50AEA708F4755D6AB239BBDD54E7295A6BD</Hash>
+    </File>
+    <File Path="backend/alembic/versions/7d5d77902d56_add_content_and_role_to_chat_logs.py">
+      <Hash>E8EE656CD4320AD61C48194573C18BEF11E94DD7</Hash>
+    </File>
+    <File Path="backend/alembic/versions/cd356a7d1e51_add_optimization_fields.py">
+      <Hash>398C2B17BB2BC3D63C747975CFC2538CD152A439</Hash>
+    </File>
+    <File Path="backend/alembic/versions/__pycache__/add_content_and_role_to_chat_logs.cpython-311.pyc">
+      <Hash>72720811B033BB12A3F3CBCBCCE0D8615EF0F11D</Hash>
+    </File>
+    <File Path="backend/alembic/versions/__pycache__/add_content_and_role_to_chat_logs.cpython-313.pyc">
+      <Hash>819D49D6A10EB1F017E25393B7CCAF33B7503177</Hash>
+    </File>
+    <File Path="backend/alembic/versions/__pycache__/add_optimization_fields.cpython-311.pyc">
+      <Hash>E77B37543D1461824C3F17563B33071B71B9CE43</Hash>
+    </File>
+    <File Path="backend/alembic/versions/__pycache__/add_optimization_fields.cpython-313.pyc">
+      <Hash>64BD3BDE428593456C51873799CC647EC6A7C827</Hash>
+    </File>
+    <File Path="backend/alembic/versions/__pycache__/create_new_optimized_test_sequence.cpython-313.pyc">
+      <Hash>ECFAF913E49B9FEFF0C65F2FB57F76DF8BE300F3</Hash>
+    </File>
+    <File Path="backend/alembic/__pycache__/env.cpython-311.pyc">
+      <Hash>F1FF2D811C3E21BB1CF0DA0C4B5F6224F9D8DD06</Hash>
+    </File>
+    <File Path="backend/app/api.py">
+      <Hash>50F2DA2B2194823936725E80E57EC6350F2B1508</Hash>
+    </File>
+    <File Path="backend/app/database.py">
+      <Hash>C1EA1575EB9328D2431EDFA9993C7DFDDE96A414</Hash>
+    </File>
+    <File Path="backend/app/exceptions.py">
+      <Hash>D85C861B8755E7285AAB62E83C095AA936308F01</Hash>
+    </File>
+    <File Path="backend/app/logging1.py">
+      <Hash>728E2E67E39E3A24F6677850341AAB0A0DA6CD84</Hash>
+    </File>
+    <File Path="backend/app/main.py">
+      <Hash>F1D4BF94B07B4A0349628A5A582820156862BE5F</Hash>
+    </File>
+    <File Path="backend/app/my_logging.py">
+      <Hash>728E2E67E39E3A24F6677850341AAB0A0DA6CD84</Hash>
+    </File>
+    <File Path="backend/app/rate_limiter.py">
+      <Hash>965079359433D3EFCFAE8CC94F3B1F84F330434F</Hash>
+    </File>
+    <File Path="backend/app/test.py">
+      <Hash>3925D47AFE88F5CB1CBEF10410398D7E54339FC9</Hash>
+    </File>
+    <File Path="backend/app/test_scan.py">
+      <Hash>42EB0F58B1E0AAA842B75E0DC94202AF05B22BB8</Hash>
+    </File>
+    <File Path="backend/app/__init__.py">
+      <Hash>DA39A3EE5E6B4B0D3255BFEF95601890AFD80709</Hash>
+    </File>
+    <File Path="backend/app/auth/.DS_Store">
+      <Hash>DF2FBEB1400ACDA0909A32C1CF6BF492F1121E07</Hash>
+    </File>
+    <File Path="backend/app/auth/controller.py">
+      <Hash>9BBBAA97AD66F5E039BE216AC8D4F9591126D665</Hash>
+    </File>
+    <File Path="backend/app/auth/models.py">
+      <Hash>33F93C5C2E9223BD6A9D033174FFF6D5F3853702</Hash>
+    </File>
+    <File Path="backend/app/auth/service.py">
+      <Hash>AD799D4F2EB4B4F3D390FA27016EB54B95D879E5</Hash>
+    </File>
+    <File Path="backend/app/auth/__init__.py">
+      <Hash>DA39A3EE5E6B4B0D3255BFEF95601890AFD80709</Hash>
+    </File>
+    <File Path="backend/app/auth/__pycache__/controller.cpython-311.pyc">
+      <Hash>48743952BB49F39CB99344125389EAEE1F9D87D8</Hash>
+    </File>
+    <File Path="backend/app/auth/__pycache__/controller.cpython-313.pyc">
+      <Hash>62F502D24CFFD4451006570E6E003637B940B198</Hash>
+    </File>
+    <File Path="backend/app/auth/__pycache__/models.cpython-311.pyc">
+      <Hash>7D0C3687516BBA9F0F8D90685383D07436E0B541</Hash>
+    </File>
+    <File Path="backend/app/auth/__pycache__/models.cpython-313.pyc">
+      <Hash>49BB8562436D0ED2EDF8887E2AC1940E6642E80D</Hash>
+    </File>
+    <File Path="backend/app/auth/__pycache__/service.cpython-311.pyc">
+      <Hash>8F4BAE12BEC19751B4EA5F5B9A7FA24910657C84</Hash>
+    </File>
+    <File Path="backend/app/auth/__pycache__/service.cpython-313.pyc">
+      <Hash>22B572BD5280999D313262FA138A8E2EB81EA3FC</Hash>
+    </File>
+    <File Path="backend/app/auth/__pycache__/__init__.cpython-311.pyc">
+      <Hash>F6585309CF7DC714D77255CF75BB5E0BB83F30A5</Hash>
+    </File>
+    <File Path="backend/app/auth/__pycache__/__init__.cpython-313.pyc">
+      <Hash>A281847B6E66AC05F82DB4D455C5D7855EB88957</Hash>
+    </File>
+    <File Path="backend/app/chat_logs/controller.py">
+      <Hash>455A1A0B63379B422E416B28FB020F73F9B0924F</Hash>
+    </File>
+    <File Path="backend/app/chat_logs/models.py">
+      <Hash>A555BA0DA4EAD40B57EE42DE8DF390B33C4DB9CE</Hash>
+    </File>
+    <File Path="backend/app/chat_logs/monitoring_controller.py">
+      <Hash>D90C421496FC459F848A9C041D0329CAF78ACB34</Hash>
+    </File>
+    <File Path="backend/app/chat_logs/monitoring_service.py">
+      <Hash>DFE953D863B251DC59B7BEE42A59E08B9EE43531</Hash>
+    </File>
+    <File Path="backend/app/chat_logs/service.py">
+      <Hash>63C21239DCAA2BA4B2D36063ABA660F617A39479</Hash>
+    </File>
+    <File Path="backend/app/chat_logs/tempo.py">
+      <Hash>96C2A281BA2F4CE4A989F833FCDCC672BEE3AB3A</Hash>
+    </File>
+    <File Path="backend/app/chat_logs/__init__.py">
+      <Hash>DA39A3EE5E6B4B0D3255BFEF95601890AFD80709</Hash>
+    </File>
+    <File Path="backend/app/chat_logs/__pycache__/controller.cpython-311.pyc">
+      <Hash>78D98EB0368493428CBF4731367532768B36ABBF</Hash>
+    </File>
+    <File Path="backend/app/chat_logs/__pycache__/controller.cpython-313.pyc">
+      <Hash>656F3EFC291661F0F0D8B9D038DCFDD6553BBAA7</Hash>
+    </File>
+    <File Path="backend/app/chat_logs/__pycache__/models.cpython-311.pyc">
+      <Hash>BEBA9F177D3C78450E26D1648657561910E57A8C</Hash>
+    </File>
+    <File Path="backend/app/chat_logs/__pycache__/models.cpython-313.pyc">
+      <Hash>21AAE4C750E7460BFFE027DFB466F313EEA231E2</Hash>
+    </File>
+    <File Path="backend/app/chat_logs/__pycache__/monitoring_service.cpython-313.pyc">
+      <Hash>222E0983CC5ED5B81D626608C08180042D37B2DF</Hash>
+    </File>
+    <File Path="backend/app/chat_logs/__pycache__/service.cpython-311.pyc">
+      <Hash>4C0A591B1FF730452676CC76588872CE10DD94D1</Hash>
+    </File>
+    <File Path="backend/app/chat_logs/__pycache__/service.cpython-313.pyc">
+      <Hash>7156F2921B174A66CD58242A2810ACF8862338E5</Hash>
+    </File>
+    <File Path="backend/app/chat_logs/__pycache__/__init__.cpython-311.pyc">
+      <Hash>E6EF9A9D2C3F21BD97AFA426933E20773E17AF6C</Hash>
+    </File>
+    <File Path="backend/app/chat_logs/__pycache__/__init__.cpython-313.pyc">
+      <Hash>049B8EAA6F4D163DE215C3C6031B67F5D14EBCF5</Hash>
+    </File>
+    <File Path="backend/app/chat_session/controller.py">
+      <Hash>0248EB91D5CDF970FE87E5DD697C434BC3148107</Hash>
+    </File>
+    <File Path="backend/app/chat_session/models.py">
+      <Hash>54B05200024546B973A6DF7765793CD7AD196C89</Hash>
+    </File>
+    <File Path="backend/app/chat_session/service.py">
+      <Hash>A2FCA799BA915377ADA1B17083574D86EF0EA2D6</Hash>
+    </File>
+    <File Path="backend/app/chat_session/__init__.py">
+      <Hash>DA39A3EE5E6B4B0D3255BFEF95601890AFD80709</Hash>
+    </File>
+    <File Path="backend/app/chat_session/__pycache__/controller.cpython-311.pyc">
+      <Hash>798D622A14F25F2FFFE1B0FBEA8E59EFC26A7271</Hash>
+    </File>
+    <File Path="backend/app/chat_session/__pycache__/controller.cpython-313.pyc">
+      <Hash>472296ADD3656D6E851666CD44737A654FD76B9F</Hash>
+    </File>
+    <File Path="backend/app/chat_session/__pycache__/models.cpython-311.pyc">
+      <Hash>34B913E3F7130545C417CFE7B3597B0F399A7ED6</Hash>
+    </File>
+    <File Path="backend/app/chat_session/__pycache__/models.cpython-313.pyc">
+      <Hash>0867E42AB37A66682AB7955939A0112FF7E10583</Hash>
+    </File>
+    <File Path="backend/app/chat_session/__pycache__/service.cpython-311.pyc">
+      <Hash>2179C085A738FCFF29F5BC842822319EEE14A18C</Hash>
+    </File>
+    <File Path="backend/app/chat_session/__pycache__/service.cpython-313.pyc">
+      <Hash>A8F4F8A75F04D19AED577E2EDAFC769BFAC2D286</Hash>
+    </File>
+    <File Path="backend/app/chat_session/__pycache__/__init__.cpython-311.pyc">
+      <Hash>393B8877E8932F6F4EA6ABB415AFCF5DA1633B32</Hash>
+    </File>
+    <File Path="backend/app/chat_session/__pycache__/__init__.cpython-313.pyc">
+      <Hash>3F9B0B51DB8FD4192FC46227779A5175D5AFA608</Hash>
+    </File>
+    <File Path="backend/app/dashboard/controller.py">
+      <Hash>4F9E35CF7B7D3650470F40B3DCD451FCD7CB891E</Hash>
+    </File>
+    <File Path="backend/app/dashboard/models.py">
+      <Hash>8CEF81036FAC599A47FCC7364FD9D5D312DF5EBA</Hash>
+    </File>
+    <File Path="backend/app/dashboard/service.py">
+      <Hash>CFE72F3E31AE2C2A3FF18A8C5273A0E3699BB9DC</Hash>
+    </File>
+    <File Path="backend/app/dashboard/__init__.py">
+      <Hash>DA39A3EE5E6B4B0D3255BFEF95601890AFD80709</Hash>
+    </File>
+    <File Path="backend/app/dashboard/__pycache__/controller.cpython-311.pyc">
+      <Hash>4060843846A877E5F27676A66A439431DB44B870</Hash>
+    </File>
+    <File Path="backend/app/dashboard/__pycache__/controller.cpython-313.pyc">
+      <Hash>A45FF80E704748701446A2B7FD74A21E985DF63B</Hash>
+    </File>
+    <File Path="backend/app/dashboard/__pycache__/models.cpython-311.pyc">
+      <Hash>60326B0D5671190B294EE87B80B1374C98DBA713</Hash>
+    </File>
+    <File Path="backend/app/dashboard/__pycache__/models.cpython-313.pyc">
+      <Hash>4B533F386EE44AB77A84E41240BFD0AC445894B8</Hash>
+    </File>
+    <File Path="backend/app/dashboard/__pycache__/service.cpython-311.pyc">
+      <Hash>4321C7F9C2BB108DA774F284E35CE5053217B843</Hash>
+    </File>
+    <File Path="backend/app/dashboard/__pycache__/service.cpython-313.pyc">
+      <Hash>E693B7EAD6EBDEFC7A88C4DA99341135B5851AEE</Hash>
+    </File>
+    <File Path="backend/app/dashboard/__pycache__/__init__.cpython-311.pyc">
+      <Hash>5DFF814A722704AEDCDB3E1E2E3987E89C78B8F6</Hash>
+    </File>
+    <File Path="backend/app/dashboard/__pycache__/__init__.cpython-313.pyc">
+      <Hash>3757DAAA215A450CA3357B808B5475F69ACE3F0A</Hash>
+    </File>
+    <File Path="backend/app/entities/entities.py">
+      <Hash>5B492AA45F80679859D06B4D2B00DF9A38846A18</Hash>
+    </File>
+    <File Path="backend/app/entities/__pycache__/entities.cpython-311.pyc">
+      <Hash>0FDEEEFAEF04071B25A2F224C734B5BD14F0BE1B</Hash>
+    </File>
+    <File Path="backend/app/entities/__pycache__/entities.cpython-313.pyc">
+      <Hash>8CD9E827E27D5A84AAD6F8156FD7AB41BBC4DD24</Hash>
+    </File>
+    <File Path="backend/app/instrument/controller.py">
+      <Hash>C32406092280EF3E7E5A7D32AD25029A0BA05A80</Hash>
+    </File>
+    <File Path="backend/app/instrument/service.py">
+      <Hash>A3B5B93A5DC0557C8E98B6FDC525E66F0844B033</Hash>
+    </File>
+    <File Path="backend/app/instrument/__pycache__/controller.cpython-311.pyc">
+      <Hash>6D890C10FD2A06B1F433CEDAB5AA3970F3CD79D5</Hash>
+    </File>
+    <File Path="backend/app/instrument/__pycache__/controller.cpython-313.pyc">
+      <Hash>AF99835CE113411BCD2FB7FA04FFEC85EC17835D</Hash>
+    </File>
+    <File Path="backend/app/instrument/__pycache__/service.cpython-311.pyc">
+      <Hash>DFBF4B895CF0D68A273615B7C6BDB554E36026B5</Hash>
+    </File>
+    <File Path="backend/app/instrument/__pycache__/service.cpython-313.pyc">
+      <Hash>3D4D267420737236F3EC77FB8D39F0AE0DDA74B9</Hash>
+    </File>
+    <File Path="backend/app/optimized_test_sequence/controller.py">
+      <Hash>D0CA7EF79FCC4802E846A7ADD08283EDB2EFCBF0</Hash>
+    </File>
+    <File Path="backend/app/optimized_test_sequence/models.py">
+      <Hash>ABBC5151B0053F9105DEA64A82AC078A63C50ADB</Hash>
+    </File>
+    <File Path="backend/app/optimized_test_sequence/service.py">
+      <Hash>E6BB6E4FD869ED6F2B68C6C83F76A5855662627B</Hash>
+    </File>
+    <File Path="backend/app/optimized_test_sequence/__init__.py">
+      <Hash>DA39A3EE5E6B4B0D3255BFEF95601890AFD80709</Hash>
+    </File>
+    <File Path="backend/app/optimized_test_sequence/__pycache__/controller.cpython-311.pyc">
+      <Hash>13B273C467F773A145A7E37EC416802FA893D32F</Hash>
+    </File>
+    <File Path="backend/app/optimized_test_sequence/__pycache__/controller.cpython-313.pyc">
+      <Hash>985FB390A74E4AA29CA366A086B318C03AB2FDEE</Hash>
+    </File>
+    <File Path="backend/app/optimized_test_sequence/__pycache__/models.cpython-311.pyc">
+      <Hash>C700D73E45CD7FCE479B349EE8A79A32F0B67DD7</Hash>
+    </File>
+    <File Path="backend/app/optimized_test_sequence/__pycache__/models.cpython-313.pyc">
+      <Hash>366B2B57C5D43BF09930D13A313627BBCCB1075D</Hash>
+    </File>
+    <File Path="backend/app/optimized_test_sequence/__pycache__/service.cpython-311.pyc">
+      <Hash>F885FAB0A14322C4766434F2C5E9799AE0733F26</Hash>
+    </File>
+    <File Path="backend/app/optimized_test_sequence/__pycache__/service.cpython-313.pyc">
+      <Hash>097BBFDC8F47CCF971DA47AA19CE708240DE0F9A</Hash>
+    </File>
+    <File Path="backend/app/optimized_test_sequence/__pycache__/__init__.cpython-311.pyc">
+      <Hash>8719F2F429BD3906259FADAC3C422EB8FC790122</Hash>
+    </File>
+    <File Path="backend/app/optimized_test_sequence/__pycache__/__init__.cpython-313.pyc">
+      <Hash>19796C3C3EF56E610BF3B86ED662547859752D1E</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/controller.py">
+      <Hash>46DA0FB772E75281773E35B8674F6E656133AB47</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/models.py">
+      <Hash>848773E4A1FA48108C8D8D04389B0DFAA60435A2</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/service.py">
+      <Hash>E5A099C61476637F29068EC173E03842D852C888</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/utils/suggest_intent.py">
+      <Hash>80554E6434C7C0DFF16B691C5E4460E3F5D7703D</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/utils/supabase.py">
+      <Hash>E24778B64B2424EB49568C30C97A6049C6ECAD0F</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/utils/models/gemini_intent.py">
+      <Hash>73926BD68B3B2709A8DC876FC93F193D6D687913</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/utils/models/__pycache__/gemini_intent.cpython-311.pyc">
+      <Hash>FB28D522BF6FFC9BDD700B73C6EF589562831A1D</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/utils/models/__pycache__/gemini_intent.cpython-313.pyc">
+      <Hash>C26F60070D2E6E27094380CF9004E2DFE7CECC87</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/utils/models/__pycache__/llama_intent.cpython-313.pyc">
+      <Hash>B159D8EA219EC127BBE7141C1888A5FF19F7455F</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/utils/models/__pycache__/query_intent.cpython-313.pyc">
+      <Hash>0940FCD9CD0DBAE2E6CAD69C1C459BFDBCF5D011</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/utils/__pycache__/suggest_intent.cpython-311.pyc">
+      <Hash>BF4AE08A6E0C9092ED6F30235BE2800954B260C4</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/utils/__pycache__/suggest_intent.cpython-313.pyc">
+      <Hash>A25B9078D679BE9EE5F3B046C08D7E945F766EAB</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/utils/__pycache__/supabase.cpython-311.pyc">
+      <Hash>B074643BF4AC59A0559024A74C23CB76B4E045CB</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/utils/__pycache__/supabase.cpython-313.pyc">
+      <Hash>93ECB545DF40868CF39B2F994559AA173566BE1D</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/__pycache__/controller.cpython-311.pyc">
+      <Hash>D94EE0B1DA8CC5AEBE1876FFDD18BD8BFED512AF</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/__pycache__/controller.cpython-313.pyc">
+      <Hash>D81A352A9C7DE6E4CE885B720EEED2A96DE6C9A3</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/__pycache__/models.cpython-311.pyc">
+      <Hash>CF6D0258277B9E58560D7F36D6132ECBB3F7E529</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/__pycache__/models.cpython-313.pyc">
+      <Hash>83F30328AE56885243DE882A2F0AB6D38F348C72</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/__pycache__/service.cpython-311.pyc">
+      <Hash>A675B12092FF34D12C2CDDB1631F47D4E8608CAB</Hash>
+    </File>
+    <File Path="backend/app/pdf_import/__pycache__/service.cpython-313.pyc">
+      <Hash>2FCF82C335C840D0AB5E3BAF30A218354C540C9C</Hash>
+    </File>
+    <File Path="backend/app/profile/controller.py">
+      <Hash>E51A80E5C0F330FE63C801B198AF8DB8A8D2F111</Hash>
+    </File>
+    <File Path="backend/app/profile/models.py">
+      <Hash>20A0910C6A89C8D99FD3B0031372B3184E878EC1</Hash>
+    </File>
+    <File Path="backend/app/profile/service.py">
+      <Hash>347110F270F5455C002B5287675931ED009D0715</Hash>
+    </File>
+    <File Path="backend/app/profile/__pycache__/controller.cpython-311.pyc">
+      <Hash>570581B7A754D9923D660DBEF5102528D6899DF1</Hash>
+    </File>
+    <File Path="backend/app/profile/__pycache__/controller.cpython-313.pyc">
+      <Hash>A2D19FF84347046B00A2B2D40D52C83EE5799663</Hash>
+    </File>
+    <File Path="backend/app/profile/__pycache__/models.cpython-311.pyc">
+      <Hash>3070352A813DE30564D174AE5C1F782AE009089D</Hash>
+    </File>
+    <File Path="backend/app/profile/__pycache__/models.cpython-313.pyc">
+      <Hash>97D4BF29E8CA4190F1A796C243528724F7037820</Hash>
+    </File>
+    <File Path="backend/app/profile/__pycache__/service.cpython-311.pyc">
+      <Hash>20EAE1539B70970F8C00DB53A15D60B1EDB70675</Hash>
+    </File>
+    <File Path="backend/app/profile/__pycache__/service.cpython-313.pyc">
+      <Hash>A77F4551CF576B038AC903B48191F7A7DB04BE09</Hash>
+    </File>
+    <File Path="backend/app/users/controller.py">
+      <Hash>031CBFDF546018BFA7CB13265B86EC2196BC9B7E</Hash>
+    </File>
+    <File Path="backend/app/users/models.py">
+      <Hash>BBA15EC708B685BBD7C2544EF62AA9D4688A9DB3</Hash>
+    </File>
+    <File Path="backend/app/users/service.py">
+      <Hash>6CEA32CDDCDE8DAD430487539F3BCDDE8A571517</Hash>
+    </File>
+    <File Path="backend/app/users/__init__.py">
+      <Hash>DA39A3EE5E6B4B0D3255BFEF95601890AFD80709</Hash>
+    </File>
+    <File Path="backend/app/users/__pycache__/controller.cpython-311.pyc">
+      <Hash>43EAF5C07864D0502D867CB4AA0BD20AFC724DBA</Hash>
+    </File>
+    <File Path="backend/app/users/__pycache__/controller.cpython-313.pyc">
+      <Hash>D202ABAB096C3FA3499781E9106E564D77BB27D0</Hash>
+    </File>
+    <File Path="backend/app/users/__pycache__/models.cpython-311.pyc">
+      <Hash>A315CF4A1A33000B943E50D784E18824179F4CBC</Hash>
+    </File>
+    <File Path="backend/app/users/__pycache__/models.cpython-313.pyc">
+      <Hash>EAC960D9545E37758D35402D16F07A8F262608E3</Hash>
+    </File>
+    <File Path="backend/app/users/__pycache__/service.cpython-311.pyc">
+      <Hash>0B11666AD201ADD3BD4548121693DCFE703565D0</Hash>
+    </File>
+    <File Path="backend/app/users/__pycache__/service.cpython-313.pyc">
+      <Hash>569D64DEB9F52F8E7B357396F9F53389ECDD92C4</Hash>
+    </File>
+    <File Path="backend/app/users/__pycache__/__init__.cpython-311.pyc">
+      <Hash>5D559F7022C751690DAE71D4DA39A3884B7AEE39</Hash>
+    </File>
+    <File Path="backend/app/users/__pycache__/__init__.cpython-313.pyc">
+      <Hash>462C724F6FF0910033DD768E2DB7097B1206E861</Hash>
+    </File>
+    <File Path="backend/app/utils/generate_intent_dataset.py">
+      <Hash>51F531ECB7803043EF3CC308C8CDED792655D22B</Hash>
+    </File>
+    <File Path="backend/app/utils/intent.controller.py">
+      <Hash>BAD8D503E68478AC8457649E49EF8D57C37D399F</Hash>
+    </File>
+    <File Path="backend/app/utils/intent_classifier.py">
+      <Hash>66175E31EB8CF609AF581BC334E66B745C3F72C2</Hash>
+    </File>
+    <File Path="backend/app/utils/intent_dataset_full.csv">
+      <Hash>152738F47C6608A9106BF34708CC9A7221D235EE</Hash>
+    </File>
+    <File Path="backend/app/utils/intent_model.joblib">
+      <Hash>3956DD8ABB6362A571B0B8EC5146C3E9AB54168A</Hash>
+    </File>
+    <File Path="backend/app/utils/intent_service.py">
+      <Hash>9D93F51328CC88CD0DDBDC79B182CEB80B9D8417</Hash>
+    </File>
+    <File Path="backend/app/utils/nlp_utils.py">
+      <Hash>0C2AF2E6C686A738A2D4C59797ECE0D42B09CAB8</Hash>
+    </File>
+    <File Path="backend/app/utils/testclarification.py">
+      <Hash>4B50B5CEFA67975252CEB8370DEB27899C155378</Hash>
+    </File>
+    <File Path="backend/app/utils/testscpi.py">
+      <Hash>EF6F9B8BC756225CD9D07349298B4E9232FB8326</Hash>
+    </File>
+    <File Path="backend/app/utils/__pycache__/intent_classifier.cpython-311.pyc">
+      <Hash>81DC61B69C4A9DAAD462202C818A06E3FFD2D45C</Hash>
+    </File>
+    <File Path="backend/app/utils/__pycache__/intent_classifier.cpython-313.pyc">
+      <Hash>AF43DBE42E1F69C6B9DCC916CBE6A3978774A486</Hash>
+    </File>
+    <File Path="backend/app/utils/__pycache__/intent_service.cpython-313.pyc">
+      <Hash>1C2488A2B52D3EE792FBF1088865A387D9F1C56D</Hash>
+    </File>
+    <File Path="backend/app/utils/__pycache__/nlp_utils.cpython-311.pyc">
+      <Hash>C74EC5C4281CFA2B51DFF7883B4E9676D2C48D3C</Hash>
+    </File>
+    <File Path="backend/app/utils/__pycache__/nlp_utils.cpython-313.pyc">
+      <Hash>DAD9A9F496F17575C85C1CA449F800E666ABBBE3</Hash>
+    </File>
+    <File Path="backend/app/__pycache__/api.cpython-311.pyc">
+      <Hash>C3CBC96F96062D3A77055F53EBF6E7748979C622</Hash>
+    </File>
+    <File Path="backend/app/__pycache__/api.cpython-313.pyc">
+      <Hash>CB9066C605FD59FD259BDF7B1C1322903121340A</Hash>
+    </File>
+    <File Path="backend/app/__pycache__/database.cpython-311.pyc">
+      <Hash>31286BA0E5EBDEE50894714B8DCFE27135D1E219</Hash>
+    </File>
+    <File Path="backend/app/__pycache__/database.cpython-313.pyc">
+      <Hash>E2344F81C31126DF05D966FCF74C248F4CF0A97B</Hash>
+    </File>
+    <File Path="backend/app/__pycache__/exceptions.cpython-311.pyc">
+      <Hash>28063F5AD8F2F2CFB8FAFF65F12FB6249145818A</Hash>
+    </File>
+    <File Path="backend/app/__pycache__/exceptions.cpython-313.pyc">
+      <Hash>470EA596D65D01EA85878D6838B6C73189760CFC</Hash>
+    </File>
+    <File Path="backend/app/__pycache__/logging1.cpython-311.pyc">
+      <Hash>7A35D4F7144EF16B5B804B8F5B9C01E65C2BC4B9</Hash>
+    </File>
+    <File Path="backend/app/__pycache__/logging1.cpython-313.pyc">
+      <Hash>6001E1F11C86AE522B9459E6485217E2946BFDAF</Hash>
+    </File>
+    <File Path="backend/app/__pycache__/main.cpython-311.pyc">
+      <Hash>DEDCEF47F49C388BC2D28A199449E49EE1A97C4C</Hash>
+    </File>
+    <File Path="backend/app/__pycache__/main.cpython-313.pyc">
+      <Hash>90794F7DF3240D2787448CEB89E9B2ED3D2A7885</Hash>
+    </File>
+    <File Path="backend/app/__pycache__/rate_limiter.cpython-311.pyc">
+      <Hash>3CE145BF37EC504684BA942E4722A47B035D2B4F</Hash>
+    </File>
+    <File Path="backend/app/__pycache__/rate_limiter.cpython-313.pyc">
+      <Hash>29D24B54922A4E52931240B7F92F9379DF380960</Hash>
+    </File>
+    <File Path="backend/app/__pycache__/__init__.cpython-311.pyc">
+      <Hash>7AA8CB9E65CC9B3CFC31EC2E9E6023423D155EE0</Hash>
+    </File>
+    <File Path="backend/app/__pycache__/__init__.cpython-313.pyc">
+      <Hash>0672A38DA29C5042FDC866C58796127AC9190E44</Hash>
+    </File>
+    <File Path="frontend/.dockerignore">
+      <Hash>F55043C6E7A5AB1FC1746CF6B03CC169E2DDCF8A</Hash>
+    </File>
+    <File Path="frontend/.gitignore">
+      <Hash>3045221647931CB276E520E7CA27C70401F463F5</Hash>
+    </File>
+    <File Path="frontend/components.json">
+      <Hash>E560C52E1CD452358CC1086A1FD04EFA7E1E3496</Hash>
+    </File>
+    <File Path="frontend/jsconfig.json">
+      <Hash>D37DC2294E4A1255D60EAC74C4A798AA621AE4A3</Hash>
+    </File>
+    <File Path="frontend/package-lock.json">
+      <Hash>C72CEAA6FA84B847FC04C00B6AFD889C49B5CA6A</Hash>
+    </File>
+    <File Path="frontend/package.json">
+      <Hash>352E195D6C0D5B142B45979CE17E14ACE25E449C</Hash>
+    </File>
+    <File Path="frontend/README.md">
+      <Hash>9E1CBF256213BFEC659E95A9EB9C6467F93B317B</Hash>
+    </File>
+    <File Path="frontend/build/asset-manifest.json">
+      <Hash>3CD6269B180BBCBD84E8D80DA16CCC74B1459B37</Hash>
+    </File>
+    <File Path="frontend/build/favicon.ico">
+      <Hash>1120538C77AD1F28A89243B4B53FE2AC16CC3BC6</Hash>
+    </File>
+    <File Path="frontend/build/groundtruth.json">
+      <Hash>243AC41D9DE5853D95C5308B7916120B1D92BDA8</Hash>
+    </File>
+    <File Path="frontend/build/index.html">
+      <Hash>2C9E94EA19AA78DBA6879D040298101F7A150C91</Hash>
+    </File>
+    <File Path="frontend/build/keysight.png">
+      <Hash>6CF6829863546CB53665E9B0FD7AF03004B1B8E1</Hash>
+    </File>
+    <File Path="frontend/build/manifest.json">
+      <Hash>1A316980E026CEA5583A083DAD11A5F06204EE2B</Hash>
+    </File>
+    <File Path="frontend/build/robots.txt">
+      <Hash>6AF64D9AC347B7B0B3CFE234A79073CF05A38982</Hash>
+    </File>
+    <File Path="frontend/build/scpi_response.json">
+      <Hash>6183344922C743C9C64AB68608F4085698401335</Hash>
+    </File>
+    <File Path="frontend/build/static/css/main.e88b8225.css">
+      <Hash>AD4B6CE54891C290614C730509F81BFDC1034155</Hash>
+    </File>
+    <File Path="frontend/build/static/css/main.e88b8225.css.map">
+      <Hash>CB66A60C8FAB6406CAA3F41C41563D4B2491346F</Hash>
+    </File>
+    <File Path="frontend/build/static/js/main.4eb3c818.js">
+      <Hash>7F971E45FBFC7FD61672873CAEF27E2942D0F2A9</Hash>
+    </File>
+    <File Path="frontend/build/static/js/main.4eb3c818.js.LICENSE.txt">
+      <Hash>771AEE2C2519F180349A714F79E835254AF4834C</Hash>
+    </File>
+    <File Path="frontend/build/static/js/main.4eb3c818.js.map">
+      <Hash>960C412BD31158FA4415FBEDFCDD9F8B6EE2E6CD</Hash>
+    </File>
+    <File Path="frontend/build/static/media/keysight.3039ec1dbd29d65c4ed9.png">
+      <Hash>2B7ED708D9BF2218BD99EF3AE9213FF89475FCC1</Hash>
+    </File>
+    <File Path="frontend/public/favicon.ico">
+      <Hash>1120538C77AD1F28A89243B4B53FE2AC16CC3BC6</Hash>
+    </File>
+    <File Path="frontend/public/groundtruth.json">
+      <Hash>243AC41D9DE5853D95C5308B7916120B1D92BDA8</Hash>
+    </File>
+    <File Path="frontend/public/index.html">
+      <Hash>9E898128AD581020798DE21355D861E589373DCB</Hash>
+    </File>
+    <File Path="frontend/public/keysight.png">
+      <Hash>6CF6829863546CB53665E9B0FD7AF03004B1B8E1</Hash>
+    </File>
+    <File Path="frontend/public/manifest.json">
+      <Hash>1A316980E026CEA5583A083DAD11A5F06204EE2B</Hash>
+    </File>
+    <File Path="frontend/public/robots.txt">
+      <Hash>6AF64D9AC347B7B0B3CFE234A79073CF05A38982</Hash>
+    </File>
+    <File Path="frontend/public/scpi_response.json">
+      <Hash>6183344922C743C9C64AB68608F4085698401335</Hash>
+    </File>
+    <File Path="frontend/src/App.jsx">
+      <Hash>320C02E4B4DD1FFF89A4DD3B78C3D0ECC2879D53</Hash>
+    </File>
+    <File Path="frontend/src/index.css">
+      <Hash>BEF6774564669613F259CEE37A23737905CC1B37</Hash>
+    </File>
+    <File Path="frontend/src/index.js">
+      <Hash>3A120242ABAC6703EB85AC42FADCBBDBBD4ECB7A</Hash>
+    </File>
+    <File Path="frontend/src/animation/lottieCrossed.json">
+      <Hash>92BC91595949319E9C006766E60319D989CF63E3</Hash>
+    </File>
+    <File Path="frontend/src/animation/lottieTicked.json">
+      <Hash>B10E96F66FDB00E2F01F1607794A53E85DE6F218</Hash>
+    </File>
+    <File Path="frontend/src/api/api.js">
+      <Hash>18F04BCAF97424F205D2E1664B4D8B4CE1CA929D</Hash>
+    </File>
+    <File Path="frontend/src/api/auth.js">
+      <Hash>E6097C0C113F8DD8CA68A538F3C3049E3B77DBB3</Hash>
+    </File>
+    <File Path="frontend/src/api/chat.js">
+      <Hash>7ECCB6721C20E6A0ACA2680846580E80707E6C33</Hash>
+    </File>
+    <File Path="frontend/src/api/dashboard.js">
+      <Hash>0A10A408E21CDA56C61B476CD1F6A65150048D14</Hash>
+    </File>
+    <File Path="frontend/src/api/instrument.js">
+      <Hash>4FA0F14AB5A7F908EA5D493A81DA83C62515D865</Hash>
+    </File>
+    <File Path="frontend/src/api/pdf.js">
+      <Hash>6074DA117A8DFE1E0835966F19F3E8F985D7FF51</Hash>
+    </File>
+    <File Path="frontend/src/api/profile.js">
+      <Hash>D28B8BC232784A138586132610F63BB386B5351A</Hash>
+    </File>
+    <File Path="frontend/src/api/sequence.js">
+      <Hash>93BFAB2FFD9CA00E28561DAF3D977ECF4B34E8C8</Hash>
+    </File>
+    <File Path="frontend/src/api/user.js">
+      <Hash>73B4D82C9F63C7037EB1450CDED644653BFF0544</Hash>
+    </File>
+    <File Path="frontend/src/assets/instrumentScanning.png">
+      <Hash>420A6DAD3C1543588F17FBF593D62738772D269D</Hash>
+    </File>
+    <File Path="frontend/src/assets/keysight.png">
+      <Hash>2B7ED708D9BF2218BD99EF3AE9213FF89475FCC1</Hash>
+    </File>
+    <File Path="frontend/src/assets/pdf.png">
+      <Hash>243CA26CEED8B8BB3650B05A4D707742035037C2</Hash>
+    </File>
+    <File Path="frontend/src/components/app-sidebar.jsx">
+      <Hash>239E0DF8C9C01B188619D10B9421D4929F331227</Hash>
+    </File>
+    <File Path="frontend/src/components/header.jsx">
+      <Hash>3D9AA2E17A3C8B3576E6CCD0BBC2470222C96C79</Hash>
+    </File>
+    <File Path="frontend/src/components/profile/dashboard-content.jsx">
+      <Hash>63C4E7AA44E981B130F86F8C29A22B04CEF390D3</Hash>
+    </File>
+    <File Path="frontend/src/components/profile/main-dashboard.jsx">
+      <Hash>DEC7B28CADB01D538655646B3FA7E8D973D8C619</Hash>
+    </File>
+    <File Path="frontend/src/components/profile/profile.jsx">
+      <Hash>B69CA5D6D91A3F596A1E323BD2D47CBC49BD1EF1</Hash>
+    </File>
+    <File Path="frontend/src/components/profile/ShadCircularProgress.jsx">
+      <Hash>C32F4D069043588C75FBA3D3FED2766DDC5A6C79</Hash>
+    </File>
+    <File Path="frontend/src/components/profile/ShadMetricsChart.jsx">
+      <Hash>ADDF8CC308C3DDFDC903834DB2F0863FD023E75A</Hash>
+    </File>
+    <File Path="frontend/src/components/reusable/AuthLayout.jsx">
+      <Hash>36DEB196198597BA7C5691BEDEFF9ACCDA053B62</Hash>
+    </File>
+    <File Path="frontend/src/components/reusable/Logo.jsx">
+      <Hash>904C859C3925D11BE5ECBE7EFBAE954210D1EADC</Hash>
+    </File>
+    <File Path="frontend/src/components/reusable/Tooltip.jsx">
+      <Hash>43A0CEC37CC899FE5D056714BE9D72C875682755</Hash>
+    </File>
+    <File Path="frontend/src/components/ui/button.jsx">
+      <Hash>0FE73F03E01215667B2D56A19F3245500E8B41F9</Hash>
+    </File>
+    <File Path="frontend/src/components/ui/dialog.jsx">
+      <Hash>5037A9D2964CB0CAA3CAA1C9BE0813A4F685A586</Hash>
+    </File>
+    <File Path="frontend/src/components/ui/dropdown-menu.jsx">
+      <Hash>50027AF859CC53126FBE66D6B3487DB85BAAFC43</Hash>
+    </File>
+    <File Path="frontend/src/components/ui/sidebar.jsx">
+      <Hash>74886D47738F84CC135E0922BBF78D90D545F98D</Hash>
+    </File>
+    <File Path="frontend/src/hook/useAuth.js">
+      <Hash>8530C341F9F56E603B0A489EF8F717EB57735591</Hash>
+    </File>
+    <File Path="frontend/src/hook/useChat.js">
+      <Hash>C8ACA4ED6647A6F1A8D4888A2D2B219E941A7CBC</Hash>
+    </File>
+    <File Path="frontend/src/hook/useDashboard.js">
+      <Hash>79D663AC26C17C087D68480DEA244D01F0A4D83E</Hash>
+    </File>
+    <File Path="frontend/src/hook/useInstrument.js">
+      <Hash>006DEF09578DFBED2CA6BD8DF5350B8FD00D29A3</Hash>
+    </File>
+    <File Path="frontend/src/hook/usePdf.js">
+      <Hash>35FA733FD3697F020A04B3D67E27CA06A802CAF0</Hash>
+    </File>
+    <File Path="frontend/src/hook/useProfile.js">
+      <Hash>F4F17E39D21228FE77FFC09DCC478B882AF4B7B0</Hash>
+    </File>
+    <File Path="frontend/src/hook/useSequence.js">
+      <Hash>6859540A117F6C9D6B1CD6E186427622B5ECD9A1</Hash>
+    </File>
+    <File Path="frontend/src/hook/useUser.js">
+      <Hash>8A76FCA5EC32A1E7A1D18EE882EA26615A992564</Hash>
+    </File>
+    <File Path="frontend/src/lib/ExportResults.js">
+      <Hash>72A51B89798746129ACD25B6B3C956FF122D495E</Hash>
+    </File>
+    <File Path="frontend/src/lib/FormValidation.js">
+      <Hash>3B786C2D3D22011BC38986C96A4AA1F0E4DFC19F</Hash>
+    </File>
+    <File Path="frontend/src/lib/styles.js">
+      <Hash>0D8E1A123BABB04CEB47DA3A0F7E283AAA4D8B03</Hash>
+    </File>
+    <File Path="frontend/src/lib/UserStatusContext.js">
+      <Hash>EC4EF6C6DBF5DC73192F2BB666785E644CEC9F4B</Hash>
+    </File>
+    <File Path="frontend/src/lib/utils.js">
+      <Hash>75EEAE9106D6DB9E5B029E944D1CC011F17F62AC</Hash>
+    </File>
+    <File Path="frontend/src/modal/ClearConversationModal.jsx">
+      <Hash>D9004ACCD91F1DAD924120854CAABA0494DE1293</Hash>
+    </File>
+    <File Path="frontend/src/modal/CrossedModal.jsx">
+      <Hash>CA0A915C985780B486A8E2DBBC3A5A3A50F65FAC</Hash>
+    </File>
+    <File Path="frontend/src/modal/DeleteAccountModal.jsx">
+      <Hash>89953F10A795DB9C346C1C77E4FE918DFED3BDDF</Hash>
+    </File>
+    <File Path="frontend/src/modal/DeleteModal.jsx">
+      <Hash>F4616D6192D18305BAC8149B44E93ECAEA6232E1</Hash>
+    </File>
+    <File Path="frontend/src/modal/InstrumentNotFoundModal.jsx">
+      <Hash>739BAAB4D463CF7AB71FBC69CDED8712E08D4D68</Hash>
+    </File>
+    <File Path="frontend/src/modal/LogoutModal.jsx">
+      <Hash>6A2F89D5154CCA4AE728CDF48689E9F1A65F515A</Hash>
+    </File>
+    <File Path="frontend/src/modal/PdfModal.jsx">
+      <Hash>DE3EEC90750ABFBA616E62058F1EA377D770F02E</Hash>
+    </File>
+    <File Path="frontend/src/modal/PTEMSuccessModal.jsx">
+      <Hash>54905B86BE0C2F76A4172D4D8BF4404518E1B5CF</Hash>
+    </File>
+    <File Path="frontend/src/modal/RenameModal.jsx">
+      <Hash>6E7A81F694391B0B10BEDD5BB38BA48BB63613FB</Hash>
+    </File>
+    <File Path="frontend/src/modal/ScanInstrumentModal.jsx">
+      <Hash>CD91C7E11C7C724B0867F7F956C4871EA0D91D15</Hash>
+    </File>
+    <File Path="frontend/src/modal/ScantResultModal.jsx">
+      <Hash>0F32108C5123A0AF73CC33F05D4536737CA7D121</Hash>
+    </File>
+    <File Path="frontend/src/modal/SearchChatModal.jsx">
+      <Hash>D9F61E09350DD3791BE6378ACBC9BC674DCA5D41</Hash>
+    </File>
+    <File Path="frontend/src/modal/TickModal.jsx">
+      <Hash>2073936AB13E3206812375FB6AFAAFE18F8C181D</Hash>
+    </File>
+    <File Path="frontend/src/modal/useModal.js">
+      <Hash>2889C883A17480B8D3A34472B91D606CFDC795FA</Hash>
+    </File>
+    <File Path="frontend/src/modal/internal/ModalManager.jsx">
+      <Hash>2FE38CEBFDD3901ED651DD1487682B0B775BF7D5</Hash>
+    </File>
+    <File Path="frontend/src/modal/internal/ModalView.jsx">
+      <Hash>B1EF49AF07C47D7B7BE0650A2FDC59108A26E714</Hash>
+    </File>
+    <File Path="frontend/src/pages/ConfirmPw.jsx">
+      <Hash>A065602DAE05B543EDD22780151C6BB6AC40C847</Hash>
+    </File>
+    <File Path="frontend/src/pages/Conversation.jsx">
+      <Hash>B1CC0C66D44289DCC70BC1721FD4D34BE7C5B24E</Hash>
+    </File>
+    <File Path="frontend/src/pages/Home.jsx">
+      <Hash>EF6B182E799BD3B7243CC4009B592837DF369C59</Hash>
+    </File>
+    <File Path="frontend/src/pages/Profile.jsx">
+      <Hash>DE85E687856722CA928CE576ED846F9F7D321C53</Hash>
+    </File>
+    <File Path="frontend/src/pages/ResetPw.jsx">
+      <Hash>FEEECE0B4EB870657F23077ED29061AC0DF4D68F</Hash>
+    </File>
+    <File Path="frontend/src/pages/SignIn&amp;UpOption.jsx">
+      <Hash>3AD275C780FC9DDCABD68CD8852D862CF7168875</Hash>
+    </File>
+    <File Path="frontend/src/pages/SignIn.jsx">
+      <Hash>45C33707ECC29B2798B98F452922725CE9D52480</Hash>
+    </File>
+    <File Path="frontend/src/pages/SignUp.jsx">
+      <Hash>C93772ACAEAF2915322B97A15C1B7DF56FB6D308</Hash>
+    </File>
+    <File Path="frontend/src/pages/Tempo.jsx">
+      <Hash>8B42E4A8D26104410C792F2BA376173D1BA1792C</Hash>
+    </File>
+    <File Path="frontend/src/services/authServices.js">
+      <Hash>40FF1D44D9DACC06419A7229B2B606903B4E826A</Hash>
+    </File>
+    <File Path="frontend/src/services/chatServices.js">
+      <Hash>A16AE40F577A4EE2D5E194E8DD4162371380168F</Hash>
+    </File>
+    <File Path="frontend/src/services/dashboardServices.js">
+      <Hash>754A73E5D22DE78CFDE9B69F624849D1786DBA87</Hash>
+    </File>
+    <File Path="frontend/src/services/pdfServices.js">
+      <Hash>CA2CE2366E0AAFA66FBFC208663EDB0A685BE719</Hash>
+    </File>
+    <File Path="frontend/src/services/profileServices.js">
+      <Hash>B5C71F4003E522CA2D50C922AD12CE88F931057D</Hash>
+    </File>
+    <File Path="frontend/src/services/scanInstrumentServices.js">
+      <Hash>AB57437EF8A4CE90AFAF5BBED46E9DE3DDE5883B</Hash>
+    </File>
+    <File Path="frontend/src/services/sequenceServices.js">
+      <Hash>669BCB807B78AC316E645257210689DF00487165</Hash>
+    </File>
+    <File Path="frontend/src/services/userServices.js">
+      <Hash>C0B3C5C980DB748B3A009BB886B1E0FA4CA1EF9F</Hash>
     </File>
   </Files>
 </Package>

@@ -16,17 +16,11 @@ def query_gemini(prompt: str):
         "Content-Type": "application/json",
         "x-goog-api-key": GEMINI_API_KEY,
     }
-
     data = {
-        "contents": [
-            {
+        "contents": [{
                 "parts": [
                     {"text": prompt}
-                ]
-            }
-        ]
-    }
-
+                ]}]}
     response = requests.post(url, headers=headers, json=data)
 
     if response.status_code == 200:

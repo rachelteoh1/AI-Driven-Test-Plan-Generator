@@ -1713,7 +1713,6 @@ useEffect(() => {
           </InstrumentBar>
 
           <MessageInputWrapper ref={inputWrapperRef}>
-            {/* Prefix Autocomplete Dropdown (SCPI Commands) */}
             {(() => {
               if (showPrefixDropdown && prefixSuggestions.length > 0 && inputWrapperRef.current) {
                 const rect = inputWrapperRef.current.getBoundingClientRect();

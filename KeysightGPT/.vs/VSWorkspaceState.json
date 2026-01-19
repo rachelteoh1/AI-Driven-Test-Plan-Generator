@@ -1,7 +1,11 @@
 {
   "ExpandedNodes": [
     "",
-    "\\bin"
+    "\\bin",
+    "\\bin\\Debug",
+    "\\bin\\Debug\\frontend",
+    "\\bin\\Release",
+    "\\bin\\Release\\frontend"
   ],
   "PreviewInSolutionExplorer": false
 }

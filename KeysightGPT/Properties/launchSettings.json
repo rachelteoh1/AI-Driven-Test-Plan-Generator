@@ -2,8 +2,7 @@
   "profiles": {
     "Debug with editor (Windows)": {
       "commandName": "Executable",
-      "executablePath": "C:\\Program Files\\OpenTAP\\tap.exe",
-      "commandLineArgs": "editor",
+      "executablePath": "C:\\Program Files\\OpenTAP\\Editor.exe",
       "dotnetRunMessages": true,
       "jsWebView2Debugging": true
     },

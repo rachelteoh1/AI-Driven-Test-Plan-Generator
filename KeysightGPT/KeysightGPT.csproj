@@ -1,49 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
 		<UseWPF>true</UseWPF>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-		<DebugWith>TUI</DebugWith>
-		<PluginInstallPath>C:\Program Files\OpenTAP\Packages\KeysightGPT\</PluginInstallPath>
-		<!-- FIX: Completely ignore dependency folders to prevent long-path errors -->
-		<DefaultItemExcludes>$(DefaultItemExcludes);..\backend\env\**;..\backend\**\__pycache__\**;..\React\frontend\node_modules\**</DefaultItemExcludes>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3405.78" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="OpenTAP" Version="9.28.2" />
-	</ItemGroup>
-
-	<!-- IMPORTANT FILES ONLY: Copy only source code, not dependencies -->
-	<ItemGroup>
-		<None Include="..\backend\**\*" Exclude="..\backend\env\**;..\backend\**\__pycache__\**">
-			<Link>backend\%(RecursiveDir)%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\React\frontend\**\*" Exclude="..\React\frontend\node_modules\**;..\React\frontend\build\**">
-			<Link>frontend\%(RecursiveDir)%(FileName)%(Extension)</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
+		<OpenTapPackageReference Include="WPF Controls" Version="9.17.5" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Reference Include="Keysight.OpenTap.Wpf"><HintPath>C:\Program Files\OpenTAP\Packages\WPF Controls\Keysight.OpenTap.Wpf.dll</HintPath></Reference>
-		<Reference Include="OpenTap.Plugins.BasicSteps"><HintPath>C:\Program Files\OpenTAP\Packages\OpenTAP\OpenTap.Plugins.BasicSteps.dll</HintPath></Reference>
+		<Reference Include="OpenTap.Plugins.BasicSteps">
+			<HintPath>C:\Program Files\OpenTAP\Packages\OpenTAP\OpenTap.Plugins.BasicSteps.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 
-	<Target Name="CopyToOpenTap" AfterTargets="Build">
-		<!-- Copy DLLs and Loader -->
-		<ItemGroup>
-			<BinFiles Include="$(OutputPath)*.dll" />
-			<BinFiles Include="$(OutputPath)runtimes\win-x64\native\WebView2Loader.dll" />
-		</ItemGroup>
-		<Copy SourceFiles="@(BinFiles)" DestinationFolder="$(PluginInstallPath)" SkipUnchangedFiles="true" />
-
-		<!-- Deploy Web Folders (Robocopy is used to safely ignore excluded folders) -->
-		<Exec Command="robocopy &quot;$(OutputPath)backend&quot; &quot;$(PluginInstallPath)backend&quot; /E /IS /R:0 /W:0 /XD env __pycache__" IgnoreExitCode="true" />
-		<Exec Command="robocopy &quot;$(OutputPath)frontend&quot; &quot;$(PluginInstallPath)frontend&quot; /E /IS /R:0 /W:0 /XD node_modules" IgnoreExitCode="true" />
-	</Target>
 </Project>
